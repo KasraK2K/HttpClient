@@ -1,0 +1,12 @@
+node_modules
+dist
+.turbo
+.env
+.env.local
+.env.production
+.vite
+coverage
+*.log
+backend/dist
+frontend/dist
+shared/dist
