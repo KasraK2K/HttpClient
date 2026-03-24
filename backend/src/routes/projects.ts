@@ -17,9 +17,20 @@ import {
 
 async function requireWorkspace(
   app: Parameters<FastifyPluginAsync>[0],
-  workspaceId: string,
+  workspaceId?: string,
 ): Promise<WorkspaceMeta> {
-  const workspace = await getWorkspaceById(app.mongo, workspaceId);
+  const normalizedWorkspaceId = workspaceId?.trim();
+  if (!normalizedWorkspaceId) {
+    throw app.httpErrors.badRequest("Workspace ID is required");
+  }
+
+  let workspace: WorkspaceMeta | null;
+  try {
+    workspace = await getWorkspaceById(app.mongo, normalizedWorkspaceId);
+  } catch {
+    throw app.httpErrors.badRequest("Invalid workspace ID");
+  }
+
   if (!workspace) {
     throw app.httpErrors.notFound("Workspace not found");
   }
@@ -29,10 +40,22 @@ async function requireWorkspace(
 async function requireProject(
   app: Parameters<FastifyPluginAsync>[0],
   workspaceId: string,
-  projectId: string,
+  projectId?: string,
 ): Promise<ProjectDoc> {
+  const normalizedProjectId = projectId?.trim();
+  if (!normalizedProjectId) {
+    throw app.httpErrors.badRequest("Project ID is required");
+  }
+
+  let objectId;
+  try {
+    objectId = toObjectId(normalizedProjectId);
+  } catch {
+    throw app.httpErrors.badRequest("Invalid project ID");
+  }
+
   const project = await workspaceDataCollection(app.mongo, workspaceId).findOne(
-    { _id: toObjectId(projectId), entityType: "project" },
+    { _id: objectId, entityType: "project" },
   );
   if (!project) {
     throw app.httpErrors.notFound("Project not found");
@@ -46,6 +69,11 @@ const projectRoutes: FastifyPluginAsync = async (app) => {
     { preHandler: app.authenticate },
     async (request) => {
       const user = getRequiredUser(request);
+      const name = request.body.name?.trim();
+      if (!name) {
+        throw app.httpErrors.badRequest("Project name is required");
+      }
+
       const workspace = await requireWorkspace(app, request.body.workspaceId);
       if (!canAccessWorkspace(user, workspace) || user.role === "member") {
         throw app.httpErrors.forbidden(
@@ -72,7 +100,7 @@ const projectRoutes: FastifyPluginAsync = async (app) => {
         _id: projectId,
         entityType: "project",
         workspaceId: workspace._id,
-        name: request.body.name.trim(),
+        name,
         envVars: [] as ProjectEnvVar[],
         order:
           ((maxOrderRecord[0] as { order?: number } | undefined)?.order ?? -1) +
@@ -350,3 +378,4 @@ const projectRoutes: FastifyPluginAsync = async (app) => {
 };
 
 export default projectRoutes;
+

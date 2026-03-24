@@ -13,13 +13,37 @@ import jwtPlugin from "./plugins/jwt.js";
 import unlockPlugin from "./plugins/unlock.js";
 import { loadConfig, type AppConfig } from "./config.js";
 
+function isAllowedOrigin(origin: string, config: AppConfig): boolean {
+  if (config.frontendOrigins.includes(origin)) {
+    return true;
+  }
+
+  if (config.nodeEnv !== "production") {
+    try {
+      const url = new URL(origin);
+      return url.hostname === "localhost" || url.hostname === "127.0.0.1";
+    } catch {
+      return false;
+    }
+  }
+
+  return false;
+}
+
 export async function buildApp(config: AppConfig = loadConfig()) {
   const app = Fastify({ logger: true });
   app.decorate("config", config);
 
   await app.register(fastifySensible);
   await app.register(fastifyCors, {
-    origin: config.frontendOrigin,
+    origin: (origin, callback) => {
+      if (!origin || isAllowedOrigin(origin, config)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`Origin ${origin} is not allowed`), false);
+    },
     credentials: true,
   });
   await app.register(mongodbPlugin);

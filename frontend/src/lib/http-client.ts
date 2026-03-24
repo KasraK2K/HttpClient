@@ -2,6 +2,7 @@ import type {
   CreateSuperuserPayload,
   ExecuteRequestPayload,
   ExecuteRequestResult,
+  FolderDoc,
   HistoryResponse,
   ListUsersResponse,
   ListWorkspacesResponse,
@@ -12,17 +13,20 @@ import type {
   RequestDoc,
   UnlockResponse,
   User,
+  WorkspaceMeta,
   WorkspaceTreeResponse,
 } from "@restify/shared";
 
-async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+async function requestJson<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const headers = new Headers(init.headers);
+  if (init.body != null && !headers.has("content-type")) {
+    headers.set("content-type", "application/json");
+  }
+
   const response = await fetch(`/api${path}`, {
-    credentials: "include",
-    headers: {
-      "content-type": "application/json",
-      ...(init?.headers ?? {}),
-    },
     ...init,
+    credentials: "include",
+    headers,
   });
 
   if (!response.ok) {
@@ -62,17 +66,17 @@ export const api = {
       headers: unlockToken ? { "X-Unlock-Token": unlockToken } : undefined,
     }),
   createWorkspace: (name: string) =>
-    requestJson<{ workspace: unknown }>("/workspaces", {
+    requestJson<{ workspace: WorkspaceMeta }>("/workspaces", {
       method: "POST",
       body: JSON.stringify({ name }),
     }),
   renameWorkspace: (workspaceId: string, name: string) =>
-    requestJson<{ workspace: unknown }>(`/workspaces/${workspaceId}`, {
+    requestJson<{ workspace: WorkspaceMeta }>(`/workspaces/${workspaceId}`, {
       method: "PATCH",
       body: JSON.stringify({ name }),
     }),
   duplicateWorkspace: (workspaceId: string) =>
-    requestJson<{ workspace: unknown }>(
+    requestJson<{ workspace: WorkspaceMeta }>(
       `/workspaces/${workspaceId}/duplicate`,
       { method: "POST", body: JSON.stringify({}) },
     ),
@@ -91,10 +95,13 @@ export const api = {
     enabled: boolean,
     password?: string,
   ) =>
-    requestJson<{ workspace: unknown }>(`/workspaces/${workspaceId}/security`, {
-      method: "PUT",
-      body: JSON.stringify({ enabled, password }),
-    }),
+    requestJson<{ workspace: WorkspaceMeta }>(
+      `/workspaces/${workspaceId}/security`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ enabled, password }),
+      },
+    ),
   deleteWorkspace: (workspaceId: string) =>
     requestJson<{ success: boolean }>(`/workspaces/${workspaceId}`, {
       method: "DELETE",
@@ -168,7 +175,7 @@ export const api = {
     name: string,
     unlockToken?: string,
   ) =>
-    requestJson<{ folder: unknown }>("/folders", {
+    requestJson<{ folder: FolderDoc }>("/folders", {
       method: "POST",
       body: JSON.stringify({ workspaceId, projectId, name }),
       headers: unlockToken ? { "X-Unlock-Token": unlockToken } : undefined,
@@ -179,7 +186,7 @@ export const api = {
     name: string,
     unlockToken?: string,
   ) =>
-    requestJson<{ folder: unknown }>(`/folders/${folderId}`, {
+    requestJson<{ folder: FolderDoc }>(`/folders/${folderId}`, {
       method: "PATCH",
       body: JSON.stringify({ workspaceId, name }),
       headers: unlockToken ? { "X-Unlock-Token": unlockToken } : undefined,
@@ -189,7 +196,7 @@ export const api = {
     workspaceId: string,
     unlockToken?: string,
   ) =>
-    requestJson<{ folder: unknown }>(`/folders/${folderId}/duplicate`, {
+    requestJson<{ folder: FolderDoc }>(`/folders/${folderId}/duplicate`, {
       method: "POST",
       body: JSON.stringify({ workspaceId }),
       headers: unlockToken ? { "X-Unlock-Token": unlockToken } : undefined,
@@ -301,3 +308,4 @@ export const api = {
       method: "DELETE",
     }),
 };
+

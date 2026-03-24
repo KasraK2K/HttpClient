@@ -1,4 +1,4 @@
-﻿import path from "node:path";
+import path from "node:path";
 
 export interface AppConfig {
   port: number;
@@ -9,6 +9,7 @@ export interface AppConfig {
   cookieDomain?: string;
   cookieSecure: boolean;
   frontendOrigin: string;
+  frontendOrigins: string[];
   nodeEnv: string;
   unlockTtlMinutes: number;
   frontendDistDir: string;
@@ -27,7 +28,19 @@ function toNumber(value: string | undefined, fallback: number): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function parseFrontendOrigins(value: string | undefined): string[] {
+  const defaults = ["http://127.0.0.1:3030", "http://localhost:3030"];
+  const configured = (value ?? "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  return [...new Set([...configured, ...defaults])];
+}
+
 export function loadConfig(): AppConfig {
+  const frontendOrigins = parseFrontendOrigins(process.env.FRONTEND_ORIGIN);
+
   return {
     port: toNumber(process.env.PORT, 4000),
     mongoUri: process.env.MONGODB_URI ?? "mongodb://localhost:27017/restify",
@@ -42,7 +55,8 @@ export function loadConfig(): AppConfig {
       process.env.COOKIE_SECURE,
       process.env.NODE_ENV === "production",
     ),
-    frontendOrigin: process.env.FRONTEND_ORIGIN ?? "http://localhost:5173",
+    frontendOrigin: frontendOrigins[0],
+    frontendOrigins,
     nodeEnv: process.env.NODE_ENV ?? "development",
     unlockTtlMinutes: toNumber(process.env.UNLOCK_TTL_MINUTES, 15),
     frontendDistDir: path.resolve(process.cwd(), "../frontend/dist"),

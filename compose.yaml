@@ -1,7 +1,7 @@
 services:
   mongodb:
     image: mongo:7
-    container_name: restify-mongodb
+    container_name: httpclient-mongodb
     restart: unless-stopped
     ports:
       - "27017:27017"

@@ -4,6 +4,9 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 const dirname = path.dirname(fileURLToPath(import.meta.url));
+const backendTarget = "http://127.0.0.1:4000";
+const frontendHost = "127.0.0.1";
+const frontendPort = 3030;
 
 export default defineConfig({
   plugins: [react()],
@@ -14,13 +17,20 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    host: frontendHost,
+    port: frontendPort,
+    strictPort: false,
     proxy: {
       "/api": {
-        target: "http://localhost:4000",
+        target: backendTarget,
         changeOrigin: true,
         secure: false,
       },
     },
+  },
+  preview: {
+    host: frontendHost,
+    port: 3031,
+    strictPort: false,
   },
 });
