@@ -479,6 +479,7 @@ export default function App() {
         user={user}
         activeWorkspaceName={activeWorkspace?.name}
         activeProjectName={activeProject?.name}
+        activeRequestName={activeRequest?.name}
         onLogout={logout}
         sidebar={
           <WorkspaceTree
@@ -766,3 +767,4 @@ export default function App() {
     </>
   );
 }
+
