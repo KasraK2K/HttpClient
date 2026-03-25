@@ -1,12 +1,12 @@
 import type { ExecuteRequestResult } from "@restify/shared";
 import { Copy } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import { Button } from "../ui/button";
-import { StatusBadge } from "./StatusBadge";
-import { JSONTree } from "./JSONTree";
 import { HTMLPreview } from "./HTMLPreview";
+import { JSONTree } from "./JSONTree";
+import { StatusBadge } from "./StatusBadge";
 
 interface ResponseViewerProps {
   response: ExecuteRequestResult | null;
@@ -33,8 +33,8 @@ export function ResponseViewer({ response }: ResponseViewerProps) {
   return (
     <Card className="flex h-full min-h-0 flex-col overflow-hidden">
       <CardHeader>
-        <div className="flex items-center justify-between gap-4">
-          <div>
+        <div className="flex w-full items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
             <CardTitle>Response Viewer</CardTitle>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted">
               <StatusBadge status={response?.status} />
@@ -43,15 +43,23 @@ export function ResponseViewer({ response }: ResponseViewerProps) {
               {response ? <span>{response.contentType}</span> : null}
             </div>
           </div>
-          <Button variant="secondary" onClick={copyResponse} disabled={!response}>
+          <Button
+            variant="secondary"
+            className="h-9 w-9 shrink-0 rounded-lg p-0"
+            onClick={copyResponse}
+            disabled={!response}
+            aria-label="Copy response"
+            title="Copy response"
+          >
             <Copy className="h-4 w-4" />
-            Copy
           </Button>
         </div>
       </CardHeader>
       <CardContent className="min-h-0 flex-1 overflow-auto">
         {!response ? (
-          <div className="flex h-[320px] items-center justify-center text-sm text-muted">Send a request to inspect status, headers, cookies, and the response body.</div>
+          <div className="flex h-[320px] items-center justify-center text-sm text-muted">
+            Send a request to inspect status, headers, cookies, and the response body.
+          </div>
         ) : (
           <Tabs value={tab} onValueChange={setTab}>
             <TabsList>
@@ -60,21 +68,39 @@ export function ResponseViewer({ response }: ResponseViewerProps) {
               <TabsTrigger value="cookies">Cookies</TabsTrigger>
             </TabsList>
             <TabsContent value="body" className="pt-4">
-              {response.contentKind === "json" ? <JSONTree value={response.textBody ?? ""} /> : null}
-              {response.contentKind === "html" ? <HTMLPreview value={response.textBody ?? ""} /> : null}
-              {response.contentKind === "xml" || response.contentKind === "text" ? (
-                <pre className="max-h-[360px] overflow-auto rounded-xl bg-slate-950/70 p-4 font-mono text-sm text-slate-200">{response.textBody}</pre>
+              {response.contentKind === "json" ? (
+                <JSONTree value={response.textBody ?? ""} />
               ) : null}
-              {response.contentKind === "image" && imageSrc ? <img alt="Response preview" className="max-h-[360px] rounded-xl border border-white/10" src={imageSrc} /> : null}
+              {response.contentKind === "html" ? (
+                <HTMLPreview value={response.textBody ?? ""} />
+              ) : null}
+              {response.contentKind === "xml" || response.contentKind === "text" ? (
+                <pre className="max-h-[360px] overflow-auto rounded-xl bg-slate-950/70 p-4 font-mono text-sm text-slate-200">
+                  {response.textBody}
+                </pre>
+              ) : null}
+              {response.contentKind === "image" && imageSrc ? (
+                <img
+                  alt="Response preview"
+                  className="max-h-[360px] rounded-xl border border-white/10"
+                  src={imageSrc}
+                />
+              ) : null}
               {response.contentKind === "binary" ? (
-                <pre className="max-h-[360px] overflow-auto rounded-xl bg-slate-950/70 p-4 font-mono text-xs text-muted">{response.base64Body}</pre>
+                <pre className="max-h-[360px] overflow-auto rounded-xl bg-slate-950/70 p-4 font-mono text-xs text-muted">
+                  {response.base64Body}
+                </pre>
               ) : null}
             </TabsContent>
             <TabsContent value="headers" className="pt-4">
-              <pre className="max-h-[360px] overflow-auto rounded-xl bg-slate-950/70 p-4 font-mono text-sm text-slate-200">{JSON.stringify(response.headers, null, 2)}</pre>
+              <pre className="max-h-[360px] overflow-auto rounded-xl bg-slate-950/70 p-4 font-mono text-sm text-slate-200">
+                {JSON.stringify(response.headers, null, 2)}
+              </pre>
             </TabsContent>
             <TabsContent value="cookies" className="pt-4">
-              <pre className="max-h-[360px] overflow-auto rounded-xl bg-slate-950/70 p-4 font-mono text-sm text-slate-200">{JSON.stringify(response.cookies, null, 2)}</pre>
+              <pre className="max-h-[360px] overflow-auto rounded-xl bg-slate-950/70 p-4 font-mono text-sm text-slate-200">
+                {JSON.stringify(response.cookies, null, 2)}
+              </pre>
             </TabsContent>
           </Tabs>
         )}
@@ -82,4 +108,3 @@ export function ResponseViewer({ response }: ResponseViewerProps) {
     </Card>
   );
 }
-
