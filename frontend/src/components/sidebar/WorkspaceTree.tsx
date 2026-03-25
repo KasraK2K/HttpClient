@@ -8,6 +8,7 @@ import {
   PointerSensor,
   closestCenter,
   pointerWithin,
+  useDroppable,
   useSensor,
   useSensors,
   type CollisionDetection,
@@ -267,6 +268,30 @@ function TreeNodeContent({
 function DropPlaceholderShell({ children }: { children: ReactNode }) {
   return (
     <div className="ml-5 rounded-md border border-dashed border-accent/45 bg-accent/8 px-2 py-1">
+      {children}
+    </div>
+  );
+}
+
+function DropPlaceholderTarget({
+  id,
+  data,
+  children,
+}: {
+  id: string;
+  data: TreeDragData;
+  children: ReactNode;
+}) {
+  const { isOver, setNodeRef } = useDroppable({ id, data });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "rounded-md transition",
+        isOver && "ring-1 ring-inset ring-accent/60",
+      )}
+    >
       {children}
     </div>
   );
@@ -1298,10 +1323,16 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                                   />
                                 ) : null}
                                 {projectRequestPreview && !projectRequestPreview.beforeRequestId ? (
-                                  <RequestDropPlaceholder request={projectRequestPreview.request} />
-                                ) : null}
-                                {projectFolderPreview && !projectFolderPreview.beforeFolderId ? (
-                                  <FolderDropPlaceholder folder={projectFolderPreview.folder} />
+                                  <DropPlaceholderTarget
+                                    id={`request-end:project:${project._id}`}
+                                    data={{
+                                      kind: "project",
+                                      workspaceId: workspace._id,
+                                      projectId: project._id,
+                                    }}
+                                  >
+                                    <RequestDropPlaceholder request={projectRequestPreview.request} />
+                                  </DropPlaceholderTarget>
                                 ) : null}
                                 <ReorderableList
                                   items={foldersByProject[project._id] ?? []}
@@ -1433,13 +1464,35 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                                             />
                                           ) : null}
                                           {folderRequestPreview && !folderRequestPreview.beforeRequestId ? (
-                                            <RequestDropPlaceholder request={folderRequestPreview.request} />
+                                            <DropPlaceholderTarget
+                                              id={`request-end:folder:${folder._id}`}
+                                              data={{
+                                                kind: "folder",
+                                                workspaceId: workspace._id,
+                                                projectId: project._id,
+                                                folderId: folder._id,
+                                              }}
+                                            >
+                                              <RequestDropPlaceholder request={folderRequestPreview.request} />
+                                            </DropPlaceholderTarget>
                                           ) : null}
                                         </div>
                                       ) : null,
                                   };
                                 }}
                               />
+                              {projectFolderPreview && !projectFolderPreview.beforeFolderId ? (
+                                <DropPlaceholderTarget
+                                  id={`folder-end:project:${project._id}`}
+                                  data={{
+                                    kind: "project",
+                                    workspaceId: workspace._id,
+                                    projectId: project._id,
+                                  }}
+                                >
+                                  <FolderDropPlaceholder folder={projectFolderPreview.folder} />
+                                </DropPlaceholderTarget>
+                              ) : null}
                               <Button
                                 variant="ghost"
                                 className="h-6 w-full justify-start rounded-md px-1.5 text-[12px] text-muted hover:bg-white/[0.04] hover:text-foreground"
@@ -1454,7 +1507,12 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                       }}
                     />
                     {workspaceProjectPreview && !workspaceProjectPreview.beforeProjectId ? (
-                      <ProjectDropPlaceholder project={workspaceProjectPreview.project} />
+                      <DropPlaceholderTarget
+                        id={`project-end:workspace:${workspace._id}`}
+                        data={{ kind: "workspace", workspaceId: workspace._id }}
+                      >
+                        <ProjectDropPlaceholder project={workspaceProjectPreview.project} />
+                      </DropPlaceholderTarget>
                     ) : null}
                   </div>
                 ) : null,
