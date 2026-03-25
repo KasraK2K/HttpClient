@@ -10,12 +10,15 @@ import {
   Layers3,
   LogOut,
   Send,
+  Shield,
+  ShieldCheck,
+  User as UserIcon,
   Workflow,
 } from "lucide-react";
 import type { AdminUser, User } from "@restify/shared";
 import httpClientLogo from "../../assets/httpclient-logo.svg";
 import { cn } from "../../lib/cn";
-import { Badge } from "../ui/badge";
+
 import { Button } from "../ui/button";
 
 const SIDEBAR_WIDTH_KEY = "httpclient.sidebar-width";
@@ -131,6 +134,54 @@ function ContextCrumb({
         )}
       >
         {displayValue}
+      </span>
+    </div>
+  );
+}
+
+function RoleChip({ role }: { role: AdminUser["role"] | User["role"] }) {
+  let label = "Member";
+  let icon = <UserIcon className="h-4 w-4" />;
+  let containerClassName = "border-white/10 bg-white/[0.04]";
+  let iconClassName = "border-white/10 bg-white/[0.08] text-slate-100";
+  let labelClassName = "text-slate-100";
+
+  if (role === "superadmin") {
+    label = "Super Admin";
+    icon = <ShieldCheck className="h-4 w-4" />;
+    containerClassName = "border-sky-400/20 bg-sky-400/10";
+    iconClassName = "border-sky-300/20 bg-sky-300/12 text-sky-100";
+    labelClassName = "text-sky-50";
+  } else if (role === "admin") {
+    label = "Admin";
+    icon = <Shield className="h-4 w-4" />;
+    containerClassName = "border-emerald-400/18 bg-emerald-400/10";
+    iconClassName = "border-emerald-300/20 bg-emerald-300/12 text-emerald-100";
+    labelClassName = "text-emerald-50";
+  }
+
+  return (
+    <div
+      className={cn(
+        "inline-flex items-center gap-2 rounded-2xl border px-2.5 py-1.5",
+        containerClassName,
+      )}
+    >
+      <span
+        className={cn(
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border",
+          iconClassName,
+        )}
+      >
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block text-[9px] font-semibold uppercase tracking-[0.24em] text-muted/90">
+          Role
+        </span>
+        <span className={cn("block text-xs font-semibold leading-4", labelClassName)}>
+          {label}
+        </span>
       </span>
     </div>
   );
@@ -465,15 +516,14 @@ export function AppShell({
       <header className="shrink-0 border-b border-white/10 bg-slate-950/70 px-4 py-3 backdrop-blur sm:px-5">
         <div className="flex flex-wrap items-start justify-between gap-3 sm:items-center">
           <div className="min-w-0 flex-1 space-y-2">
-            <div className="flex min-w-0 flex-wrap items-center gap-2.5">
+            <div className="flex max-w-full min-w-0 flex-wrap items-center gap-3 rounded-[26px] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02))] px-3 py-2 shadow-[0_12px_32px_rgba(2,6,23,0.24)]">
               <img
                 src={httpClientLogo}
                 alt="HttpClient"
-                className="h-9 w-auto max-w-[160px] shrink-0 sm:h-10 sm:max-w-[196px]"
+                className="h-10 w-auto max-w-[208px] shrink-0 sm:h-11 sm:max-w-[236px]"
               />
-              <Badge className="border-white/10 bg-white/[0.05] px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted">
-                {user.role}
-              </Badge>
+              <span className="hidden h-8 w-px shrink-0 bg-white/8 sm:block" />
+              <RoleChip role={user.role} />
             </div>
             <nav
               className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2"
@@ -655,6 +705,8 @@ export function AppShell({
     </div>
   );
 }
+
+
 
 
 
