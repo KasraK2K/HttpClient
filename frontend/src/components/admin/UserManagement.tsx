@@ -1,6 +1,7 @@
 import type { User, WorkspaceMeta } from "@restify/shared";
-import { Plus } from "lucide-react";
+import { Plus, Shield, Trash2, Users } from "lucide-react";
 import { useMemo, useState } from "react";
+import { cn } from "../../lib/cn";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
@@ -32,12 +33,19 @@ const ROLE_OPTIONS: Array<DropdownOption<UserRole>> = [
   { value: "admin", label: "Admin" },
 ];
 
+const ROLE_BADGE_STYLES: Record<UserRole, string> = {
+  member: "border-white/10 bg-white/[0.05] text-slate-200",
+  admin: "border-sky-400/20 bg-sky-500/10 text-sky-200",
+};
+
 function RoleSelector({
   value,
   onChange,
+  compact = false,
 }: {
   value: UserRole;
   onChange: (role: UserRole) => void;
+  compact?: boolean;
 }) {
   return (
     <DropdownSelect
@@ -45,12 +53,81 @@ function RoleSelector({
       options={ROLE_OPTIONS}
       onChange={onChange}
       ariaLabel="Select user role"
+      triggerClassName={cn(
+        "bg-slate-950/70",
+        compact && "h-9 rounded-lg px-2.5 text-xs",
+      )}
+      menuWidth={compact ? 132 : 152}
       getItemClassName={(_option, isSelected) =>
         isSelected
           ? "bg-accent text-slate-950"
           : "text-foreground hover:bg-white/[0.06]"
       }
     />
+  );
+}
+
+function RoleBadge({ role }: { role: UserRole }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-medium",
+        ROLE_BADGE_STYLES[role],
+      )}
+    >
+      {role === "admin" ? "Admin" : "Member"}
+    </span>
+  );
+}
+
+function WorkspaceAccessPicker({
+  workspaces,
+  selectedIds,
+  onToggle,
+}: {
+  workspaces: WorkspaceMeta[];
+  selectedIds: string[];
+  onToggle: (workspaceId: string) => void;
+}) {
+  if (workspaces.length === 0) {
+    return (
+      <div className="rounded-xl border border-white/8 bg-slate-950/35 px-3 py-3 text-xs text-muted">
+        No workspaces available yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {workspaces.map((workspace) => {
+        const checked = selectedIds.includes(workspace._id);
+        return (
+          <label
+            key={workspace._id}
+            className={cn(
+              "flex min-w-0 cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-2 text-xs transition",
+              checked
+                ? "border-sky-400/25 bg-sky-500/10 text-sky-100"
+                : "border-white/10 bg-slate-950/40 text-muted hover:border-white/18 hover:bg-white/[0.04]",
+            )}
+          >
+            <input
+              checked={checked}
+              onChange={() => onToggle(workspace._id)}
+              type="checkbox"
+              className="sr-only"
+            />
+            <span
+              className={cn(
+                "h-1.5 w-1.5 shrink-0 rounded-full",
+                checked ? "bg-sky-300" : "bg-white/20",
+              )}
+            />
+            <span className="truncate">{workspace.name}</span>
+          </label>
+        );
+      })}
+    </div>
   );
 }
 
@@ -122,18 +199,28 @@ export function UserManagement({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>User Management</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-5">
-        <div className="space-y-3 rounded-2xl border border-white/8 bg-white/4 p-4">
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+    <div className="space-y-4">
+      <Card className="border-white/8 bg-white/[0.035] shadow-none">
+        <CardHeader className="items-start">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-muted">
+              <Shield className="h-3.5 w-3.5" />
+              Access Control
+            </div>
+            <CardTitle className="mt-2">Create User</CardTitle>
+            <p className="mt-1 text-xs leading-5 text-muted">
+              Add a new member or admin and choose the workspaces they can use.
+            </p>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3">
             <Input
               value={username}
               onChange={(event) => setUsername(event.target.value)}
               placeholder="Username"
             />
+            <RoleSelector value={role} onChange={setRole} />
             <Input
               type="password"
               value={password}
@@ -146,91 +233,139 @@ export function UserManagement({
               onChange={(event) => setConfirmPassword(event.target.value)}
               placeholder="Confirm password"
             />
-            <RoleSelector value={role} onChange={setRole} />
           </div>
-          <div className="grid gap-2 md:grid-cols-2">
-            {workspaces.map((workspace) => (
-              <label
-                key={workspace._id}
-                className="flex items-center gap-2 rounded-xl border border-white/10 bg-slate-950/50 px-3 py-2 text-sm text-muted"
-              >
-                <input
-                  checked={workspaceIds.includes(workspace._id)}
-                  onChange={() => toggleWorkspace(workspace._id)}
-                  type="checkbox"
-                />
-                {workspace.name}
-              </label>
-            ))}
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+                Workspace Access
+              </div>
+              <div className="text-xs text-muted">
+                {workspaceIds.length} selected
+              </div>
+            </div>
+            <WorkspaceAccessPicker
+              workspaces={workspaces}
+              selectedIds={workspaceIds}
+              onToggle={toggleWorkspace}
+            />
           </div>
-          {error ? <p className="text-sm text-rose-300">{error}</p> : null}
+
+          {error ? (
+            <div className="rounded-xl border border-rose-400/20 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
+              {error}
+            </div>
+          ) : null}
+
           <Button
+            className="h-10 w-full justify-center"
             onClick={() => void handleCreate()}
             disabled={isCreating || !username || !password || !confirmPassword}
           >
             <Plus className="h-4 w-4" />
             {isCreating ? "Creating User..." : "Create User"}
           </Button>
-        </div>
-        <div className="space-y-3">
+        </CardContent>
+      </Card>
+
+      <Card className="border-white/8 bg-white/[0.035] shadow-none">
+        <CardHeader className="items-start">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-muted">
+              <Users className="h-3.5 w-3.5" />
+              Team Access
+            </div>
+            <CardTitle className="mt-2">Users</CardTitle>
+            <p className="mt-1 text-xs leading-5 text-muted">
+              Review roles and workspace access for each account.
+            </p>
+          </div>
+          <div className="rounded-full border border-white/10 bg-slate-950/50 px-2.5 py-1 text-xs text-muted">
+            {sortedUsers.length}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {sortedUsers.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-white/10 bg-slate-950/30 px-4 py-8 text-center text-sm text-muted">
+              No users created yet.
+            </div>
+          ) : null}
+
           {sortedUsers.map((user) => (
             <div
               key={user._id}
-              className="rounded-2xl border border-white/8 bg-white/4 p-4"
+              className="rounded-2xl border border-white/8 bg-slate-950/35 p-3"
             >
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <div className="font-medium text-foreground">
-                    {user.username}
-                  </div>
-                  <div className="text-xs text-muted">Role: {user.role}</div>
+              <div className="flex items-start gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-sm font-semibold text-foreground">
+                  {user.username.slice(0, 1).toUpperCase()}
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="secondary"
-                    onClick={() =>
-                      onUpdate(user._id, {
-                        role: user.role === "admin" ? "member" : "admin",
-                      })
-                    }
-                  >
-                    Toggle Role
-                  </Button>
-                  <Button variant="destructive" onClick={() => onDelete(user._id)}>
-                    Delete
-                  </Button>
-                </div>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {workspaces.map((workspace) => {
-                  const checked = user.workspaceIds.includes(workspace._id);
-                  return (
-                    <label
-                      key={`${user._id}-${workspace._id}`}
-                      className="flex items-center gap-2 rounded-xl border border-white/10 bg-slate-950/50 px-3 py-2 text-xs text-muted"
+
+                <div className="min-w-0 flex-1 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="truncate font-medium text-foreground">
+                        {user.username}
+                      </div>
+                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted">
+                        <RoleBadge role={user.role} />
+                        <span>{user.workspaceIds.length} workspaces</span>
+                      </div>
+                    </div>
+                    <Button
+                      variant="destructive"
+                      className="h-9 w-9 shrink-0 rounded-lg p-0"
+                      onClick={() => onDelete(user._id)}
+                      aria-label={`Delete ${user.username}`}
+                      title={`Delete ${user.username}`}
                     >
-                      <input
-                        checked={checked}
-                        onChange={() =>
-                          onUpdate(user._id, {
-                            workspaceIds: checked
-                              ? user.workspaceIds.filter(
-                                  (id) => id !== workspace._id,
-                                )
-                              : [...user.workspaceIds, workspace._id],
-                          })
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+                      Role
+                    </div>
+                    <RoleSelector
+                      compact
+                      value={user.role}
+                      onChange={(nextRole) => {
+                        if (nextRole === user.role) {
+                          return;
                         }
-                        type="checkbox"
-                      />
-                      {workspace.name}
-                    </label>
-                  );
-                })}
+                        void onUpdate(user._id, { role: nextRole });
+                      }}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+                        Workspace Access
+                      </div>
+                      <div className="text-xs text-muted">
+                        {user.workspaceIds.length} selected
+                      </div>
+                    </div>
+                    <WorkspaceAccessPicker
+                      workspaces={workspaces}
+                      selectedIds={user.workspaceIds}
+                      onToggle={(workspaceId) =>
+                        void onUpdate(user._id, {
+                          workspaceIds: user.workspaceIds.includes(workspaceId)
+                            ? user.workspaceIds.filter((id) => id !== workspaceId)
+                            : [...user.workspaceIds, workspaceId],
+                        })
+                      }
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           ))}
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
