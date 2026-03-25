@@ -8,7 +8,12 @@ interface TabsContextValue {
 
 const TabsContext = React.createContext<TabsContextValue | null>(null);
 
-export function Tabs({ value, onValueChange, className, children }: React.PropsWithChildren<TabsContextValue & { className?: string }>) {
+export function Tabs({
+  value,
+  onValueChange,
+  className,
+  children,
+}: React.PropsWithChildren<TabsContextValue & { className?: string }>) {
   return (
     <TabsContext.Provider value={{ value, onValueChange }}>
       <div className={className}>{children}</div>
@@ -16,11 +21,26 @@ export function Tabs({ value, onValueChange, className, children }: React.PropsW
   );
 }
 
-export function TabsList({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("inline-flex rounded-xl border border-white/10 bg-white/5 p-1", className)} {...props} />;
+export function TabsList({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn(
+        "inline-flex rounded-lg border border-white/10 bg-white/[0.04] p-0.5",
+        className,
+      )}
+      {...props}
+    />
+  );
 }
 
-export function TabsTrigger({ value, className, children }: React.PropsWithChildren<{ value: string; className?: string }>) {
+export function TabsTrigger({
+  value,
+  className,
+  children,
+}: React.PropsWithChildren<{ value: string; className?: string }>) {
   const context = React.useContext(TabsContext);
   if (!context) {
     throw new Error("TabsTrigger must be used inside Tabs");
@@ -30,9 +50,11 @@ export function TabsTrigger({ value, className, children }: React.PropsWithChild
   return (
     <button
       className={cn(
-        "rounded-lg px-3 py-1.5 text-sm transition",
-        active ? "bg-accent text-slate-950" : "text-muted hover:bg-white/6 hover:text-foreground",
-        className
+        "rounded-md px-2.5 py-1.5 text-[13px] leading-5 transition",
+        active
+          ? "bg-accent text-slate-950"
+          : "text-muted hover:bg-white/6 hover:text-foreground",
+        className,
       )}
       onClick={() => context.onValueChange(value)}
       type="button"
@@ -42,7 +64,11 @@ export function TabsTrigger({ value, className, children }: React.PropsWithChild
   );
 }
 
-export function TabsContent({ value, className, children }: React.PropsWithChildren<{ value: string; className?: string }>) {
+export function TabsContent({
+  value,
+  className,
+  children,
+}: React.PropsWithChildren<{ value: string; className?: string }>) {
   const context = React.useContext(TabsContext);
   if (!context || context.value !== value) {
     return null;

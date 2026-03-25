@@ -460,7 +460,7 @@ export default function App() {
   if (isInitializing) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-muted">
-        Starting Restify...
+        Starting HttpClient...
       </div>
     );
   }
@@ -628,18 +628,18 @@ export default function App() {
             value={inspectorTab}
             onValueChange={(value) => setInspectorTab(value as InspectorTab)}
           >
-            <TabsList className="mb-4 flex w-full justify-between">
-              <TabsTrigger value="environment">
+            <TabsList className="mb-4 flex w-full flex-wrap justify-start gap-1">
+              <TabsTrigger value="environment" className="inline-flex items-center gap-1.5">
                 <Settings2 className="mr-1 h-4 w-4" />Environment
               </TabsTrigger>
-              <TabsTrigger value="history">
+              <TabsTrigger value="history" className="inline-flex items-center gap-1.5">
                 <Activity className="mr-1 h-4 w-4" />History
               </TabsTrigger>
-              <TabsTrigger value="security">
+              <TabsTrigger value="security" className="inline-flex items-center gap-1.5">
                 <Shield className="mr-1 h-4 w-4" />Security
               </TabsTrigger>
               {user.role === "superadmin" ? (
-                <TabsTrigger value="admin">
+                <TabsTrigger value="admin" className="inline-flex items-center gap-1.5">
                   <Users className="mr-1 h-4 w-4" />Admin
                 </TabsTrigger>
               ) : null}
@@ -767,4 +767,5 @@ export default function App() {
     </>
   );
 }
+
 

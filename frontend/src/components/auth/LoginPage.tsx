@@ -35,7 +35,7 @@ export function LoginPage({ onSubmit }: LoginPageProps) {
               <LogIn className="h-5 w-5" />
             </div>
             <div>
-              <CardTitle>Sign In To Restify</CardTitle>
+              <CardTitle>Sign In To HttpClient</CardTitle>
               <p className="mt-1 text-sm text-muted">REST-only workspace access with secure cookie sessions.</p>
             </div>
           </div>
@@ -59,3 +59,4 @@ export function LoginPage({ onSubmit }: LoginPageProps) {
     </div>
   );
 }
+

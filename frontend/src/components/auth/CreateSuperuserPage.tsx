@@ -37,7 +37,7 @@ export function CreateSuperuserPage({ onSubmit }: CreateSuperuserPageProps) {
             </div>
             <div>
               <CardTitle>Create The First Superuser</CardTitle>
-              <p className="mt-1 text-sm text-muted">Restify detected an empty admins collection, so bootstrap starts here.</p>
+              <p className="mt-1 text-sm text-muted">HttpClient detected an empty admins collection, so bootstrap starts here.</p>
             </div>
           </div>
         </CardHeader>
@@ -63,3 +63,4 @@ export function CreateSuperuserPage({ onSubmit }: CreateSuperuserPageProps) {
     </div>
   );
 }
+

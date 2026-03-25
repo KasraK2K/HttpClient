@@ -27,7 +27,6 @@ import {
   GripVertical,
   Layers3,
   Plus,
-  Send,
   Workflow,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -81,16 +80,17 @@ function SortableRow({ id, children }: { id: string; children: ReactNode }) {
   };
 
   return (
-    <div ref={setNodeRef} style={style} className="group flex items-start gap-1.5">
+    <div ref={setNodeRef} style={style} className="group relative">
       <button
-        className="mt-2 rounded-md p-1 text-muted/70 transition hover:bg-white/8 hover:text-foreground"
+        className="absolute -left-3 top-1 rounded-md p-0.5 text-muted/60 opacity-0 transition hover:bg-white/8 hover:text-foreground group-hover:opacity-100 group-focus-within:opacity-100"
         {...attributes}
         {...listeners}
         type="button"
+        aria-label="Reorder item"
       >
-        <GripVertical className="h-3.5 w-3.5" />
+        <GripVertical className="h-3 w-3" />
       </button>
-      <div className="min-w-0 flex-1">{children}</div>
+      <div className="min-w-0">{children}</div>
     </div>
   );
 }
@@ -105,7 +105,7 @@ function ReorderableList<T extends SortableItem>({
   renderItem: (item: T) => ReactNode;
 }) {
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -129,7 +129,7 @@ function ReorderableList<T extends SortableItem>({
         items={items.map((item) => item._id)}
         strategy={verticalListSortingStrategy}
       >
-        <div className="space-y-1.5">
+        <div className="space-y-0.5">
           {items.map((item) => (
             <SortableRow key={item._id} id={item._id}>
               {renderItem(item)}
@@ -153,18 +153,18 @@ function TreeNodeContent({
   accessory?: ReactNode;
 }) {
   return (
-    <div className="flex min-w-0 items-start gap-2.5">
-      <span className="mt-0.5 shrink-0">{icon}</span>
-      <div className="min-w-0 flex-1">
-        <div
-          className="break-words text-sm font-medium leading-5 text-foreground"
-          title={name}
-        >
-          {name}
-        </div>
-        {meta ? <div className="mt-0.5 text-xs text-muted">{meta}</div> : null}
-      </div>
-      {accessory ? <div className="mt-0.5 shrink-0">{accessory}</div> : null}
+    <div className="flex min-w-0 items-center gap-1.5">
+      <span className="shrink-0">{icon}</span>
+      <span
+        className="min-w-0 flex-1 truncate text-[13px] leading-5 text-foreground"
+        title={name}
+      >
+        {name}
+      </span>
+      {meta ? (
+        <span className="shrink-0 text-[10px] text-muted">{meta}</span>
+      ) : null}
+      {accessory ? <span className="shrink-0">{accessory}</span> : null}
     </div>
   );
 }
@@ -185,24 +185,26 @@ function RequestItem({
   return (
     <div
       className={cn(
-        "group relative rounded-lg px-2 py-1.5 transition",
+        "group relative rounded-md pr-7 transition",
         activeRequestId === request._id
-          ? "bg-accent/12"
-          : "hover:bg-white/[0.05]",
+          ? "bg-accent/10"
+          : "hover:bg-white/[0.035]",
       )}
     >
-      <div className="flex items-start gap-2 pr-10">
-        <Send className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-300" />
+      <div className="flex items-center gap-1.5 px-1 py-0.5">
+        <span className="w-10 shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-300">
+          {request.method}
+        </span>
         <button
-          className="min-w-0 flex-1 text-left"
+          className={cn(
+            "min-w-0 flex-1 truncate text-left text-[13px] leading-5 text-foreground",
+            activeRequestId === request._id && "font-medium",
+          )}
           onClick={() => onSelectRequest(request._id)}
           type="button"
           title={request.name}
         >
-          <span className="block break-words text-sm leading-5 text-foreground">
-            {request.name}
-          </span>
-          <span className="mt-0.5 block text-xs text-muted">{request.method}</span>
+          {request.name}
         </button>
       </div>
       <ContextMenus
@@ -257,21 +259,24 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
 
   return (
     <Card className="h-full overflow-hidden">
-      <CardHeader>
-        <div className="flex items-center justify-between gap-3">
+      <CardHeader className="px-3 py-2.5">
+        <div className="flex items-center justify-between gap-2">
           <div>
-            <CardTitle>Workspace Tree</CardTitle>
-            <p className="mt-1 text-xs text-muted">
-              Workspaces, collections, folders, and requests.
+            <CardTitle>Collections</CardTitle>
+            <p className="mt-0.5 text-[11px] text-muted">
+              Workspaces, projects, folders, and requests.
             </p>
           </div>
-          <Button className="h-9 shrink-0" onClick={onCreateWorkspace}>
-            <Plus className="h-4 w-4" />
+          <Button
+            className="h-7 rounded-md px-2 text-xs"
+            onClick={onCreateWorkspace}
+          >
+            <Plus className="h-3.5 w-3.5" />
             Workspace
           </Button>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3 overflow-y-auto p-3">
+      <CardContent className="space-y-1 overflow-y-auto p-1.5 pl-4">
         <ReorderableList
           items={workspaceList}
           onReorder={onWorkspaceReorder}
@@ -281,21 +286,28 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
             const isExpandedWorkspace = Boolean(activeWorkspaceTree);
             const workspaceMeta = activeWorkspaceTree
               ? formatCount(activeWorkspaceTree.projects.length, "project")
-              : "Select to load projects";
+              : "Open";
 
             return (
-              <div className="rounded-xl border border-white/8 bg-white/[0.03] p-2.5">
+              <div className="space-y-0.5">
                 <div
                   className={cn(
-                    "group relative rounded-lg px-2 py-2 transition",
-                    isActiveWorkspace ? "bg-accent/10" : "hover:bg-white/[0.05]",
+                    "group relative rounded-md pr-7 transition",
+                    isActiveWorkspace
+                      ? "bg-white/[0.05]"
+                      : "hover:bg-white/[0.03]",
                   )}
                 >
-                  <div className="flex items-start gap-2 pr-10">
+                  <div className="flex items-center gap-0.5 px-1 py-0.5">
                     <button
-                      className="mt-0.5 rounded-md p-1 text-muted transition hover:bg-white/8 hover:text-foreground"
+                      className="rounded-md p-0.5 text-muted transition hover:bg-white/8 hover:text-foreground"
                       onClick={() => onSelectWorkspace(workspace._id)}
                       type="button"
+                      aria-label={
+                        isExpandedWorkspace
+                          ? "Collapse workspace"
+                          : "Expand workspace"
+                      }
                     >
                       {isExpandedWorkspace ? (
                         <ChevronDown className="h-3.5 w-3.5" />
@@ -315,7 +327,7 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                       type="button"
                     >
                       <TreeNodeContent
-                        icon={<Layers3 className="h-4 w-4 text-accent" />}
+                        icon={<Layers3 className="h-3.5 w-3.5 text-accent" />}
                         name={workspace.name}
                         meta={workspaceMeta}
                         accessory={
@@ -333,37 +345,37 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                   />
                 </div>
                 {isExpandedWorkspace ? (
-                  <div className="mt-2 space-y-2 border-l border-white/10 pl-3">
+                  <div className="ml-2 space-y-0.5 pl-1.5">
                     <ReorderableList
-                      items={[...(activeWorkspaceTree?.projects ?? [])].sort((a, b) => a.order - b.order)}
+                      items={[...(activeWorkspaceTree?.projects ?? [])].sort(
+                        (a, b) => a.order - b.order,
+                      )}
                       onReorder={onProjectReorder}
                       renderItem={(project) => {
                         const isExpandedProject =
-                          expandedProjects[project._id] ?? project._id === activeProjectId;
+                          expandedProjects[project._id] ??
+                          project._id === activeProjectId;
                         const requestCount =
                           project.requests.length +
                           project.folders.reduce(
                             (total, folder) => total + folder.requests.length,
                             0,
                           );
-                        const projectMeta = [
-                          formatCount(project.folders.length, "folder"),
-                          formatCount(requestCount, "request"),
-                        ].join(" • ");
+                        const projectMeta = `${project.folders.length} fld • ${requestCount} req`;
 
                         return (
-                          <div className="rounded-lg border border-white/8 bg-slate-950/30 p-2.5">
+                          <div className="space-y-0.5">
                             <div
                               className={cn(
-                                "group relative rounded-lg px-2 py-2 transition",
+                                "group relative rounded-md pr-7 transition",
                                 project._id === activeProjectId
-                                  ? "bg-white/[0.06]"
-                                  : "hover:bg-white/[0.05]",
+                                  ? "bg-white/[0.05]"
+                                  : "hover:bg-white/[0.03]",
                               )}
                             >
-                              <div className="flex items-start gap-2 pr-10">
+                              <div className="flex items-center gap-0.5 px-1 py-0.5">
                                 <button
-                                  className="mt-0.5 rounded-md p-1 text-muted transition hover:bg-white/8 hover:text-foreground"
+                                  className="rounded-md p-0.5 text-muted transition hover:bg-white/8 hover:text-foreground"
                                   onClick={() =>
                                     setExpandedProjects((state) => ({
                                       ...state,
@@ -371,6 +383,11 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                                     }))
                                   }
                                   type="button"
+                                  aria-label={
+                                    isExpandedProject
+                                      ? "Collapse project"
+                                      : "Expand project"
+                                  }
                                 >
                                   {isExpandedProject ? (
                                     <ChevronDown className="h-3.5 w-3.5" />
@@ -394,7 +411,7 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                                   type="button"
                                 >
                                   <TreeNodeContent
-                                    icon={<Workflow className="h-4 w-4 text-sky-300" />}
+                                    icon={<Workflow className="h-3.5 w-3.5 text-sky-300" />}
                                     name={project.name}
                                     meta={projectMeta}
                                     accessory={
@@ -412,7 +429,7 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                               />
                             </div>
                             {isExpandedProject ? (
-                              <div className="mt-2 space-y-1.5 border-l border-white/8 pl-3">
+                              <div className="ml-2 space-y-0.5 pl-1.5">
                                 {project.requests.length > 0 ? (
                                   <ReorderableList
                                     items={[...project.requests].sort(
@@ -440,12 +457,13 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                                   renderItem={(folder) => {
                                     const isExpandedFolder =
                                       expandedFolders[folder._id] ?? true;
+
                                     return (
-                                      <div className="rounded-lg border border-white/8 bg-white/[0.03] p-2.5">
-                                        <div className="group relative rounded-lg px-2 py-2 transition hover:bg-white/[0.05]">
-                                          <div className="flex items-start gap-2 pr-10">
+                                      <div className="space-y-0.5">
+                                        <div className="group relative rounded-md pr-7 transition hover:bg-white/[0.03]">
+                                          <div className="flex items-center gap-0.5 px-1 py-0.5">
                                             <button
-                                              className="mt-0.5 rounded-md p-1 text-muted transition hover:bg-white/8 hover:text-foreground"
+                                              className="rounded-md p-0.5 text-muted transition hover:bg-white/8 hover:text-foreground"
                                               onClick={() =>
                                                 setExpandedFolders((state) => ({
                                                   ...state,
@@ -453,6 +471,11 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                                                 }))
                                               }
                                               type="button"
+                                              aria-label={
+                                                isExpandedFolder
+                                                  ? "Collapse folder"
+                                                  : "Expand folder"
+                                              }
                                             >
                                               {isExpandedFolder ? (
                                                 <ChevronDown className="h-3.5 w-3.5" />
@@ -464,9 +487,9 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                                               <TreeNodeContent
                                                 icon={
                                                   isExpandedFolder ? (
-                                                    <Folder className="h-4 w-4 text-amber-300" />
+                                                    <Folder className="h-3.5 w-3.5 text-amber-300" />
                                                   ) : (
-                                                    <FolderClosed className="h-4 w-4 text-amber-300" />
+                                                    <FolderClosed className="h-3.5 w-3.5 text-amber-300" />
                                                   )
                                                 }
                                                 name={folder.name}
@@ -488,7 +511,7 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                                           />
                                         </div>
                                         {isExpandedFolder ? (
-                                          <div className="mt-2 space-y-1.5 border-l border-white/8 pl-3">
+                                          <div className="ml-2 space-y-0.5 pl-1.5">
                                             {folder.requests.map((request) => (
                                               <RequestItem
                                                 key={request._id}
@@ -507,11 +530,11 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                                 />
                                 <Button
                                   variant="ghost"
-                                  className="w-full justify-start rounded-lg border border-dashed border-white/10 bg-white/[0.03] py-2 text-foreground hover:bg-white/[0.07]"
+                                  className="h-6 w-full justify-start rounded-md px-1.5 text-[12px] text-muted hover:bg-white/[0.04] hover:text-foreground"
                                   onClick={() => onCreateFolder(project._id)}
                                 >
-                                  <Plus className="h-4 w-4" />
-                                  Add Folder
+                                  <Plus className="h-3 w-3" />
+                                  Add folder
                                 </Button>
                               </div>
                             ) : null}
@@ -529,5 +552,3 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
     </Card>
   );
 }
-
-
