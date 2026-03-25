@@ -1,16 +1,22 @@
-import type { RequestBodyConfig } from "@restify/shared";
+import type { ProjectEnvVar, RequestBodyConfig } from "@restify/shared";
 import { json } from "@codemirror/lang-json";
 import { oneDark } from "@codemirror/theme-one-dark";
 import CodeMirror from "@uiw/react-codemirror";
+import {
+  resolveRequestBodyResolution,
+  resolveVariableInputs,
+} from "../../lib/var-resolver";
 import { createFormValueRow } from "../../lib/request-helpers";
 import {
   DropdownSelect,
   type DropdownOption,
 } from "../ui/DropdownSelect";
 import { KeyValueTable } from "./KeyValueTable";
+import { VariableBadges } from "./VariableBadges";
 
 interface BodyEditorProps {
   value: RequestBodyConfig;
+  envVars: ProjectEnvVar[];
   onChange: (value: RequestBodyConfig) => void;
 }
 
@@ -25,7 +31,12 @@ const BODY_TYPE_OPTIONS: Array<DropdownOption<RequestBodyConfig["type"]>> = [
   },
 ];
 
-export function BodyEditor({ value, onChange }: BodyEditorProps) {
+export function BodyEditor({ value, envVars, onChange }: BodyEditorProps) {
+  const resolution =
+    value.type === "json" || value.type === "text"
+      ? resolveVariableInputs([value.content ?? ""], envVars)
+      : resolveRequestBodyResolution(value, envVars);
+
   return (
     <div className="flex h-full min-h-0 w-full min-w-0 flex-col gap-3">
       <DropdownSelect
@@ -41,16 +52,19 @@ export function BodyEditor({ value, onChange }: BodyEditorProps) {
         }
       />
       {value.type === "json" || value.type === "text" ? (
-        <div className="min-h-0 w-full min-w-0 flex-1 overflow-hidden rounded-xl border border-white/10 bg-[#0b1220] shadow-inner shadow-black/20">
-          <CodeMirror
-            className="request-body-editor h-full w-full text-sm"
-            theme={oneDark}
-            value={value.content ?? ""}
-            height="100%"
-            extensions={value.type === "json" ? [json()] : []}
-            onChange={(content) => onChange({ ...value, content })}
-          />
-        </div>
+        <>
+          <div className="min-h-0 w-full min-w-0 flex-1 overflow-hidden rounded-xl border border-white/10 bg-[#0b1220] shadow-inner shadow-black/20">
+            <CodeMirror
+              className="request-body-editor h-full w-full text-sm"
+              theme={oneDark}
+              value={value.content ?? ""}
+              height="100%"
+              extensions={value.type === "json" ? [json()] : []}
+              onChange={(content) => onChange({ ...value, content })}
+            />
+          </div>
+          <VariableBadges resolution={resolution} />
+        </>
       ) : null}
       {value.type === "form-data" || value.type === "x-www-form-urlencoded" ? (
         <KeyValueTable
@@ -59,6 +73,7 @@ export function BodyEditor({ value, onChange }: BodyEditorProps) {
           createRow={createFormValueRow}
           keyLabel="Field"
           valueLabel="Value"
+          envVars={envVars}
         />
       ) : null}
     </div>

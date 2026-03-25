@@ -1,8 +1,8 @@
-import { AlertTriangle, CheckCircle2, SendHorizontal } from "lucide-react";
+import { SendHorizontal } from "lucide-react";
 import type { VariableResolution } from "../../types";
-import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { VariableBadges } from "./VariableBadges";
 
 interface URLBarProps {
   value: string;
@@ -37,26 +37,7 @@ export function URLBar({
           {isSending ? "Sending..." : "Send"}
         </Button>
       </div>
-      <div className="flex flex-wrap gap-2">
-        {resolution.resolved.map((variable) => (
-          <Badge
-            key={variable}
-            className="border-emerald-400/20 bg-emerald-500/12 text-emerald-300"
-          >
-            <CheckCircle2 className="h-3.5 w-3.5" />
-            {variable}
-          </Badge>
-        ))}
-        {resolution.unresolved.map((variable) => (
-          <Badge
-            key={variable}
-            className="border-rose-400/20 bg-rose-500/12 text-rose-300"
-          >
-            <AlertTriangle className="h-3.5 w-3.5" />
-            {variable}
-          </Badge>
-        ))}
-      </div>
+      <VariableBadges resolution={resolution} />
     </div>
   );
 }

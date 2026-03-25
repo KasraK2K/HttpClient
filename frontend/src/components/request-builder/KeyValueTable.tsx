@@ -1,7 +1,14 @@
+import type {
+  FormValueRow,
+  HeaderRow,
+  ProjectEnvVar,
+  QueryParamRow,
+} from "@restify/shared";
 import { Plus, Trash2 } from "lucide-react";
-import type { FormValueRow, HeaderRow, QueryParamRow } from "@restify/shared";
+import { resolveKeyValueRowsResolution } from "../../lib/var-resolver";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { VariableBadges } from "./VariableBadges";
 
 type Row = HeaderRow | QueryParamRow | FormValueRow;
 
@@ -12,6 +19,7 @@ interface KeyValueTableProps<T extends Row> {
   keyLabel?: string;
   valueLabel?: string;
   showEnabled?: boolean;
+  envVars?: ProjectEnvVar[];
 }
 
 export function KeyValueTable<T extends Row>({
@@ -21,6 +29,7 @@ export function KeyValueTable<T extends Row>({
   keyLabel = "Key",
   valueLabel = "Value",
   showEnabled = true,
+  envVars,
 }: KeyValueTableProps<T>) {
   const updateRow = (index: number, patch: Partial<T>) => {
     const nextRows = rows.map((row, rowIndex) =>
@@ -35,6 +44,9 @@ export function KeyValueTable<T extends Row>({
   const desktopGridClass = showEnabled
     ? "md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_78px_44px]"
     : "md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_44px]";
+  const variableResolution = envVars
+    ? resolveKeyValueRowsResolution(rows, envVars)
+    : { output: "", resolved: [], unresolved: [] };
 
   return (
     <div className="space-y-3">
@@ -114,7 +126,12 @@ export function KeyValueTable<T extends Row>({
           </div>
         ))}
       </div>
-      <Button variant="secondary" className="self-start" onClick={() => onChange([...rows, createRow()])}>
+      <VariableBadges resolution={variableResolution} />
+      <Button
+        variant="secondary"
+        className="self-start"
+        onClick={() => onChange([...rows, createRow()])}
+      >
         <Plus className="h-4 w-4" />
         Add Row
       </Button>

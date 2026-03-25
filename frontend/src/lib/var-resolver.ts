@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   ExecuteRequestPayload,
   FormValueRow,
   HeaderRow,
@@ -44,6 +44,34 @@ export function resolveVariables(
   };
 }
 
+export function combineVariableResolutions(
+  ...resolutions: VariableResolution[]
+): VariableResolution {
+  return {
+    output: resolutions
+      .map((resolution) => resolution.output)
+      .filter(Boolean)
+      .join("\n"),
+    resolved: [
+      ...new Set(resolutions.flatMap((resolution) => resolution.resolved)),
+    ],
+    unresolved: [
+      ...new Set(resolutions.flatMap((resolution) => resolution.unresolved)),
+    ],
+  };
+}
+
+export function resolveVariableInputs(
+  inputs: string[],
+  envVars: ProjectEnvVar[],
+): VariableResolution {
+  return combineVariableResolutions(
+    ...inputs
+      .filter((input) => input.trim())
+      .map((input) => resolveVariables(input, envVars)),
+  );
+}
+
 export function resolveKeyValueRows<T extends RequestKeyValueRow>(
   rows: T[],
   envVars: ProjectEnvVar[],
@@ -55,6 +83,18 @@ export function resolveKeyValueRows<T extends RequestKeyValueRow>(
         key: resolveVariables(row.key, envVars).output,
         value: resolveVariables(row.value, envVars).output,
       }) as T,
+  );
+}
+
+export function resolveKeyValueRowsResolution<T extends RequestKeyValueRow>(
+  rows: T[],
+  envVars: ProjectEnvVar[],
+): VariableResolution {
+  return resolveVariableInputs(
+    rows
+      .filter((row) => row.enabled !== false)
+      .flatMap((row) => [row.key, row.value]),
+    envVars,
   );
 }
 
@@ -73,6 +113,17 @@ export function resolveRequestBody(
     ...body,
     values: resolveKeyValueRows(body.values ?? [], envVars),
   };
+}
+
+export function resolveRequestBodyResolution(
+  body: RequestBodyConfig,
+  envVars: ProjectEnvVar[],
+): VariableResolution {
+  if (body.type === "json" || body.type === "text") {
+    return resolveVariableInputs([body.content ?? ""], envVars);
+  }
+
+  return resolveKeyValueRowsResolution(body.values ?? [], envVars);
 }
 
 export function resolveRequestAuth(
@@ -95,6 +146,24 @@ export function resolveRequestAuth(
   }
 
   return auth;
+}
+
+export function resolveRequestAuthResolution(
+  auth: RequestAuthConfig,
+  envVars: ProjectEnvVar[],
+): VariableResolution {
+  if (auth.type === "bearer") {
+    return resolveVariableInputs([auth.token ?? ""], envVars);
+  }
+
+  if (auth.type === "basic") {
+    return resolveVariableInputs(
+      [auth.username ?? "", auth.password ?? ""],
+      envVars,
+    );
+  }
+
+  return { output: "", resolved: [], unresolved: [] };
 }
 
 export function buildExecuteRequestPayload(

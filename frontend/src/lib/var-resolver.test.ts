@@ -1,9 +1,12 @@
-﻿import type { RequestDoc } from "@restify/shared";
+import type { RequestDoc } from "@restify/shared";
 import { describe, expect, it } from "vitest";
 import {
   buildExecuteRequestPayload,
   buildParamsFromUrl,
   mergeParamsIntoUrl,
+  resolveRequestAuthResolution,
+  resolveRequestBodyResolution,
+  resolveVariableInputs,
   resolveVariables,
 } from "./var-resolver";
 
@@ -17,6 +20,44 @@ describe("resolveVariables", () => {
     expect(result.output).toBe("https://api.example.com/v1/users/{{userId}}");
     expect(result.resolved).toEqual(["version"]);
     expect(result.unresolved).toEqual(["userId"]);
+  });
+
+  it("combines variable state across multiple inputs", () => {
+    const result = resolveVariableInputs(
+      ["Bearer {{token}}", "{{username}}", "{{missing}}"],
+      [
+        { key: "token", value: "abc" },
+        { key: "username", value: "kasra" },
+      ],
+    );
+
+    expect(result.resolved).toEqual(["token", "username"]);
+    expect(result.unresolved).toEqual(["missing"]);
+  });
+});
+
+describe("request section variable resolution", () => {
+  it("reports variables used in auth and body sections", () => {
+    const authResolution = resolveRequestAuthResolution(
+      {
+        type: "basic",
+        username: "{{username}}",
+        password: "{{password}}",
+      },
+      [{ key: "username", value: "service-user" }],
+    );
+    const bodyResolution = resolveRequestBodyResolution(
+      {
+        type: "json",
+        content: '{"email":"{{email}}","name":"{{missing}}"}',
+      },
+      [{ key: "email", value: "team@example.com" }],
+    );
+
+    expect(authResolution.resolved).toEqual(["username"]);
+    expect(authResolution.unresolved).toEqual(["password"]);
+    expect(bodyResolution.resolved).toEqual(["email"]);
+    expect(bodyResolution.unresolved).toEqual(["missing"]);
   });
 });
 

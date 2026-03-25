@@ -1,12 +1,15 @@
-import type { RequestAuthConfig } from "@restify/shared";
+import type { ProjectEnvVar, RequestAuthConfig } from "@restify/shared";
+import { resolveRequestAuthResolution } from "../../lib/var-resolver";
 import {
   DropdownSelect,
   type DropdownOption,
 } from "../ui/DropdownSelect";
 import { Input } from "../ui/input";
+import { VariableBadges } from "./VariableBadges";
 
 interface AuthEditorProps {
   value: RequestAuthConfig;
+  envVars: ProjectEnvVar[];
   onChange: (value: RequestAuthConfig) => void;
 }
 
@@ -16,7 +19,9 @@ const AUTH_TYPE_OPTIONS: Array<DropdownOption<RequestAuthConfig["type"]>> = [
   { value: "basic", label: "Basic Auth" },
 ];
 
-export function AuthEditor({ value, onChange }: AuthEditorProps) {
+export function AuthEditor({ value, envVars, onChange }: AuthEditorProps) {
+  const resolution = resolveRequestAuthResolution(value, envVars);
+
   return (
     <div className="space-y-3">
       <DropdownSelect
@@ -74,6 +79,7 @@ export function AuthEditor({ value, onChange }: AuthEditorProps) {
           </div>
         </div>
       ) : null}
+      <VariableBadges resolution={resolution} />
     </div>
   );
 }

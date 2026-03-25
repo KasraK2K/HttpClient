@@ -129,6 +129,7 @@ export function RequestBuilder({
           <TabsContent value="body" className="flex min-h-0 w-full flex-1 pt-4">
             <BodyEditor
               value={draft.body}
+              envVars={envVars}
               onChange={(body) => updateDraft({ body })}
             />
           </TabsContent>
@@ -137,11 +138,13 @@ export function RequestBuilder({
               rows={draft.headers}
               onChange={(headers) => updateDraft({ headers })}
               createRow={createHeaderRow}
+              envVars={envVars}
             />
           </TabsContent>
           <TabsContent value="auth" className="min-h-0 flex-1 overflow-auto pt-4">
             <AuthEditor
               value={draft.auth}
+              envVars={envVars}
               onChange={(auth) => updateDraft({ auth })}
             />
           </TabsContent>
@@ -157,6 +160,7 @@ export function RequestBuilder({
               createRow={createQueryParamRow}
               keyLabel="Query"
               valueLabel="Value"
+              envVars={envVars}
             />
           </TabsContent>
         </Tabs>
