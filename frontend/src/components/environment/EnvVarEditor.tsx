@@ -32,7 +32,7 @@ export function EnvVarEditor({ projectName, envVars, onChange, onSave }: EnvVarE
       </CardHeader>
       <CardContent className="space-y-3">
         {envVars.map((envVar, index) => (
-          <div key={`${envVar.key}-${index}`} className="grid grid-cols-[1fr_1fr_44px] gap-2">
+          <div key={index} className="grid grid-cols-[1fr_1fr_44px] gap-2">
             <Input value={envVar.key} onChange={(event) => updateRow(index, { key: event.target.value })} placeholder="API_BASE_URL" />
             <Input value={envVar.value} onChange={(event) => updateRow(index, { value: event.target.value })} placeholder="https://api.example.com" />
             <Button variant="ghost" className="px-2 text-rose-300" onClick={() => onChange(envVars.filter((_, envIndex) => envIndex !== index))}>

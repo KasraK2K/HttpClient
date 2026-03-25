@@ -155,6 +155,7 @@ export function AppShell({
   const [isResizingInspector, setIsResizingInspector] = useState(false);
   const [isResizingCenter, setIsResizingCenter] = useState(false);
   const [isInspectorCollapsed, setIsInspectorCollapsed] = useState(false);
+  const [hasLoadedLayoutPrefs, setHasLoadedLayoutPrefs] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -197,12 +198,15 @@ export function AppShell({
         setIsInspectorCollapsed(storedInspectorState === "true");
       }
     } catch {
+      setHasLoadedLayoutPrefs(true);
       return;
     }
+
+    setHasLoadedLayoutPrefs(true);
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined" || !hasLoadedLayoutPrefs) {
       return;
     }
 
@@ -211,10 +215,10 @@ export function AppShell({
     } catch {
       return;
     }
-  }, [sidebarWidth]);
+  }, [hasLoadedLayoutPrefs, sidebarWidth]);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined" || !hasLoadedLayoutPrefs) {
       return;
     }
 
@@ -226,10 +230,10 @@ export function AppShell({
     } catch {
       return;
     }
-  }, [inspectorWidth]);
+  }, [hasLoadedLayoutPrefs, inspectorWidth]);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined" || !hasLoadedLayoutPrefs) {
       return;
     }
 
@@ -238,10 +242,10 @@ export function AppShell({
     } catch {
       return;
     }
-  }, [builderHeight]);
+  }, [builderHeight, hasLoadedLayoutPrefs]);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
+    if (typeof window === "undefined" || !hasLoadedLayoutPrefs) {
       return;
     }
 
@@ -253,7 +257,7 @@ export function AppShell({
     } catch {
       return;
     }
-  }, [isInspectorCollapsed]);
+  }, [hasLoadedLayoutPrefs, isInspectorCollapsed]);
 
   useEffect(() => {
     const clampToViewport = () => {
