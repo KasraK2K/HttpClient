@@ -629,18 +629,38 @@ export default function App() {
             onValueChange={(value) => setInspectorTab(value as InspectorTab)}
           >
             <TabsList className="mb-4 flex w-full flex-wrap justify-start gap-1">
-              <TabsTrigger value="environment" className="inline-flex items-center gap-1.5">
-                <Settings2 className="mr-1 h-4 w-4" />Environment
+              <TabsTrigger
+                value="environment"
+                className="inline-flex h-9 w-9 items-center justify-center p-0"
+                aria-label="Environment"
+                title="Environment"
+              >
+                <Settings2 className="h-4 w-4" />
               </TabsTrigger>
-              <TabsTrigger value="history" className="inline-flex items-center gap-1.5">
-                <Activity className="mr-1 h-4 w-4" />History
+              <TabsTrigger
+                value="history"
+                className="inline-flex h-9 w-9 items-center justify-center p-0"
+                aria-label="History"
+                title="History"
+              >
+                <Activity className="h-4 w-4" />
               </TabsTrigger>
-              <TabsTrigger value="security" className="inline-flex items-center gap-1.5">
-                <Shield className="mr-1 h-4 w-4" />Security
+              <TabsTrigger
+                value="security"
+                className="inline-flex h-9 w-9 items-center justify-center p-0"
+                aria-label="Security"
+                title="Security"
+              >
+                <Shield className="h-4 w-4" />
               </TabsTrigger>
               {user.role === "superadmin" ? (
-                <TabsTrigger value="admin" className="inline-flex items-center gap-1.5">
-                  <Users className="mr-1 h-4 w-4" />Admin
+                <TabsTrigger
+                  value="admin"
+                  className="inline-flex h-9 w-9 items-center justify-center p-0"
+                  aria-label="Admin"
+                  title="Admin"
+                >
+                  <Users className="h-4 w-4" />
                 </TabsTrigger>
               ) : null}
             </TabsList>
@@ -767,5 +787,8 @@ export default function App() {
     </>
   );
 }
+
+
+
 
 

@@ -40,7 +40,13 @@ export function TabsTrigger({
   value,
   className,
   children,
-}: React.PropsWithChildren<{ value: string; className?: string }>) {
+  onClick,
+  type,
+  ...props
+}: React.PropsWithChildren<{
+  value: string;
+  className?: string;
+} & React.ButtonHTMLAttributes<HTMLButtonElement>>) {
   const context = React.useContext(TabsContext);
   if (!context) {
     throw new Error("TabsTrigger must be used inside Tabs");
@@ -56,8 +62,14 @@ export function TabsTrigger({
           : "text-muted hover:bg-white/6 hover:text-foreground",
         className,
       )}
-      onClick={() => context.onValueChange(value)}
-      type="button"
+      onClick={(event) => {
+        onClick?.(event);
+        if (!event.defaultPrevented) {
+          context.onValueChange(value);
+        }
+      }}
+      type={type ?? "button"}
+      {...props}
     >
       {children}
     </button>
