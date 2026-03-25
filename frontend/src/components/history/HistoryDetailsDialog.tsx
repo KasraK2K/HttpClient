@@ -128,6 +128,30 @@ function getEnabledBodyRows(
   );
 }
 
+function getBodyListItems(
+  snapshot: NonNullable<HistoryDoc["requestSnapshot"]>,
+) {
+  return getEnabledBodyRows(snapshot).map((row) => {
+    if (row.valueKind === "file") {
+      return {
+        key: row.key,
+        value: row.fileName || "(file)",
+        meta: [
+          row.fileContentType,
+          row.fileSizeBytes != null ? formatBytes(row.fileSizeBytes) : undefined,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+      };
+    }
+
+    return {
+      key: row.key,
+      value: row.value,
+    };
+  });
+}
+
 function getBodyCopyValue(
   snapshot: NonNullable<HistoryDoc["requestSnapshot"]>,
 ) {
@@ -137,7 +161,11 @@ function getBodyCopyValue(
       return snapshot.body.content ?? "";
     case "form-data":
       return getEnabledBodyRows(snapshot)
-        .map((row) => `${row.key}: ${row.value}`)
+        .map((row) =>
+          row.valueKind === "file"
+            ? `${row.key}: @${row.fileName || "file"}`
+            : `${row.key}: ${row.value}`,
+        )
         .join("\n");
     case "x-www-form-urlencoded":
       return getEnabledBodyRows(snapshot)
@@ -328,8 +356,13 @@ export function HistoryDetailsDialog({
                     {snapshot.body.content || "(empty)"}
                   </pre>
                 ) : null}
-                {snapshot.body.type === "form-data" ||
-                snapshot.body.type === "x-www-form-urlencoded"
+                {snapshot.body.type === "form-data"
+                  ? renderKeyValueList(
+                      getBodyListItems(snapshot),
+                      "No enabled body fields were sent with this request.",
+                    )
+                  : null}
+                {snapshot.body.type === "x-www-form-urlencoded"
                   ? renderKeyValueList(
                       getEnabledBodyRows(snapshot).map((row) => ({
                         key: row.key,
@@ -346,4 +379,6 @@ export function HistoryDetailsDialog({
     </Dialog>
   );
 }
+
+
 

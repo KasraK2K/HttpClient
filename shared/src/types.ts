@@ -1,4 +1,4 @@
-﻿export type UserRole = "superadmin" | "admin" | "member";
+export type UserRole = "superadmin" | "admin" | "member";
 
 export type HttpMethod =
   | "GET"
@@ -97,11 +97,18 @@ export interface QueryParamRow {
   enabled: boolean;
 }
 
+export type FormValueKind = "text" | "file";
+
 export interface FormValueRow {
   id: string;
   key: string;
   value: string;
   enabled: boolean;
+  valueKind?: FormValueKind;
+  fileName?: string;
+  fileContentBase64?: string;
+  fileContentType?: string;
+  fileSizeBytes?: number;
 }
 
 export interface RequestAuthConfig {
@@ -267,4 +274,5 @@ export interface ListUsersResponse {
 export interface HistoryResponse {
   history: HistoryDoc[];
 }
+
 

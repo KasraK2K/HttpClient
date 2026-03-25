@@ -19,10 +19,36 @@ function applyParams(url: URL, params: QueryParamRow[]): void {
     .forEach((param) => url.searchParams.set(param.key, param.value));
 }
 
-function appendFormValues<T extends FormData | URLSearchParams>(
-  target: T,
+function appendMultipartFormValues(target: FormData, rows: FormValueRow[]): FormData {
+  rows
+    .filter((row) => row.enabled && row.key.trim())
+    .forEach((row) => {
+      if (row.valueKind === "file") {
+        if (!row.fileContentBase64) {
+          return;
+        }
+
+        const blob = new Blob(
+          [Buffer.from(row.fileContentBase64, "base64")],
+          {
+            type: row.fileContentType || "application/octet-stream",
+          },
+        );
+
+        target.append(row.key, blob, row.fileName || "file");
+        return;
+      }
+
+      target.append(row.key, row.value);
+    });
+
+  return target;
+}
+
+function appendUrlEncodedValues(
+  target: URLSearchParams,
   rows: FormValueRow[],
-): T {
+): URLSearchParams {
   rows
     .filter((row) => row.enabled && row.key.trim())
     .forEach((row) => target.append(row.key, row.value));
@@ -69,7 +95,7 @@ function buildBody(
     case "text":
       return payload.body.content ?? "";
     case "form-data":
-      return appendFormValues(new FormData(), payload.body.values ?? []);
+      return appendMultipartFormValues(new FormData(), payload.body.values ?? []);
     case "x-www-form-urlencoded":
       if (!headers.has("content-type")) {
         headers.set(
@@ -77,7 +103,7 @@ function buildBody(
           "application/x-www-form-urlencoded;charset=UTF-8",
         );
       }
-      return appendFormValues(
+      return appendUrlEncodedValues(
         new URLSearchParams(),
         payload.body.values ?? [],
       ).toString();

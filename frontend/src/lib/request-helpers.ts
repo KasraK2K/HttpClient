@@ -7,7 +7,7 @@ import type {
   RequestHistorySummary,
 } from "@restify/shared";
 
-function createRow<T extends HeaderRow | QueryParamRow | FormValueRow>(): T {
+function createRow<T extends HeaderRow | QueryParamRow>(): T {
   return {
     id: crypto.randomUUID(),
     key: "",
@@ -25,7 +25,13 @@ export function createQueryParamRow(): QueryParamRow {
 }
 
 export function createFormValueRow(): FormValueRow {
-  return createRow<FormValueRow>();
+  return {
+    id: crypto.randomUUID(),
+    key: "",
+    value: "",
+    enabled: true,
+    valueKind: "text",
+  };
 }
 
 export function createEmptyRequest(
@@ -56,3 +62,4 @@ export function createEmptyRequest(
     updatedAt: new Date().toISOString(),
   };
 }
+

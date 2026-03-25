@@ -12,6 +12,7 @@ import {
   type DropdownOption,
 } from "../ui/DropdownSelect";
 import { KeyValueTable } from "./KeyValueTable";
+import { FormDataTable } from "./FormDataTable";
 import { VariableBadges } from "./VariableBadges";
 
 interface BodyEditorProps {
@@ -66,7 +67,14 @@ export function BodyEditor({ value, envVars, onChange }: BodyEditorProps) {
           <VariableBadges resolution={resolution} />
         </>
       ) : null}
-      {value.type === "form-data" || value.type === "x-www-form-urlencoded" ? (
+      {value.type === "form-data" ? (
+        <FormDataTable
+          rows={value.values ?? [createFormValueRow()]}
+          envVars={envVars}
+          onChange={(rows) => onChange({ ...value, values: rows })}
+        />
+      ) : null}
+      {value.type === "x-www-form-urlencoded" ? (
         <KeyValueTable
           rows={value.values ?? [createFormValueRow()]}
           onChange={(rows) => onChange({ ...value, values: rows })}

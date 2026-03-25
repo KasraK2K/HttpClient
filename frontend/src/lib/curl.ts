@@ -49,7 +49,12 @@ function buildComputedHeaders(payload: ExecuteRequestPayload) {
 }
 
 export function buildCurlCommand(payload: ExecuteRequestPayload) {
-  const parts: string[] = ["curl", "-X", payload.method, escapeShellValue(payload.url)];
+  const parts: string[] = [
+    "curl",
+    "-X",
+    payload.method,
+    escapeShellValue(payload.url),
+  ];
   const headers = buildComputedHeaders(payload);
 
   Array.from(headers.entries()).forEach(([key, value]) => {
@@ -64,9 +69,11 @@ export function buildCurlCommand(payload: ExecuteRequestPayload) {
   }
 
   if (payload.body.type === "x-www-form-urlencoded") {
-    const content = getEnabledBodyRows(payload.body.values).map(
-      (row) => `${encodeURIComponent(row.key)}=${encodeURIComponent(row.value)}`,
-    ).join("&");
+    const content = getEnabledBodyRows(payload.body.values)
+      .map(
+        (row) => `${encodeURIComponent(row.key)}=${encodeURIComponent(row.value)}`,
+      )
+      .join("&");
 
     if (content) {
       parts.push("--data-raw", escapeShellValue(content));
@@ -75,6 +82,14 @@ export function buildCurlCommand(payload: ExecuteRequestPayload) {
 
   if (payload.body.type === "form-data") {
     getEnabledBodyRows(payload.body.values).forEach((row) => {
+      if (row.valueKind === "file") {
+        parts.push(
+          "-F",
+          escapeShellValue(`${row.key}=@${row.fileName || "file"}`),
+        );
+        return;
+      }
+
       parts.push("-F", escapeShellValue(`${row.key}=${row.value}`));
     });
   }

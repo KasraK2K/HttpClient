@@ -14,6 +14,10 @@ const VARIABLE_PATTERN = /\{\{\s*([a-zA-Z0-9_.-]+)\s*\}\}/g;
 
 type RequestKeyValueRow = HeaderRow | QueryParamRow | FormValueRow;
 
+function isFileFormValueRow(row: RequestKeyValueRow): row is FormValueRow {
+  return "valueKind" in row && row.valueKind === "file";
+}
+
 export function extractVariableNames(input: string): string[] {
   const matches = [...input.matchAll(VARIABLE_PATTERN)];
   return [...new Set(matches.map((match) => match[1]))];
@@ -76,14 +80,20 @@ export function resolveKeyValueRows<T extends RequestKeyValueRow>(
   rows: T[],
   envVars: ProjectEnvVar[],
 ): T[] {
-  return rows.map(
-    (row) =>
-      ({
+  return rows.map((row) => {
+    if (isFileFormValueRow(row)) {
+      return {
         ...row,
         key: resolveVariables(row.key, envVars).output,
-        value: resolveVariables(row.value, envVars).output,
-      }) as T,
-  );
+      } as T;
+    }
+
+    return {
+      ...row,
+      key: resolveVariables(row.key, envVars).output,
+      value: resolveVariables(row.value, envVars).output,
+    } as T;
+  });
 }
 
 export function resolveKeyValueRowsResolution<T extends RequestKeyValueRow>(
@@ -93,7 +103,9 @@ export function resolveKeyValueRowsResolution<T extends RequestKeyValueRow>(
   return resolveVariableInputs(
     rows
       .filter((row) => row.enabled !== false)
-      .flatMap((row) => [row.key, row.value]),
+      .flatMap((row) =>
+        isFileFormValueRow(row) ? [row.key] : [row.key, row.value],
+      ),
     envVars,
   );
 }
