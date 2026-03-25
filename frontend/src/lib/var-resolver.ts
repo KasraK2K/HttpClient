@@ -1,7 +1,18 @@
-import type { ProjectEnvVar } from "@restify/shared";
+﻿import type {
+  ExecuteRequestPayload,
+  FormValueRow,
+  HeaderRow,
+  ProjectEnvVar,
+  QueryParamRow,
+  RequestAuthConfig,
+  RequestBodyConfig,
+  RequestDoc,
+} from "@restify/shared";
 import type { VariableResolution } from "../types";
 
 const VARIABLE_PATTERN = /\{\{\s*([a-zA-Z0-9_.-]+)\s*\}\}/g;
+
+type RequestKeyValueRow = HeaderRow | QueryParamRow | FormValueRow;
 
 export function extractVariableNames(input: string): string[] {
   const matches = [...input.matchAll(VARIABLE_PATTERN)];
@@ -30,6 +41,82 @@ export function resolveVariables(
     output,
     resolved: [...new Set(resolved)],
     unresolved: [...new Set(unresolved)],
+  };
+}
+
+export function resolveKeyValueRows<T extends RequestKeyValueRow>(
+  rows: T[],
+  envVars: ProjectEnvVar[],
+): T[] {
+  return rows.map(
+    (row) =>
+      ({
+        ...row,
+        key: resolveVariables(row.key, envVars).output,
+        value: resolveVariables(row.value, envVars).output,
+      }) as T,
+  );
+}
+
+export function resolveRequestBody(
+  body: RequestBodyConfig,
+  envVars: ProjectEnvVar[],
+): RequestBodyConfig {
+  if (body.type === "json" || body.type === "text") {
+    return {
+      ...body,
+      content: resolveVariables(body.content ?? "", envVars).output,
+    };
+  }
+
+  return {
+    ...body,
+    values: resolveKeyValueRows(body.values ?? [], envVars),
+  };
+}
+
+export function resolveRequestAuth(
+  auth: RequestAuthConfig,
+  envVars: ProjectEnvVar[],
+): RequestAuthConfig {
+  if (auth.type === "bearer") {
+    return {
+      ...auth,
+      token: resolveVariables(auth.token ?? "", envVars).output,
+    };
+  }
+
+  if (auth.type === "basic") {
+    return {
+      ...auth,
+      username: resolveVariables(auth.username ?? "", envVars).output,
+      password: resolveVariables(auth.password ?? "", envVars).output,
+    };
+  }
+
+  return auth;
+}
+
+export function buildExecuteRequestPayload(
+  draft: RequestDoc,
+  envVars: ProjectEnvVar[],
+): ExecuteRequestPayload {
+  const resolvedParams = resolveKeyValueRows(draft.params, envVars);
+  const resolvedUrl = mergeParamsIntoUrl(
+    resolveVariables(draft.url, envVars).output,
+    resolvedParams,
+  );
+
+  return {
+    workspaceId: draft.workspaceId,
+    projectId: draft.projectId,
+    requestId: draft._id,
+    method: draft.method,
+    url: resolvedUrl,
+    headers: resolveKeyValueRows(draft.headers, envVars),
+    params: resolvedParams,
+    body: resolveRequestBody(draft.body, envVars),
+    auth: resolveRequestAuth(draft.auth, envVars),
   };
 }
 

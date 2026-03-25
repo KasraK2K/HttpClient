@@ -1,5 +1,7 @@
+﻿import type { RequestDoc } from "@restify/shared";
 import { describe, expect, it } from "vitest";
 import {
+  buildExecuteRequestPayload,
   buildParamsFromUrl,
   mergeParamsIntoUrl,
   resolveVariables,
@@ -15,6 +17,134 @@ describe("resolveVariables", () => {
     expect(result.output).toBe("https://api.example.com/v1/users/{{userId}}");
     expect(result.resolved).toEqual(["version"]);
     expect(result.unresolved).toEqual(["userId"]);
+  });
+});
+
+describe("buildExecuteRequestPayload", () => {
+  it("resolves variables across request fields before execution", () => {
+    const draft: RequestDoc = {
+      _id: "request-1",
+      entityType: "request",
+      workspaceId: "workspace-1",
+      projectId: "project-1",
+      folderId: null,
+      name: "Users",
+      method: "POST",
+      url: "https://{{host}}/users",
+      headers: [
+        {
+          id: "header-1",
+          key: "X-{{headerKey}}",
+          value: "{{headerValue}}",
+          enabled: true,
+        },
+      ],
+      params: [
+        {
+          id: "param-1",
+          key: "{{paramKey}}",
+          value: "{{paramValue}}",
+          enabled: true,
+        },
+      ],
+      body: {
+        type: "form-data",
+        values: [
+          {
+            id: "body-1",
+            key: "{{bodyKey}}",
+            value: "{{bodyValue}}",
+            enabled: true,
+          },
+        ],
+      },
+      auth: {
+        type: "basic",
+        username: "{{username}}",
+        password: "{{password}}",
+      },
+      responseHistory: [],
+      order: 0,
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    };
+
+    const payload = buildExecuteRequestPayload(draft, [
+      { key: "host", value: "api.example.com" },
+      { key: "headerKey", value: "Trace" },
+      { key: "headerValue", value: "abc-123" },
+      { key: "paramKey", value: "limit" },
+      { key: "paramValue", value: "25" },
+      { key: "bodyKey", value: "email" },
+      { key: "bodyValue", value: "team@example.com" },
+      { key: "username", value: "service-user" },
+      { key: "password", value: "secret-pass" },
+    ]);
+
+    expect(payload.url).toBe("https://api.example.com/users?limit=25");
+    expect(payload.headers[0]).toMatchObject({
+      key: "X-Trace",
+      value: "abc-123",
+    });
+    expect(payload.params[0]).toMatchObject({
+      key: "limit",
+      value: "25",
+    });
+    expect(payload.body).toMatchObject({
+      type: "form-data",
+      values: [
+        expect.objectContaining({
+          key: "email",
+          value: "team@example.com",
+        }),
+      ],
+    });
+    expect(payload.auth).toMatchObject({
+      type: "basic",
+      username: "service-user",
+      password: "secret-pass",
+    });
+  });
+
+  it("resolves json body content and bearer auth", () => {
+    const draft: RequestDoc = {
+      _id: "request-2",
+      entityType: "request",
+      workspaceId: "workspace-1",
+      projectId: "project-1",
+      folderId: null,
+      name: "Create User",
+      method: "POST",
+      url: "https://api.example.com/users",
+      headers: [],
+      params: [],
+      body: {
+        type: "json",
+        content: '{"name":"{{name}}"}',
+      },
+      auth: {
+        type: "bearer",
+        token: "{{token}}",
+      },
+      responseHistory: [],
+      order: 0,
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    };
+
+    const payload = buildExecuteRequestPayload(draft, [
+      { key: "name", value: "Kasra" },
+      { key: "token", value: "abc.def.ghi" },
+    ]);
+
+    expect(payload.body).toMatchObject({
+      type: "json",
+      content: '{"name":"Kasra"}',
+    });
+    expect(payload.auth).toMatchObject({
+      type: "bearer",
+      token: "abc.def.ghi",
+    });
   });
 });
 

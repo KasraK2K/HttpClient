@@ -1,9 +1,10 @@
-import type { ExecuteRequestPayload, ProjectEnvVar, RequestDoc } from "@restify/shared";
+﻿import type { ExecuteRequestPayload, ProjectEnvVar, RequestDoc } from "@restify/shared";
 import { Save } from "lucide-react";
 import { useMemo } from "react";
 import { useCtrlEnter } from "../../hooks/use-ctrl-enter";
 import { createHeaderRow, createQueryParamRow } from "../../lib/request-helpers";
 import {
+  buildExecuteRequestPayload,
   buildParamsFromUrl,
   mergeParamsIntoUrl,
   resolveVariables,
@@ -49,39 +50,7 @@ export function RequestBuilder({
       return null;
     }
 
-    const resolvedUrl = resolveVariables(
-      mergeParamsIntoUrl(draft.url, draft.params),
-      envVars,
-    ).output;
-    const resolvedHeaders = draft.headers.map((header) => ({
-      ...header,
-      value: resolveVariables(header.value, envVars).output,
-    }));
-    const resolvedBody =
-      draft.body.type === "json" || draft.body.type === "text"
-        ? {
-            ...draft.body,
-            content: resolveVariables(draft.body.content ?? "", envVars).output,
-          }
-        : {
-            ...draft.body,
-            values: draft.body.values?.map((row) => ({
-              ...row,
-              value: resolveVariables(row.value, envVars).output,
-            })),
-          };
-
-    return {
-      workspaceId: draft.workspaceId,
-      projectId: draft.projectId,
-      requestId: draft._id,
-      method: draft.method,
-      url: resolvedUrl,
-      headers: resolvedHeaders,
-      params: draft.params,
-      body: resolvedBody,
-      auth: draft.auth,
-    };
+    return buildExecuteRequestPayload(draft, envVars);
   }, [draft, envVars]);
 
   useCtrlEnter(() => {
