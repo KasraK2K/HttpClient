@@ -335,7 +335,7 @@ function RequestDropPlaceholder({ request }: { request: RequestDoc }) {
       <div className="flex items-center gap-1.5">
         <span
           className={cn(
-            "w-10 shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em]",
+            "w-14 shrink-0 text-[10px] font-semibold uppercase tracking-[0.12em]",
             METHOD_TEXT_STYLES[request.method],
           )}
         >
@@ -382,7 +382,7 @@ function RequestItem({
       <div className="flex items-center gap-1.5 px-1 py-0.5">
         <span
           className={cn(
-            "w-10 shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em]",
+            "w-14 shrink-0 text-[10px] font-semibold uppercase tracking-[0.12em]",
             METHOD_TEXT_STYLES[request.method],
           )}
         >
@@ -1528,3 +1528,4 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
     </Card>
   );
 }
+
