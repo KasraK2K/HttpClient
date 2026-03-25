@@ -18,11 +18,14 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 
 const SIDEBAR_WIDTH_KEY = "httpclient.sidebar-width";
+const INSPECTOR_WIDTH_KEY = "httpclient.inspector-width";
 const INSPECTOR_COLLAPSED_KEY = "httpclient.inspector-collapsed";
 const DEFAULT_SIDEBAR_WIDTH = 340;
 const MIN_SIDEBAR_WIDTH = 260;
 const MAX_SIDEBAR_WIDTH = 560;
-const INSPECTOR_WIDTH = 336;
+const DEFAULT_INSPECTOR_WIDTH = 336;
+const MIN_INSPECTOR_WIDTH = 280;
+const MAX_INSPECTOR_WIDTH = 520;
 const COLLAPSED_INSPECTOR_WIDTH = 52;
 
 interface AppShellProps {
@@ -49,14 +52,25 @@ function clampSidebarWidth(width: number, maxWidth = MAX_SIDEBAR_WIDTH) {
   return Math.min(maxWidth, Math.max(MIN_SIDEBAR_WIDTH, Math.round(width)));
 }
 
-function getSidebarMaxWidth(
-  containerWidth: number,
-  isInspectorCollapsed: boolean,
-) {
-  const reservedWidth = isInspectorCollapsed ? 328 : 620;
+function clampInspectorWidth(width: number, maxWidth = MAX_INSPECTOR_WIDTH) {
+  return Math.min(
+    maxWidth,
+    Math.max(MIN_INSPECTOR_WIDTH, Math.round(width)),
+  );
+}
+
+function getSidebarMaxWidth(containerWidth: number, inspectorWidth: number) {
+  const reservedWidth = inspectorWidth + 284;
   return Math.min(
     MAX_SIDEBAR_WIDTH,
     Math.max(MIN_SIDEBAR_WIDTH, containerWidth - reservedWidth),
+  );
+}
+
+function getInspectorMaxWidth(containerWidth: number, sidebarWidth: number) {
+  return Math.min(
+    MAX_INSPECTOR_WIDTH,
+    Math.max(MIN_INSPECTOR_WIDTH, containerWidth - sidebarWidth - 360),
   );
 }
 
@@ -111,7 +125,9 @@ export function AppShell({
 }: AppShellProps) {
   const mainRef = useRef<HTMLElement | null>(null);
   const [sidebarWidth, setSidebarWidth] = useState(DEFAULT_SIDEBAR_WIDTH);
+  const [inspectorWidth, setInspectorWidth] = useState(DEFAULT_INSPECTOR_WIDTH);
   const [isResizingSidebar, setIsResizingSidebar] = useState(false);
+  const [isResizingInspector, setIsResizingInspector] = useState(false);
   const [isInspectorCollapsed, setIsInspectorCollapsed] = useState(false);
 
   useEffect(() => {
@@ -125,6 +141,16 @@ export function AppShell({
         const parsedWidth = Number(storedWidth);
         if (!Number.isNaN(parsedWidth)) {
           setSidebarWidth(clampSidebarWidth(parsedWidth));
+        }
+      }
+
+      const storedInspectorWidth = window.localStorage.getItem(
+        INSPECTOR_WIDTH_KEY,
+      );
+      if (storedInspectorWidth) {
+        const parsedWidth = Number(storedInspectorWidth);
+        if (!Number.isNaN(parsedWidth)) {
+          setInspectorWidth(clampInspectorWidth(parsedWidth));
         }
       }
 
@@ -158,6 +184,21 @@ export function AppShell({
 
     try {
       window.localStorage.setItem(
+        INSPECTOR_WIDTH_KEY,
+        String(inspectorWidth),
+      );
+    } catch {
+      return;
+    }
+  }, [inspectorWidth]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(
         INSPECTOR_COLLAPSED_KEY,
         String(isInspectorCollapsed),
       );
@@ -173,10 +214,26 @@ export function AppShell({
         return;
       }
 
+      const nextInspectorWidth = isInspectorCollapsed
+        ? inspectorWidth
+        : clampInspectorWidth(
+            inspectorWidth,
+            getInspectorMaxWidth(containerWidth, sidebarWidth),
+          );
+
+      if (!isInspectorCollapsed && nextInspectorWidth !== inspectorWidth) {
+        setInspectorWidth(nextInspectorWidth);
+      }
+
       setSidebarWidth((currentWidth) =>
         clampSidebarWidth(
           currentWidth,
-          getSidebarMaxWidth(containerWidth, isInspectorCollapsed),
+          getSidebarMaxWidth(
+            containerWidth,
+            isInspectorCollapsed
+              ? COLLAPSED_INSPECTOR_WIDTH
+              : nextInspectorWidth,
+          ),
         ),
       );
     };
@@ -184,7 +241,7 @@ export function AppShell({
     clampToViewport();
     window.addEventListener("resize", clampToViewport);
     return () => window.removeEventListener("resize", clampToViewport);
-  }, [isInspectorCollapsed]);
+  }, [inspectorWidth, isInspectorCollapsed, sidebarWidth]);
 
   useEffect(() => {
     if (!isResizingSidebar) {
@@ -201,7 +258,12 @@ export function AppShell({
       setSidebarWidth(
         clampSidebarWidth(
           nextWidth,
-          getSidebarMaxWidth(bounds.width, isInspectorCollapsed),
+          getSidebarMaxWidth(
+            bounds.width,
+            isInspectorCollapsed
+              ? COLLAPSED_INSPECTOR_WIDTH
+              : inspectorWidth,
+          ),
         ),
       );
     };
@@ -219,7 +281,42 @@ export function AppShell({
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", stopResizing);
     };
-  }, [isInspectorCollapsed, isResizingSidebar]);
+  }, [inspectorWidth, isInspectorCollapsed, isResizingSidebar]);
+
+  useEffect(() => {
+    if (!isResizingInspector || isInspectorCollapsed) {
+      return;
+    }
+
+    const handlePointerMove = (event: PointerEvent) => {
+      const bounds = mainRef.current?.getBoundingClientRect();
+      if (!bounds) {
+        return;
+      }
+
+      const nextWidth = bounds.right - event.clientX;
+      setInspectorWidth(
+        clampInspectorWidth(
+          nextWidth,
+          getInspectorMaxWidth(bounds.width, sidebarWidth),
+        ),
+      );
+    };
+
+    const stopResizing = () => setIsResizingInspector(false);
+
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", stopResizing);
+
+    return () => {
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", stopResizing);
+    };
+  }, [isInspectorCollapsed, isResizingInspector, sidebarWidth]);
 
   const mainStyle = useMemo(
     () =>
@@ -227,9 +324,9 @@ export function AppShell({
         "--sidebar-width": `${sidebarWidth}px`,
         "--inspector-width": isInspectorCollapsed
           ? `${COLLAPSED_INSPECTOR_WIDTH}px`
-          : `${INSPECTOR_WIDTH}px`,
+          : `${inspectorWidth}px`,
       }) as CSSProperties,
-    [isInspectorCollapsed, sidebarWidth],
+    [inspectorWidth, isInspectorCollapsed, sidebarWidth],
   );
 
   const handleResizeStart = (event: ReactPointerEvent<HTMLButtonElement>) => {
@@ -239,6 +336,20 @@ export function AppShell({
 
     event.preventDefault();
     setIsResizingSidebar(true);
+  };
+
+  const handleInspectorResizeStart = (
+    event: ReactPointerEvent<HTMLButtonElement>,
+  ) => {
+    if (
+      isInspectorCollapsed ||
+      (typeof window !== "undefined" && window.innerWidth <= 1280)
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    setIsResizingInspector(true);
   };
 
   return (
@@ -332,10 +443,31 @@ export function AppShell({
         </section>
         <aside
           className={cn(
-            "min-h-0 overflow-hidden",
+            "relative min-h-0 overflow-hidden",
             isInspectorCollapsed && "max-[1280px]:w-[52px] max-[1280px]:justify-self-end",
           )}
         >
+          {!isInspectorCollapsed ? (
+            <button
+              className="group absolute -left-4 top-0 z-10 flex h-full w-8 cursor-col-resize items-center justify-center max-[1280px]:hidden"
+              onPointerDown={handleInspectorResizeStart}
+              type="button"
+              aria-label="Resize right sidebar"
+            >
+              <span
+                className={cn(
+                  "h-full w-px transition",
+                  isResizingInspector ? "bg-accent/80" : "bg-white/10",
+                )}
+              />
+              <span
+                className={cn(
+                  "absolute left-1/2 top-1/2 h-14 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10 bg-slate-950/90 opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100",
+                  isResizingInspector && "border-accent/30 bg-accent/20 opacity-100",
+                )}
+              />
+            </button>
+          ) : null}
           <div className="flex h-full min-h-0 overflow-hidden rounded-2xl border border-white/10 bg-card/85 shadow-glow backdrop-blur">
             <div
               className={cn(
