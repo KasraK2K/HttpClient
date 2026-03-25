@@ -51,6 +51,10 @@ interface WorkspaceTreeProps {
   onCreateProject: () => void;
   onCreateFolder: (projectId: string) => void;
   onCreateRequest: (projectId: string, folderId?: string | null) => void;
+  onRenameWorkspace: (workspaceId: string) => void;
+  onRenameProject: (projectId: string) => void;
+  onRenameFolder: (folderId: string) => void;
+  onRenameRequest: (requestId: string) => void;
   onDuplicateWorkspace: (workspaceId: string) => void;
   onDeleteWorkspace: (workspaceId: string) => void;
   onDuplicateProject: (projectId: string) => void;
@@ -173,12 +177,14 @@ function RequestItem({
   request,
   activeRequestId,
   onSelectRequest,
+  onRenameRequest,
   onDuplicateRequest,
   onDeleteRequest,
 }: {
   request: RequestDoc;
   activeRequestId?: string;
   onSelectRequest: (requestId: string) => void;
+  onRenameRequest: (requestId: string) => void;
   onDuplicateRequest: (requestId: string) => void;
   onDeleteRequest: (requestId: string) => void;
 }) {
@@ -208,6 +214,7 @@ function RequestItem({
         </button>
       </div>
       <ContextMenus
+        onRename={() => onRenameRequest(request._id)}
         onDuplicate={() => onDuplicateRequest(request._id)}
         onDelete={() => onDeleteRequest(request._id)}
       />
@@ -229,6 +236,10 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
     onCreateProject,
     onCreateFolder,
     onCreateRequest,
+    onRenameWorkspace,
+    onRenameProject,
+    onRenameFolder,
+    onRenameRequest,
     onDuplicateWorkspace,
     onDeleteWorkspace,
     onDuplicateProject,
@@ -340,6 +351,7 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                   </div>
                   <ContextMenus
                     onCreate={isActiveWorkspace ? onCreateProject : undefined}
+                    onRename={() => onRenameWorkspace(workspace._id)}
                     onDuplicate={() => onDuplicateWorkspace(workspace._id)}
                     onDelete={() => onDeleteWorkspace(workspace._id)}
                   />
@@ -361,7 +373,7 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                             (total, folder) => total + folder.requests.length,
                             0,
                           );
-                        const projectMeta = `${project.folders.length} fld • ${requestCount} req`;
+                        const projectMeta = `${project.folders.length} fld | ${requestCount} req`;
 
                         return (
                           <div className="space-y-0.5">
@@ -424,6 +436,7 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                               </div>
                               <ContextMenus
                                 onCreate={() => onCreateRequest(project._id)}
+                                onRename={() => onRenameProject(project._id)}
                                 onDuplicate={() => onDuplicateProject(project._id)}
                                 onDelete={() => onDeleteProject(project._id)}
                               />
@@ -441,6 +454,7 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                                         request={request}
                                         activeRequestId={activeRequestId}
                                         onSelectRequest={onSelectRequest}
+                                        onRenameRequest={onRenameRequest}
                                         onDuplicateRequest={onDuplicateRequest}
                                         onDeleteRequest={onDeleteRequest}
                                       />
@@ -504,6 +518,7 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                                             onCreate={() =>
                                               onCreateRequest(project._id, folder._id)
                                             }
+                                            onRename={() => onRenameFolder(folder._id)}
                                             onDuplicate={() =>
                                               onDuplicateFolder(folder._id)
                                             }
@@ -518,6 +533,7 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                                                 request={request}
                                                 activeRequestId={activeRequestId}
                                                 onSelectRequest={onSelectRequest}
+                                                onRenameRequest={onRenameRequest}
                                                 onDuplicateRequest={onDuplicateRequest}
                                                 onDeleteRequest={onDeleteRequest}
                                               />

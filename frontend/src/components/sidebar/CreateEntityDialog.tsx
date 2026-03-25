@@ -10,6 +10,8 @@ interface CreateEntityDialogProps {
   label: string;
   placeholder: string;
   submitLabel: string;
+  initialValue?: string;
+  actionVerb?: "create" | "rename";
   onOpenChange: (open: boolean) => void;
   onSubmit: (name: string) => Promise<void>;
 }
@@ -21,6 +23,8 @@ export function CreateEntityDialog({
   label,
   placeholder,
   submitLabel,
+  initialValue,
+  actionVerb = "create",
   onOpenChange,
   onSubmit,
 }: CreateEntityDialogProps) {
@@ -29,12 +33,17 @@ export function CreateEntityDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!open) {
-      setName("");
+    if (open) {
+      setName(initialValue ?? "");
       setError(null);
       setIsSubmitting(false);
+      return;
     }
-  }, [open]);
+
+    setName("");
+    setError(null);
+    setIsSubmitting(false);
+  }, [initialValue, open]);
 
   const handleSubmit = async () => {
     const trimmedName = name.trim();
@@ -53,7 +62,7 @@ export function CreateEntityDialog({
       setError(
         submitError instanceof Error
           ? submitError.message
-          : `Unable to create ${label.toLowerCase()}`,
+          : `Unable to ${actionVerb} ${label.toLowerCase()}`,
       );
     } finally {
       setIsSubmitting(false);
@@ -89,7 +98,11 @@ export function CreateEntityDialog({
             Cancel
           </Button>
           <Button onClick={() => void handleSubmit()} disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : submitLabel}
+            {isSubmitting
+              ? actionVerb === "rename"
+                ? "Renaming..."
+                : "Creating..."
+              : submitLabel}
           </Button>
         </div>
       </div>

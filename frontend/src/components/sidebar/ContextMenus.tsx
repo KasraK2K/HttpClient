@@ -1,20 +1,21 @@
-import { Copy, EllipsisVertical, Plus, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Copy, EllipsisVertical, PenSquare, Plus, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "../ui/button";
 
 interface ContextMenusProps {
   onCreate?: () => void;
+  onRename?: () => void;
   onDuplicate?: () => void;
   onDelete?: () => void;
 }
 
 const MENU_WIDTH = 152;
-const MENU_HEIGHT = 116;
 const VIEWPORT_GAP = 8;
 
 export function ContextMenus({
   onCreate,
+  onRename,
   onDuplicate,
   onDelete,
 }: ContextMenusProps) {
@@ -23,6 +24,57 @@ export function ContextMenus({
   const rootRef = useRef<HTMLDivElement | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
+
+  const actions = useMemo(
+    () =>
+      [
+        onCreate
+          ? {
+              key: "create",
+              label: "Create",
+              icon: Plus,
+              className: "text-foreground",
+              onClick: onCreate,
+            }
+          : null,
+        onRename
+          ? {
+              key: "rename",
+              label: "Rename",
+              icon: PenSquare,
+              className: "text-foreground",
+              onClick: onRename,
+            }
+          : null,
+        onDuplicate
+          ? {
+              key: "duplicate",
+              label: "Duplicate",
+              icon: Copy,
+              className: "text-foreground",
+              onClick: onDuplicate,
+            }
+          : null,
+        onDelete
+          ? {
+              key: "delete",
+              label: "Delete",
+              icon: Trash2,
+              className: "text-rose-200 hover:text-rose-100",
+              onClick: onDelete,
+            }
+          : null,
+      ].filter(Boolean),
+    [onCreate, onDelete, onDuplicate, onRename],
+  ) as Array<{
+    key: string;
+    label: string;
+    icon: typeof Plus;
+    className: string;
+    onClick: () => void;
+  }>;
+
+  const menuHeight = actions.length * 32 + 8;
 
   useEffect(() => {
     if (!open) {
@@ -37,13 +89,16 @@ export function ContextMenus({
 
       const rect = trigger.getBoundingClientRect();
       const fitsBelow =
-        window.innerHeight - rect.bottom >= MENU_HEIGHT + VIEWPORT_GAP;
+        window.innerHeight - rect.bottom >= menuHeight + VIEWPORT_GAP;
       const top = fitsBelow
         ? rect.bottom + 4
-        : Math.max(VIEWPORT_GAP, rect.top - MENU_HEIGHT - 4);
+        : Math.max(VIEWPORT_GAP, rect.top - menuHeight - 4);
       const left = Math.max(
         VIEWPORT_GAP,
-        Math.min(rect.right - MENU_WIDTH, window.innerWidth - MENU_WIDTH - VIEWPORT_GAP),
+        Math.min(
+          rect.right - MENU_WIDTH,
+          window.innerWidth - MENU_WIDTH - VIEWPORT_GAP,
+        ),
       );
 
       setMenuPosition({ top, left });
@@ -77,58 +132,47 @@ export function ContextMenus({
       window.removeEventListener("pointerdown", handlePointerDown);
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open]);
+  }, [menuHeight, open]);
 
-  if (!onCreate && !onDuplicate && !onDelete) {
+  if (actions.length === 0) {
     return null;
   }
 
-  const runAction = (action?: () => void) => {
+  const runAction = (action: () => void) => {
     setOpen(false);
-    action?.();
+    action();
   };
 
-  const menu = open && typeof document !== "undefined"
-    ? createPortal(
-        <div
-          ref={menuRef}
-          style={{ top: menuPosition.top, left: menuPosition.left, width: MENU_WIDTH }}
-          className="fixed z-[100] rounded-lg border border-white/10 bg-slate-950 p-1 shadow-2xl"
-        >
-          {onCreate ? (
-            <Button
-              variant="ghost"
-              className="h-8 w-full justify-start rounded-md px-2 text-xs text-foreground"
-              onClick={() => runAction(onCreate)}
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Create
-            </Button>
-          ) : null}
-          {onDuplicate ? (
-            <Button
-              variant="ghost"
-              className="h-8 w-full justify-start rounded-md px-2 text-xs text-foreground"
-              onClick={() => runAction(onDuplicate)}
-            >
-              <Copy className="h-3.5 w-3.5" />
-              Duplicate
-            </Button>
-          ) : null}
-          {onDelete ? (
-            <Button
-              variant="ghost"
-              className="h-8 w-full justify-start rounded-md px-2 text-xs text-rose-200 hover:text-rose-100"
-              onClick={() => runAction(onDelete)}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              Delete
-            </Button>
-          ) : null}
-        </div>,
-        document.body,
-      )
-    : null;
+  const menu =
+    open && typeof document !== "undefined"
+      ? createPortal(
+          <div
+            ref={menuRef}
+            style={{
+              top: menuPosition.top,
+              left: menuPosition.left,
+              width: MENU_WIDTH,
+            }}
+            className="fixed z-[100] rounded-lg border border-white/10 bg-slate-950 p-1 shadow-2xl"
+          >
+            {actions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <Button
+                  key={action.key}
+                  variant="ghost"
+                  className={`h-8 w-full justify-start rounded-md px-2 text-xs ${action.className}`}
+                  onClick={() => runAction(action.onClick)}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {action.label}
+                </Button>
+              );
+            })}
+          </div>,
+          document.body,
+        )
+      : null;
 
   return (
     <>
@@ -151,4 +195,3 @@ export function ContextMenus({
     </>
   );
 }
-

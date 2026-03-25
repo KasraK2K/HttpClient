@@ -53,6 +53,30 @@ type CreateDialogState =
     }
   | null;
 
+type RenameDialogState =
+  | { kind: "workspace"; workspaceId: string; currentName: string }
+  | {
+      kind: "project";
+      workspaceId: string;
+      projectId: string;
+      currentName: string;
+    }
+  | {
+      kind: "folder";
+      workspaceId: string;
+      projectId: string;
+      folderId: string;
+      currentName: string;
+    }
+  | {
+      kind: "request";
+      workspaceId: string;
+      projectId: string;
+      requestId: string;
+      currentName: string;
+    }
+  | null;
+
 export default function App() {
   const {
     user,
@@ -99,6 +123,7 @@ export default function App() {
     id: string;
   } | null>(null);
   const [createDialog, setCreateDialog] = useState<CreateDialogState>(null);
+  const [renameDialog, setRenameDialog] = useState<RenameDialogState>(null);
 
   const activeWorkspace = useMemo(
     () =>
@@ -126,6 +151,44 @@ export default function App() {
   const activeProjectEnvVars = activeProject
     ? getEnvVars(activeProject._id)
     : [];
+
+  const findProjectInTree = (workspaceId: string, projectId: string) =>
+    trees[workspaceId]?.projects.find((project) => project._id === projectId);
+
+  const findFolderInTree = (workspaceId: string, folderId: string) => {
+    const project = trees[workspaceId]?.projects.find((item) =>
+      item.folders.some((folder) => folder._id === folderId),
+    );
+    const folder = project?.folders.find((item) => item._id === folderId);
+
+    if (!project || !folder) {
+      return null;
+    }
+
+    return { project, folder };
+  };
+
+  const findRequestInTree = (workspaceId: string, requestId: string) => {
+    const project = trees[workspaceId]?.projects.find(
+      (item) =>
+        item.requests.some((request) => request._id === requestId) ||
+        item.folders.some((folder) =>
+          folder.requests.some((request) => request._id === requestId),
+        ),
+    );
+    const request = project
+      ? [
+          ...project.requests,
+          ...project.folders.flatMap((folder) => folder.requests),
+        ].find((item) => item._id === requestId)
+      : undefined;
+
+    if (!project || !request) {
+      return null;
+    }
+
+    return { project, request };
+  };
 
   useEffect(() => {
     initialize().catch(reportError);
@@ -217,6 +280,7 @@ export default function App() {
   };
 
   const openCreateWorkspaceDialog = () => {
+    setRenameDialog(null);
     setCreateDialog({ kind: "workspace" });
   };
 
@@ -226,6 +290,7 @@ export default function App() {
       return;
     }
 
+    setRenameDialog(null);
     setCreateDialog({
       kind: "project",
       workspaceId: activeWorkspace._id,
@@ -245,11 +310,92 @@ export default function App() {
       return;
     }
 
+    setRenameDialog(null);
     setCreateDialog({
       kind: "folder",
       workspaceId: activeWorkspace._id,
       projectId,
       projectName: project.name,
+    });
+  };
+
+  const openRenameWorkspaceDialog = (workspaceId: string) => {
+    const workspace = workspaces.find((item) => item._id === workspaceId);
+    if (!workspace) {
+      reportError(new Error("Workspace not found."));
+      return;
+    }
+
+    setCreateDialog(null);
+    setRenameDialog({
+      kind: "workspace",
+      workspaceId,
+      currentName: workspace.name,
+    });
+  };
+
+  const openRenameProjectDialog = (projectId: string) => {
+    if (!activeWorkspace) {
+      reportError(new Error("Open a workspace before renaming a project."));
+      return;
+    }
+
+    const project = findProjectInTree(activeWorkspace._id, projectId);
+    if (!project) {
+      reportError(new Error("Project not found."));
+      return;
+    }
+
+    setCreateDialog(null);
+    setRenameDialog({
+      kind: "project",
+      workspaceId: activeWorkspace._id,
+      projectId,
+      currentName: project.name,
+    });
+  };
+
+  const openRenameFolderDialog = (folderId: string) => {
+    if (!activeWorkspace) {
+      reportError(new Error("Open a workspace before renaming a folder."));
+      return;
+    }
+
+    const target = findFolderInTree(activeWorkspace._id, folderId);
+    if (!target) {
+      reportError(new Error("Folder not found."));
+      return;
+    }
+
+    setCreateDialog(null);
+    setRenameDialog({
+      kind: "folder",
+      workspaceId: activeWorkspace._id,
+      projectId: target.project._id,
+      folderId,
+      currentName: target.folder.name,
+    });
+  };
+
+  const openRenameRequestDialog = (requestId: string) => {
+    if (!activeWorkspace) {
+      reportError(new Error("Open a workspace before renaming a request."));
+      return;
+    }
+
+    const target = findRequestInTree(activeWorkspace._id, requestId);
+    if (!target) {
+      reportError(new Error("Request not found."));
+      return;
+    }
+
+    setCreateDialog(null);
+    setRenameDialog({
+      kind: "request",
+      workspaceId: activeWorkspace._id,
+      projectId: target.project._id,
+      requestId,
+      currentName: target.request.name,
     });
   };
 
@@ -292,6 +438,71 @@ export default function App() {
     selectWorkspace(createDialog.workspaceId);
     selectProject(createDialog.projectId);
     await loadWorkspaceTree(createDialog.workspaceId);
+  };
+
+  const handleRenameEntity = async (name: string) => {
+    if (!renameDialog) {
+      return;
+    }
+
+    if (renameDialog.kind === "workspace") {
+      await api.renameWorkspace(renameDialog.workspaceId, name);
+      await refreshWorkspaces();
+      return;
+    }
+
+    if (renameDialog.kind === "project") {
+      const project = findProjectInTree(
+        renameDialog.workspaceId,
+        renameDialog.projectId,
+      );
+      if (!project) {
+        throw new Error("Project not found.");
+      }
+
+      await api.updateProject(
+        renameDialog.projectId,
+        renameDialog.workspaceId,
+        { name },
+        buildProjectToken(project, renameDialog.workspaceId),
+      );
+      await refreshTree(renameDialog.workspaceId);
+      return;
+    }
+
+    if (renameDialog.kind === "folder") {
+      const project = findProjectInTree(
+        renameDialog.workspaceId,
+        renameDialog.projectId,
+      );
+      if (!project) {
+        throw new Error("Project not found.");
+      }
+
+      await api.updateFolder(
+        renameDialog.folderId,
+        renameDialog.workspaceId,
+        name,
+        buildProjectToken(project, renameDialog.workspaceId),
+      );
+      await refreshTree(renameDialog.workspaceId);
+      return;
+    }
+
+    const project = findProjectInTree(
+      renameDialog.workspaceId,
+      renameDialog.projectId,
+    );
+    if (!project) {
+      throw new Error("Project not found.");
+    }
+
+    await api.updateRequest(
+      renameDialog.requestId,
+      { workspaceId: renameDialog.workspaceId, name },
+      buildProjectToken(project, renameDialog.workspaceId),
+    );
+    await refreshTree(renameDialog.workspaceId);
   };
 
   const createRequest = async (projectId: string, folderId?: string | null) => {
@@ -457,6 +668,50 @@ export default function App() {
     };
   }, [createDialog]);
 
+  const renameDialogConfig = useMemo(() => {
+    if (!renameDialog) {
+      return null;
+    }
+
+    if (renameDialog.kind === "workspace") {
+      return {
+        title: "Rename Workspace",
+        description: "Update the workspace name shown in the sidebar.",
+        label: "Workspace",
+        placeholder: "Workspace name",
+        submitLabel: "Save Name",
+      };
+    }
+
+    if (renameDialog.kind === "project") {
+      return {
+        title: "Rename Project",
+        description: "Update the project name shown in the sidebar.",
+        label: "Project",
+        placeholder: "Project name",
+        submitLabel: "Save Name",
+      };
+    }
+
+    if (renameDialog.kind === "folder") {
+      return {
+        title: "Rename Folder",
+        description: "Update the folder name shown in the sidebar.",
+        label: "Folder",
+        placeholder: "Folder name",
+        submitLabel: "Save Name",
+      };
+    }
+
+    return {
+      title: "Rename Request",
+      description: "Update the request name shown in the sidebar.",
+      label: "Request",
+      placeholder: "Request name",
+      submitLabel: "Save Name",
+    };
+  }, [renameDialog]);
+
   if (isInitializing) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-muted">
@@ -499,6 +754,10 @@ export default function App() {
             onCreateRequest={(projectId, folderId) =>
               createRequest(projectId, folderId).catch(reportError)
             }
+            onRenameWorkspace={openRenameWorkspaceDialog}
+            onRenameProject={openRenameProjectDialog}
+            onRenameFolder={openRenameFolderDialog}
+            onRenameRequest={openRenameRequestDialog}
             onDuplicateWorkspace={(workspaceId) =>
               api.duplicateWorkspace(workspaceId).then(refreshWorkspaces).catch(reportError)
             }
@@ -767,6 +1026,20 @@ export default function App() {
           submitLabel={createDialogConfig.submitLabel}
           onOpenChange={(open) => !open && setCreateDialog(null)}
           onSubmit={handleCreateEntity}
+        />
+      ) : null}
+      {renameDialogConfig ? (
+        <CreateEntityDialog
+          open={Boolean(renameDialog)}
+          title={renameDialogConfig.title}
+          description={renameDialogConfig.description}
+          label={renameDialogConfig.label}
+          placeholder={renameDialogConfig.placeholder}
+          submitLabel={renameDialogConfig.submitLabel}
+          initialValue={renameDialog?.currentName}
+          actionVerb="rename"
+          onOpenChange={(open) => !open && setRenameDialog(null)}
+          onSubmit={handleRenameEntity}
         />
       ) : null}
       <UnlockModal
