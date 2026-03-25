@@ -1,5 +1,5 @@
-import type { HistoryDoc, ProjectDoc, RequestDoc, User } from "@restify/shared";
-import { Activity, Settings2, Shield, Users } from "lucide-react";
+﻿import type { HistoryDoc, ProjectDoc, RequestDoc, User } from "@restify/shared";
+import { Activity, FileText, Settings2, Shield, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { CreateSuperuserPage } from "../components/auth/CreateSuperuserPage";
 import { LoginPage } from "../components/auth/LoginPage";
@@ -7,11 +7,13 @@ import { UnlockModal } from "../components/auth/UnlockModal";
 import { PasswordSettings } from "../components/admin/PasswordSettings";
 import { UserManagement } from "../components/admin/UserManagement";
 import { EnvVarEditor } from "../components/environment/EnvVarEditor";
+import { HistoryDetailsDialog } from "../components/history/HistoryDetailsDialog";
 import { AppShell } from "../components/layout/AppShell";
 import { RequestBuilder } from "../components/request-builder/RequestBuilder";
 import { ResponseViewer } from "../components/response-viewer/ResponseViewer";
 import { CreateEntityDialog } from "../components/sidebar/CreateEntityDialog";
 import { WorkspaceTree } from "../components/sidebar/WorkspaceTree";
+import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { api } from "../lib/http-client";
@@ -124,6 +126,7 @@ export default function App() {
   } | null>(null);
   const [createDialog, setCreateDialog] = useState<CreateDialogState>(null);
   const [renameDialog, setRenameDialog] = useState<RenameDialogState>(null);
+  const [historyDetailsEntry, setHistoryDetailsEntry] = useState<HistoryDoc | null>(null);
 
   const activeWorkspace = useMemo(
     () =>
@@ -949,14 +952,28 @@ export default function App() {
                       key={entry._id}
                       className="rounded-2xl border border-white/8 bg-white/4 p-3"
                     >
-                      <div className="flex items-center justify-between gap-3 text-sm">
-                        <span className="font-medium text-foreground">
-                          {entry.method}
-                        </span>
-                        <span className="text-muted">{entry.status}</span>
-                      </div>
-                      <div className="mt-1 truncate text-xs text-muted">
-                        {entry.url}
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-3 text-sm">
+                            <span className="font-medium text-foreground">
+                              {entry.method}
+                            </span>
+                            <span className="text-muted">{entry.status}</span>
+                          </div>
+                          <div className="mt-1 truncate text-xs text-muted">
+                            {entry.url}
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          className="h-8 shrink-0 rounded-lg px-2 text-xs text-foreground"
+                          onClick={() => setHistoryDetailsEntry(entry)}
+                          title="Show history details"
+                          aria-label="Show history details"
+                        >
+                          <FileText className="h-4 w-4" />
+                          Details
+                        </Button>
                       </div>
                       <div className="mt-2 flex items-center justify-between text-xs text-muted">
                         <span>{new Date(entry.createdAt).toLocaleString()}</span>
@@ -1042,6 +1059,11 @@ export default function App() {
           onSubmit={handleRenameEntity}
         />
       ) : null}
+      <HistoryDetailsDialog
+        entry={historyDetailsEntry}
+        open={Boolean(historyDetailsEntry)}
+        onOpenChange={(open) => !open && setHistoryDetailsEntry(null)}
+      />
       <UnlockModal
         open={Boolean(unlockTarget)}
         title={
@@ -1060,6 +1082,8 @@ export default function App() {
     </>
   );
 }
+
+
 
 
 

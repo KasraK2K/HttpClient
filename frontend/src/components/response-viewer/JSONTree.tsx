@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
+import { cn } from "../../lib/cn";
 
 function renderValue(value: unknown): ReactNode {
   if (value === null) {
@@ -26,13 +27,15 @@ function renderValue(value: unknown): ReactNode {
   if (typeof value === "object") {
     return (
       <div className="pl-4">
-        <span className="text-muted">{'{'}</span>
-        {Object.entries(value as Record<string, unknown>).map(([key, nestedValue]) => (
-          <div key={key} className="pl-4">
-            <span className="text-violet-300">{key}</span>: {renderValue(nestedValue)}
-          </div>
-        ))}
-        <span className="text-muted">{'}'}</span>
+        <span className="text-muted">{"{"}</span>
+        {Object.entries(value as Record<string, unknown>).map(
+          ([key, nestedValue]) => (
+            <div key={key} className="pl-4">
+              <span className="text-violet-300">{key}</span>: {renderValue(nestedValue)}
+            </div>
+          ),
+        )}
+        <span className="text-muted">{"}"}</span>
       </div>
     );
   }
@@ -41,13 +44,39 @@ function renderValue(value: unknown): ReactNode {
 
 interface JSONTreeProps {
   value: string;
+  className?: string;
+  scrollable?: boolean;
 }
 
-export function JSONTree({ value }: JSONTreeProps) {
+export function JSONTree({
+  value,
+  className,
+  scrollable = true,
+}: JSONTreeProps) {
   try {
     const parsed = JSON.parse(value);
-    return <div className="overflow-auto rounded-xl bg-slate-950/70 p-4 font-mono text-sm">{renderValue(parsed)}</div>;
+    return (
+      <div
+        className={cn(
+          "rounded-xl bg-slate-950/70 p-4 font-mono text-sm",
+          scrollable && "overflow-auto",
+          className,
+        )}
+      >
+        {renderValue(parsed)}
+      </div>
+    );
   } catch {
-    return <pre className="overflow-auto rounded-xl bg-slate-950/70 p-4 font-mono text-sm text-muted">{value}</pre>;
+    return (
+      <pre
+        className={cn(
+          "rounded-xl bg-slate-950/70 p-4 font-mono text-sm text-muted whitespace-pre-wrap break-all",
+          scrollable && "overflow-auto",
+          className,
+        )}
+      >
+        {value}
+      </pre>
+    );
   }
 }

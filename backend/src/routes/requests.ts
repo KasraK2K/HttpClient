@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   ExecuteRequestPayload,
   FolderDoc,
   HistoryDoc,
@@ -91,6 +91,48 @@ async function trimHistory(
       _id: { $in: staleRecords.map((record) => record._id) },
     });
   }
+}
+
+function buildHistoryRequestSnapshot(
+  payload: ExecuteRequestPayload,
+): NonNullable<HistoryDoc["requestSnapshot"]> {
+  const computedHeaders = new Headers();
+
+  payload.headers
+    .filter((header) => header.enabled && header.key.trim())
+    .forEach((header) => computedHeaders.set(header.key, header.value));
+
+  if (payload.auth.type === "bearer" && payload.auth.token) {
+    computedHeaders.set("authorization", `Bearer ${payload.auth.token}`);
+  }
+
+  if (payload.auth.type === "basic" && payload.auth.username) {
+    const token = Buffer.from(
+      `${payload.auth.username}:${payload.auth.password ?? ""}`,
+    ).toString("base64");
+    computedHeaders.set("authorization", `Basic ${token}`);
+  }
+
+  if (!computedHeaders.has("content-type")) {
+    if (payload.body.type === "json") {
+      computedHeaders.set("content-type", "application/json");
+    }
+
+    if (payload.body.type === "x-www-form-urlencoded") {
+      computedHeaders.set(
+        "content-type",
+        "application/x-www-form-urlencoded;charset=UTF-8",
+      );
+    }
+  }
+
+  return {
+    headers: payload.headers,
+    params: payload.params,
+    body: payload.body,
+    auth: payload.auth,
+    computedHeaders: Object.fromEntries(computedHeaders.entries()),
+  };
 }
 
 const requestRoutes: FastifyPluginAsync = async (app) => {
@@ -579,6 +621,7 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
         status: result.status,
         durationMs: result.durationMs,
         sizeBytes: result.sizeBytes,
+        requestSnapshot: buildHistoryRequestSnapshot(request.body),
         createdAt: now,
         updatedAt: now,
       };
@@ -618,3 +661,4 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
 };
 
 export default requestRoutes;
+

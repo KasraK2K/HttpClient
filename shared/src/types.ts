@@ -1,4 +1,4 @@
-export type UserRole = "superadmin" | "admin" | "member";
+﻿export type UserRole = "superadmin" | "admin" | "member";
 
 export type HttpMethod =
   | "GET"
@@ -126,6 +126,14 @@ export interface RequestHistorySummary {
   createdAt: string;
 }
 
+export interface HistoryRequestSnapshot {
+  headers: HeaderRow[];
+  params: QueryParamRow[];
+  body: RequestBodyConfig;
+  auth: RequestAuthConfig;
+  computedHeaders: Record<string, string>;
+}
+
 export interface RequestDoc extends Timestamped {
   _id: string;
   entityType: "request";
@@ -154,6 +162,7 @@ export interface HistoryDoc extends Timestamped {
   status: number;
   durationMs: number;
   sizeBytes: number;
+  requestSnapshot?: HistoryRequestSnapshot;
 }
 
 export interface WorkspaceTree {
@@ -258,3 +267,4 @@ export interface ListUsersResponse {
 export interface HistoryResponse {
   history: HistoryDoc[];
 }
+
