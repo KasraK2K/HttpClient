@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   CSSProperties,
   PointerEvent as ReactPointerEvent,
   ReactNode,
@@ -13,6 +13,7 @@ import {
   Workflow,
 } from "lucide-react";
 import type { AdminUser, User } from "@restify/shared";
+import httpClientLogo from "../../assets/httpclient-logo.svg";
 import { cn } from "../../lib/cn";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -464,10 +465,12 @@ export function AppShell({
       <header className="shrink-0 border-b border-white/10 bg-slate-950/70 px-5 py-3 backdrop-blur">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="text-[11px] uppercase tracking-[0.28em] text-accent">
-                HttpClient
-              </div>
+            <div className="flex min-w-0 flex-wrap items-center gap-2">
+              <img
+                src={httpClientLogo}
+                alt="HttpClient"
+                className="h-9 w-auto max-w-[172px] shrink-0 sm:h-10 sm:max-w-[196px]"
+              />
               <Badge className="border-white/10 bg-white/[0.05] px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-muted">
                 {user.role}
               </Badge>
@@ -650,3 +653,4 @@ export function AppShell({
     </div>
   );
 }
+

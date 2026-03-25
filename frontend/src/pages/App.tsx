@@ -26,6 +26,31 @@ import { useHistoryStore } from "../store/history";
 import { useUnlockTokenStore } from "../store/unlockTokens";
 import { useWorkspaceStore } from "../store/workspaces";
 
+const INSPECTOR_TAB_STORAGE_KEY = "httpclient.inspector-tab";
+const INSPECTOR_TABS: InspectorTab[] = [
+  "environment",
+  "history",
+  "security",
+  "admin",
+];
+
+function getStoredInspectorTab(): InspectorTab {
+  if (typeof window === "undefined") {
+    return "environment";
+  }
+
+  try {
+    const storedTab = window.localStorage.getItem(INSPECTOR_TAB_STORAGE_KEY);
+    if (storedTab && INSPECTOR_TABS.includes(storedTab as InspectorTab)) {
+      return storedTab as InspectorTab;
+    }
+  } catch {
+    return "environment";
+  }
+
+  return "environment";
+}
+
 function reportError(error: unknown) {
   const message =
     error instanceof Error ? error.message : "Something went wrong";
@@ -117,7 +142,7 @@ export default function App() {
     useUnlockTokenStore();
 
   const [inspectorTab, setInspectorTab] = useState<InspectorTab>(
-    "environment",
+    getStoredInspectorTab,
   );
   const [users, setUsers] = useState<User[]>([]);
   const [unlockTarget, setUnlockTarget] = useState<{
@@ -127,6 +152,32 @@ export default function App() {
   const [createDialog, setCreateDialog] = useState<CreateDialogState>(null);
   const [renameDialog, setRenameDialog] = useState<RenameDialogState>(null);
   const [historyDetailsEntry, setHistoryDetailsEntry] = useState<HistoryDoc | null>(null);
+
+  const normalizedInspectorTab =
+    user?.role === "superadmin" || inspectorTab !== "admin"
+      ? inspectorTab
+      : "environment";
+
+  useEffect(() => {
+    if (normalizedInspectorTab !== inspectorTab) {
+      setInspectorTab(normalizedInspectorTab);
+    }
+  }, [inspectorTab, normalizedInspectorTab]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(
+        INSPECTOR_TAB_STORAGE_KEY,
+        normalizedInspectorTab,
+      );
+    } catch {
+      return;
+    }
+  }, [normalizedInspectorTab]);
 
   const activeWorkspace = useMemo(
     () =>
@@ -887,7 +938,7 @@ export default function App() {
         response={<ResponseViewer response={response} />}
         inspector={
           <Tabs
-            value={inspectorTab}
+            value={normalizedInspectorTab}
             onValueChange={(value) => setInspectorTab(value as InspectorTab)}
           >
             <TabsList className="mb-4 flex w-full flex-wrap justify-start gap-1">
@@ -1082,6 +1133,7 @@ export default function App() {
     </>
   );
 }
+
 
 
 

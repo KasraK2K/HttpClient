@@ -1,0 +1,29 @@
+﻿<svg width="212" height="40" viewBox="0 0 212 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="hcIconFill" x1="4" y1="4" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#B8E6FF"/>
+      <stop offset="0.52" stop-color="#7DD3FC"/>
+      <stop offset="1" stop-color="#38BDF8"/>
+    </linearGradient>
+    <linearGradient id="hcFrameStroke" x1="1" y1="1" x2="39" y2="39" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7DD3FC" stop-opacity="0.38"/>
+      <stop offset="1" stop-color="#1E293B" stop-opacity="0.9"/>
+    </linearGradient>
+    <linearGradient id="hcAccentLine" x1="51" y1="31.5" x2="181" y2="31.5" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7DD3FC" stop-opacity="0"/>
+      <stop offset="0.18" stop-color="#7DD3FC" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#7DD3FC" stop-opacity="0.15"/>
+    </linearGradient>
+  </defs>
+  <rect x="0.75" y="0.75" width="38.5" height="38.5" rx="12.25" fill="#081120"/>
+  <rect x="0.75" y="0.75" width="38.5" height="38.5" rx="12.25" stroke="url(#hcFrameStroke)" stroke-width="1.5"/>
+  <rect x="5" y="5" width="30" height="30" rx="10" fill="url(#hcIconFill)"/>
+  <path d="M12 13.25H22.5" stroke="#EAF7FF" stroke-width="2.25" stroke-linecap="round"/>
+  <path d="M12 19.75H19.5" stroke="#EAF7FF" stroke-width="2.25" stroke-linecap="round"/>
+  <path d="M12 26.25H22.5" stroke="#EAF7FF" stroke-width="2.25" stroke-linecap="round"/>
+  <path d="M22.25 12.5L27 17.25L22.25 22" stroke="#062035" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="52" y="17" fill="#E5EEF8" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="0.2">Http</text>
+  <text x="93" y="17" fill="#7DD3FC" font-family="Segoe UI, Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="0.2">Client</text>
+  <text x="52" y="28.5" fill="#8FA6BF" font-family="Segoe UI, Arial, sans-serif" font-size="7.5" font-weight="700" letter-spacing="1.5">REQUEST WORKBENCH</text>
+  <path d="M52 31.5H181" stroke="url(#hcAccentLine)" stroke-width="1.5" stroke-linecap="round"/>
+</svg>
