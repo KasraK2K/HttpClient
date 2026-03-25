@@ -30,14 +30,14 @@ export function CreateSuperuserPage({ onSubmit }: CreateSuperuserPageProps) {
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <Card className="w-full max-w-xl overflow-hidden">
-        <CardHeader className="border-b border-white/10 bg-white/5">
+        <CardHeader className="border-b border-white/10 bg-white/[0.03] px-6 py-5">
           <div className="flex items-center gap-3">
-            <div className="rounded-2xl bg-emerald-400/20 p-3 text-emerald-300">
+            <div className="rounded-xl bg-emerald-400/15 p-2.5 text-emerald-300">
               <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <CardTitle>Create The First Superuser</CardTitle>
-              <p className="mt-1 text-sm text-muted">HttpClient detected an empty admins collection, so bootstrap starts here.</p>
+              <CardTitle className="text-base">Create The First Superuser</CardTitle>
+              <p className="mt-0.5 text-xs text-muted">HttpClient detected an empty admins collection.</p>
             </div>
           </div>
         </CardHeader>

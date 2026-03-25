@@ -29,14 +29,14 @@ export function LoginPage({ onSubmit }: LoginPageProps) {
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
       <Card className="w-full max-w-md overflow-hidden">
-        <CardHeader className="border-b border-white/10 bg-white/5">
+        <CardHeader className="border-b border-white/10 bg-white/[0.03] px-6 py-5">
           <div className="flex items-center gap-3">
-            <div className="rounded-2xl bg-accent/20 p-3 text-accent">
+            <div className="rounded-xl bg-accent/15 p-2.5 text-accent">
               <LogIn className="h-5 w-5" />
             </div>
             <div>
-              <CardTitle>Sign In To HttpClient</CardTitle>
-              <p className="mt-1 text-sm text-muted">REST-only workspace access with secure cookie sessions.</p>
+              <CardTitle className="text-base">Sign In To HttpClient</CardTitle>
+              <p className="mt-0.5 text-xs text-muted">Secure cookie session</p>
             </div>
           </div>
         </CardHeader>

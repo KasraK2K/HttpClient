@@ -1063,40 +1063,50 @@ export default function App() {
                       The last 50 project executions will appear here.
                     </p>
                   ) : null}
-                  {activeHistory.map((entry: HistoryDoc) => (
-                    <div
-                      key={entry._id}
-                      className="rounded-2xl border border-white/8 bg-white/4 p-3"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-3 text-sm">
-                            <span className={`font-medium ${METHOD_TEXT_STYLES[entry.method]}`}>
-                              {entry.method}
-                            </span>
-                            <span className="text-muted">{entry.status}</span>
+                  {activeHistory.map((entry: HistoryDoc) => {
+                    const statusColor =
+                      entry.status >= 200 && entry.status < 300
+                        ? "border-l-emerald-500/50"
+                        : entry.status >= 300 && entry.status < 400
+                          ? "border-l-amber-500/50"
+                          : entry.status >= 400
+                            ? "border-l-rose-500/50"
+                            : "border-l-white/10";
+                    return (
+                      <div
+                        key={entry._id}
+                        className={`rounded-lg border border-white/8 border-l-2 bg-white/[0.03] p-3 ${statusColor}`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 text-sm">
+                              <span className={`font-semibold ${METHOD_TEXT_STYLES[entry.method]}`}>
+                                {entry.method}
+                              </span>
+                              <span className="font-medium text-foreground/70">{entry.status}</span>
+                            </div>
+                            <div className="mt-1 truncate text-xs text-muted">
+                              {entry.url}
+                            </div>
                           </div>
-                          <div className="mt-1 truncate text-xs text-muted">
-                            {entry.url}
-                          </div>
+                          <Button
+                            variant="ghost"
+                            className="h-7 shrink-0 rounded-md px-2 text-xs"
+                            onClick={() => setHistoryDetailsEntry(entry)}
+                            title="Show history details"
+                            aria-label="Show history details"
+                          >
+                            <FileText className="h-3.5 w-3.5" />
+                            Details
+                          </Button>
                         </div>
-                        <Button
-                          variant="ghost"
-                          className="h-8 shrink-0 rounded-lg px-2 text-xs text-foreground"
-                          onClick={() => setHistoryDetailsEntry(entry)}
-                          title="Show history details"
-                          aria-label="Show history details"
-                        >
-                          <FileText className="h-4 w-4" />
-                          Details
-                        </Button>
+                        <div className="mt-2 flex items-center justify-between text-xs text-muted">
+                          <span>{new Date(entry.createdAt).toLocaleString()}</span>
+                          <span>{entry.durationMs} ms</span>
+                        </div>
                       </div>
-                      <div className="mt-2 flex items-center justify-between text-xs text-muted">
-                        <span>{new Date(entry.createdAt).toLocaleString()}</span>
-                        <span>{entry.durationMs} ms</span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </CardContent>
               </Card>
             </TabsContent>

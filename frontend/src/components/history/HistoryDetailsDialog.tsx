@@ -27,7 +27,7 @@ function DetailSection({
   children,
 }: DetailSectionProps) {
   return (
-    <section className="space-y-3 rounded-2xl border border-white/8 bg-slate-950/40 p-4">
+    <section className="space-y-3 rounded-xl border border-white/8 bg-slate-950/40 p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-sm font-semibold text-foreground">{title}</h3>
@@ -141,7 +141,7 @@ function getBodyListItems(
           row.fileSizeBytes != null ? formatBytes(row.fileSizeBytes) : undefined,
         ]
           .filter(Boolean)
-          .join(" · "),
+          .join(" Â· "),
       };
     }
 
@@ -250,7 +250,7 @@ export function HistoryDetailsDialog({
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
           {!snapshot ? (
-            <div className="rounded-2xl border border-dashed border-white/10 bg-slate-950/30 px-4 py-8 text-sm text-muted">
+            <div className="rounded-xl border border-dashed border-white/10 bg-slate-950/30 px-4 py-8 text-sm text-muted">
               This history item was created before full request snapshots were stored. Run the request again to capture sent headers, auth, params, and body details.
             </div>
           ) : (

@@ -41,7 +41,7 @@ export function EnvVarEditor({
         {envVars.map((envVar, index) => (
           <div
             key={index}
-            className="rounded-xl border border-white/8 bg-slate-950/30 p-3 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0"
+            className="rounded-lg border border-white/8 bg-slate-950/30 p-3 sm:rounded-none sm:border-0 sm:bg-transparent sm:p-0"
           >
             <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_44px] sm:items-end sm:gap-2">
               <div className="space-y-1.5">

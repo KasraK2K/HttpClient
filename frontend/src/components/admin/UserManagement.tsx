@@ -356,7 +356,7 @@ export function UserManagement({
             return (
               <div
                 key={user._id}
-                className="rounded-2xl border border-white/8 bg-slate-950/35 p-3.5"
+                className="rounded-xl border border-white/8 bg-slate-950/35 p-3.5"
               >
                 <div className="flex items-start gap-3">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-sm font-semibold text-foreground">
