@@ -270,14 +270,9 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
 
   return (
     <Card className="h-full overflow-hidden">
-      <CardHeader className="px-3 py-2.5">
-        <div className="flex items-center justify-between gap-2">
-          <div>
-            <CardTitle>Collections</CardTitle>
-            <p className="mt-0.5 text-[11px] text-muted">
-              Workspaces, projects, folders, and requests.
-            </p>
-          </div>
+      <CardHeader className="px-3 py-2">
+        <div className="flex w-full items-center justify-between gap-2">
+          <CardTitle>Collections</CardTitle>
           <Button
             className="h-7 rounded-md px-2 text-xs"
             onClick={onCreateWorkspace}
