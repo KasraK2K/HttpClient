@@ -18,6 +18,8 @@ The backend defaults to a local MongoDB database and secure cookie session, and 
 
 The frontend dev server uses `127.0.0.1` and starts at port `3030` because some Windows setups reserve port `5173`, which causes Vite to fail with `EACCES`. If `3030` is busy, Vite will automatically move to the next available local port.
 
+The backend now defaults to port `3500` and the frontend proxy reads the same `BACKEND_PORT` value from the shared env file. In development, a legacy `PORT=4000` setting is also remapped to `3500` so older local env files do not keep hitting the Windows `EACCES` socket restriction on port `4000`.
+
 The root install bootstraps `shared/`, `backend/`, and `frontend/` automatically, so it works even on npm versions that do not support the `workspace:*` protocol.
 
 ## Production build
@@ -30,5 +32,3 @@ The root install bootstraps `shared/`, `backend/`, and `frontend/` automatically
 - `npm run db:up`
 - `npm run db:down`
 - `npm run db:logs`
-
-

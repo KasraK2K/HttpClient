@@ -38,11 +38,26 @@ function parseFrontendOrigins(value: string | undefined): string[] {
   return [...new Set([...configured, ...defaults])];
 }
 
+function resolvePort(): number {
+  const configuredPort = process.env.BACKEND_PORT ?? process.env.PORT;
+  const parsedPort = toNumber(configuredPort, 3500);
+
+  if (
+    process.env.NODE_ENV !== "production" &&
+    !process.env.BACKEND_PORT &&
+    configuredPort === "4000"
+  ) {
+    return 3500;
+  }
+
+  return parsedPort;
+}
+
 export function loadConfig(): AppConfig {
   const frontendOrigins = parseFrontendOrigins(process.env.FRONTEND_ORIGIN);
 
   return {
-    port: toNumber(process.env.PORT, 4000),
+    port: resolvePort(),
     mongoUri: process.env.MONGODB_URI ?? "mongodb://localhost:27017/restify",
     mongoServerSelectionTimeoutMs: toNumber(
       process.env.MONGODB_SERVER_SELECTION_TIMEOUT_MS,
