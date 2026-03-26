@@ -145,6 +145,7 @@ export default function App() {
   const sendAbortControllerRef = useRef<AbortController | null>(null);
   const canCreateWorkspace = user?.role !== "member";
   const canCreateProject = user?.role !== "member";
+  const canManagePrivacy = user?.role !== "member";
   const normalizedInspectorTab =
     user?.role === "superadmin" || inspectorTab !== "admin"
       ? inspectorTab
@@ -596,7 +597,7 @@ export default function App() {
       await api.updateFolder(
         renameDialog.folderId,
         renameDialog.workspaceId,
-        name,
+        { name },
       );
       await refreshTree(renameDialog.workspaceId);
       showSuccessToast(`Saved folder name as ${name}.`, "Folder Saved");
@@ -619,6 +620,66 @@ export default function App() {
     showSuccessToast(`Saved request name as ${name}.`, "Request Saved");
   };
 
+  const handleToggleProjectPrivacy = async (
+    workspaceId: string,
+    projectId: string,
+    isPrivate: boolean,
+  ) => {
+    const project = findProjectInTree(workspaceId, projectId);
+    if (!project) {
+      throw new Error("Project not found.");
+    }
+
+    await api.updateProject(projectId, workspaceId, { isPrivate });
+    await refreshTree(workspaceId);
+    showSuccessToast(
+      isPrivate
+        ? `${project.name} is now private.`
+        : `${project.name} is now visible to members.`,
+      "Project Visibility",
+    );
+  };
+  const handleToggleFolderPrivacy = async (
+    workspaceId: string,
+    folderId: string,
+    isPrivate: boolean,
+  ) => {
+    const target = findFolderInTree(workspaceId, folderId);
+    if (!target) {
+      throw new Error("Folder not found.");
+    }
+
+    await api.updateFolder(folderId, workspaceId, { isPrivate });
+    await refreshTree(workspaceId);
+    showSuccessToast(
+      isPrivate
+        ? `${target.folder.name} is now private.`
+        : `${target.folder.name} is now visible to members.`,
+      "Folder Visibility",
+    );
+  };
+  const handleToggleRequestPrivacy = async (
+    workspaceId: string,
+    requestId: string,
+    isPrivate: boolean,
+  ) => {
+    const target = findRequestInTree(workspaceId, requestId);
+    if (!target) {
+      throw new Error("Request not found.");
+    }
+
+    await api.updateRequest(requestId, {
+      workspaceId,
+      isPrivate,
+    });
+    await refreshTree(workspaceId);
+    showSuccessToast(
+      isPrivate
+        ? `${target.request.name} is now private.`
+        : `${target.request.name} is now visible to members.`,
+      "Request Visibility",
+    );
+  };
   const createRequest = async (
     workspaceId: string,
     projectId: string,
@@ -647,6 +708,7 @@ export default function App() {
       params: requestDraft.params,
       body: requestDraft.body,
       auth: requestDraft.auth,
+      isPrivate: requestDraft.isPrivate,
       order: [
         ...project.requests,
         ...project.folders.flatMap((folder) => folder.requests),
@@ -970,6 +1032,7 @@ export default function App() {
             onSelectRequest={handleSelectRequest}
             canCreateWorkspace={canCreateWorkspace}
             canCreateProject={canCreateProject}
+            canManagePrivacy={canManagePrivacy}
             onCreateWorkspace={openCreateWorkspaceDialog}
             onCreateProject={openCreateProjectDialog}
             onCreateFolder={openCreateFolderDialog}
@@ -1030,6 +1093,15 @@ export default function App() {
                   refreshTree(activeWorkspace._id),
                 ),
               ).catch(reportError)
+            }
+            onToggleProjectPrivacy={(workspaceId, projectId, isPrivate) =>
+              handleToggleProjectPrivacy(workspaceId, projectId, isPrivate).catch(reportError)
+            }
+            onToggleFolderPrivacy={(workspaceId, folderId, isPrivate) =>
+              handleToggleFolderPrivacy(workspaceId, folderId, isPrivate).catch(reportError)
+            }
+            onToggleRequestPrivacy={(workspaceId, requestId, isPrivate) =>
+              handleToggleRequestPrivacy(workspaceId, requestId, isPrivate).catch(reportError)
             }
             onWorkspaceReorder={(orderedIds) =>
               api.reorderWorkspaces(orderedIds).then(refreshWorkspaces).catch(reportError)
@@ -1227,12 +1299,3 @@ export default function App() {
     </>
   );
 }
-
-
-
-
-
-
-
-
-

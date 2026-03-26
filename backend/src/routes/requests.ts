@@ -1,9 +1,11 @@
 import type {
+  AdminUser,
   ExecuteRequestPayload,
   FolderDoc,
   HistoryDoc,
   ProjectDoc,
   RequestDoc,
+  User,
   WorkspaceMeta,
 } from "@restify/shared";
 import type { FastifyPluginAsync } from "fastify";
@@ -17,7 +19,12 @@ import {
   workspaceDataCollection,
 } from "../db/collections.js";
 import { executeHttpRequest } from "../lib/http-executor.js";
-import { canAccessWorkspace, getRequiredUser } from "../lib/permissions.js";
+import {
+  canAccessWorkspace,
+  canManagePrivateEntities,
+  canViewEntity,
+  getRequiredUser,
+} from "../lib/permissions.js";
 
 async function requireWorkspace(
   app: Parameters<FastifyPluginAsync>[0],
@@ -30,10 +37,36 @@ async function requireWorkspace(
   return workspace;
 }
 
+type SessionUser = AdminUser | User;
+
+function normalizeProject(project: ProjectDoc): ProjectDoc {
+  return {
+    ...project,
+    passwordHash: null,
+    isPasswordProtected: false,
+    isPrivate: Boolean(project.isPrivate),
+  };
+}
+
+function normalizeFolder(folder: FolderDoc): FolderDoc {
+  return {
+    ...folder,
+    isPrivate: Boolean(folder.isPrivate),
+  };
+}
+
+function normalizeRequest(request: RequestDoc): RequestDoc {
+  return {
+    ...request,
+    isPrivate: Boolean(request.isPrivate),
+  };
+}
+
 async function requireProject(
   app: Parameters<FastifyPluginAsync>[0],
   workspaceId: string,
   projectId: string,
+  user?: SessionUser,
 ): Promise<ProjectDoc> {
   const project = await workspaceDataCollection(app.mongo, workspaceId).findOne(
     { _id: toObjectId(projectId), entityType: "project" },
@@ -41,13 +74,20 @@ async function requireProject(
   if (!project) {
     throw app.httpErrors.notFound("Project not found");
   }
-  return serializeDoc(project) as ProjectDoc;
+
+  const normalizedProject = normalizeProject(serializeDoc(project) as ProjectDoc);
+  if (user && !canViewEntity(user, normalizedProject)) {
+    throw app.httpErrors.notFound("Project not found");
+  }
+
+  return normalizedProject;
 }
 
 async function requireFolder(
   app: Parameters<FastifyPluginAsync>[0],
   workspaceId: string,
   folderId: string,
+  user?: SessionUser,
 ): Promise<FolderDoc> {
   const folder = await workspaceDataCollection(app.mongo, workspaceId).findOne({
     _id: toObjectId(folderId),
@@ -56,13 +96,20 @@ async function requireFolder(
   if (!folder) {
     throw app.httpErrors.notFound("Folder not found");
   }
-  return serializeDoc(folder) as unknown as FolderDoc;
+
+  const normalizedFolder = normalizeFolder(serializeDoc(folder) as FolderDoc);
+  if (user && !canViewEntity(user, normalizedFolder)) {
+    throw app.httpErrors.notFound("Folder not found");
+  }
+
+  return normalizedFolder;
 }
 
 async function requireRequestDoc(
   app: Parameters<FastifyPluginAsync>[0],
   workspaceId: string,
   requestId: string,
+  user?: SessionUser,
 ): Promise<RequestDoc> {
   const requestDoc = await workspaceDataCollection(
     app.mongo,
@@ -71,9 +118,18 @@ async function requireRequestDoc(
   if (!requestDoc) {
     throw app.httpErrors.notFound("Request not found");
   }
-  return serializeDoc(requestDoc) as RequestDoc;
-}
 
+  const normalizedRequest = normalizeRequest(serializeDoc(requestDoc) as RequestDoc);
+  if (user && !canViewEntity(user, normalizedRequest)) {
+    throw app.httpErrors.notFound("Request not found");
+  }
+
+  if (user && normalizedRequest.folderId) {
+    await requireFolder(app, workspaceId, normalizedRequest.folderId, user);
+  }
+
+  return normalizedRequest;
+}
 function sortByOrder<T extends { order: number }>(items: T[]): T[] {
   return [...items].sort((a, b) => a.order - b.order);
 }
@@ -153,17 +209,19 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
     { preHandler: app.authenticate },
     async (request) => {
       const workspace = await requireWorkspace(app, request.body.workspaceId);
-      const project = await requireProject(
-        app,
-        workspace._id,
-        request.body.projectId,
-      );
       const user = getRequiredUser(request);
       if (!canAccessWorkspace(user, workspace)) {
         throw app.httpErrors.forbidden(
           "You do not have access to this workspace",
         );
       }
+
+      const project = await requireProject(
+        app,
+        workspace._id,
+        request.body.projectId,
+        user,
+      );
 
       await app.assertProjectUnlocked(request, project, workspace);
 
@@ -182,6 +240,7 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
         name: request.body.name.trim(),
         order:
           ((maxOrder[0] as { order?: number } | undefined)?.order ?? -1) + 1,
+        isPrivate: false,
         createdAt: now,
         updatedAt: now,
       };
@@ -189,28 +248,17 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
       await workspaceDataCollection(app.mongo, workspace._id).insertOne(
         folder as never,
       );
-      return { folder: serializeDoc(folder) };
+      return { folder: normalizeFolder(serializeDoc(folder) as FolderDoc) };
     },
   );
-
   app.patch<{
     Params: { folderId: string };
-    Body: { workspaceId: string; name: string };
+    Body: { workspaceId: string; name?: string; isPrivate?: boolean };
   }>(
     "/folders/:folderId",
     { preHandler: app.authenticate },
     async (request) => {
       const workspace = await requireWorkspace(app, request.body.workspaceId);
-      const folder = await requireFolder(
-        app,
-        workspace._id,
-        request.params.folderId,
-      );
-      const project = await requireProject(
-        app,
-        workspace._id,
-        folder.projectId,
-      );
       const user = getRequiredUser(request);
       if (!canAccessWorkspace(user, workspace)) {
         throw app.httpErrors.forbidden(
@@ -218,10 +266,45 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
         );
       }
 
+      const folder = await requireFolder(
+        app,
+        workspace._id,
+        request.params.folderId,
+        user,
+      );
+      const project = await requireProject(
+        app,
+        workspace._id,
+        folder.projectId,
+        user,
+      );
+
+      if ("isPrivate" in request.body && !canManagePrivateEntities(user)) {
+        throw app.httpErrors.forbidden(
+          "Members cannot change private visibility",
+        );
+      }
+
+      const patch: Record<string, unknown> = {
+        updatedAt: isoNow(),
+      };
+
+      if ("name" in request.body) {
+        const name = request.body.name?.trim();
+        if (!name) {
+          throw app.httpErrors.badRequest("Folder name is required");
+        }
+        patch.name = name;
+      }
+
+      if ("isPrivate" in request.body) {
+        patch.isPrivate = Boolean(request.body.isPrivate);
+      }
+
       await app.assertProjectUnlocked(request, project, workspace);
       await workspaceDataCollection(app.mongo, workspace._id).updateOne(
         { _id: toObjectId(folder._id) },
-        { $set: { name: request.body.name.trim(), updatedAt: isoNow() } },
+        { $set: patch },
       );
 
       return {
@@ -229,32 +312,35 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
           app,
           workspace._id,
           request.params.folderId,
+          user,
         ),
       };
     },
   );
-
   app.post<{ Params: { folderId: string }; Body: { workspaceId: string } }>(
     "/folders/:folderId/duplicate",
     { preHandler: app.authenticate },
     async (request) => {
       const workspace = await requireWorkspace(app, request.body.workspaceId);
-      const folder = await requireFolder(
-        app,
-        workspace._id,
-        request.params.folderId,
-      );
-      const project = await requireProject(
-        app,
-        workspace._id,
-        folder.projectId,
-      );
       const user = getRequiredUser(request);
       if (!canAccessWorkspace(user, workspace)) {
         throw app.httpErrors.forbidden(
           "You do not have access to this workspace",
         );
       }
+
+      const folder = await requireFolder(
+        app,
+        workspace._id,
+        request.params.folderId,
+        user,
+      );
+      const project = await requireProject(
+        app,
+        workspace._id,
+        folder.projectId,
+        user,
+      );
 
       await app.assertProjectUnlocked(request, project, workspace);
 
@@ -274,6 +360,7 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
         projectId: folder.projectId,
         name: `${folder.name} Copy`,
         order: requestDocs.length,
+        isPrivate: Boolean(folder.isPrivate),
         createdAt: now,
         updatedAt: now,
       } as never);
@@ -296,26 +383,28 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
           app,
           workspace._id,
           newFolderId.toHexString(),
+          user,
         ),
       };
     },
   );
-
   app.post<{
     Body: { workspaceId: string; projectId: string; orderedIds: string[] };
   }>("/folders/reorder", { preHandler: app.authenticate }, async (request) => {
     const workspace = await requireWorkspace(app, request.body.workspaceId);
-    const project = await requireProject(
-      app,
-      workspace._id,
-      request.body.projectId,
-    );
     const user = getRequiredUser(request);
     if (!canAccessWorkspace(user, workspace)) {
       throw app.httpErrors.forbidden(
         "You do not have access to this workspace",
       );
     }
+
+    const project = await requireProject(
+      app,
+      workspace._id,
+      request.body.projectId,
+      user,
+    );
 
     await app.assertProjectUnlocked(request, project, workspace);
     await Promise.all(
@@ -328,7 +417,6 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
     );
     return { success: true };
   });
-
   app.post<{
     Params: { folderId: string };
     Body: { workspaceId: string; targetProjectId: string; targetOrder?: number };
@@ -337,27 +425,31 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
     { preHandler: app.authenticate },
     async (request) => {
       const workspace = await requireWorkspace(app, request.body.workspaceId);
-      const folder = await requireFolder(
-        app,
-        workspace._id,
-        request.params.folderId,
-      );
-      const sourceProject = await requireProject(
-        app,
-        workspace._id,
-        folder.projectId,
-      );
-      const targetProject = await requireProject(
-        app,
-        workspace._id,
-        request.body.targetProjectId,
-      );
       const user = getRequiredUser(request);
       if (!canAccessWorkspace(user, workspace)) {
         throw app.httpErrors.forbidden(
           "You do not have access to this workspace",
         );
       }
+
+      const folder = await requireFolder(
+        app,
+        workspace._id,
+        request.params.folderId,
+        user,
+      );
+      const sourceProject = await requireProject(
+        app,
+        workspace._id,
+        folder.projectId,
+        user,
+      );
+      const targetProject = await requireProject(
+        app,
+        workspace._id,
+        request.body.targetProjectId,
+        user,
+      );
 
       await app.assertProjectUnlocked(request, sourceProject, workspace);
       await app.assertProjectUnlocked(request, targetProject, workspace);
@@ -395,7 +487,7 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
         }
 
         return {
-          folder: await requireFolder(app, workspace._id, folder._id),
+          folder: await requireFolder(app, workspace._id, folder._id, user),
         };
       }
 
@@ -443,11 +535,10 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
       );
 
       return {
-        folder: await requireFolder(app, workspace._id, folder._id),
+        folder: await requireFolder(app, workspace._id, folder._id, user),
       };
     },
   );
-
   app.delete<{
     Params: { folderId: string };
     Querystring: { workspaceId: string };
@@ -456,22 +547,25 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
     { preHandler: app.authenticate },
     async (request) => {
       const workspace = await requireWorkspace(app, request.query.workspaceId);
-      const folder = await requireFolder(
-        app,
-        workspace._id,
-        request.params.folderId,
-      );
-      const project = await requireProject(
-        app,
-        workspace._id,
-        folder.projectId,
-      );
       const user = getRequiredUser(request);
       if (!canAccessWorkspace(user, workspace)) {
         throw app.httpErrors.forbidden(
           "You do not have access to this workspace",
         );
       }
+
+      const folder = await requireFolder(
+        app,
+        workspace._id,
+        request.params.folderId,
+        user,
+      );
+      const project = await requireProject(
+        app,
+        workspace._id,
+        folder.projectId,
+        user,
+      );
 
       await app.assertProjectUnlocked(request, project, workspace);
       await workspaceDataCollection(app.mongo, workspace._id).deleteMany({
@@ -480,7 +574,6 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
       return { success: true };
     },
   );
-
   app.post<{
     Body: Omit<
       RequestDoc,
@@ -488,16 +581,32 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
     >;
   }>("/requests", { preHandler: app.authenticate }, async (request) => {
     const workspace = await requireWorkspace(app, request.body.workspaceId);
-    const project = await requireProject(
-      app,
-      workspace._id,
-      request.body.projectId,
-    );
     const user = getRequiredUser(request);
     if (!canAccessWorkspace(user, workspace)) {
       throw app.httpErrors.forbidden(
         "You do not have access to this workspace",
       );
+    }
+
+    const project = await requireProject(
+      app,
+      workspace._id,
+      request.body.projectId,
+      user,
+    );
+
+    if (request.body.folderId) {
+      const folder = await requireFolder(
+        app,
+        workspace._id,
+        request.body.folderId,
+        user,
+      );
+      if (folder.projectId !== project._id) {
+        throw app.httpErrors.badRequest(
+          "Folder does not belong to the selected project",
+        );
+      }
     }
 
     await app.assertProjectUnlocked(request, project, workspace);
@@ -519,6 +628,7 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
       auth: request.body.auth,
       responseHistory: [],
       order: request.body.order,
+      isPrivate: false,
       createdAt: now,
       updatedAt: now,
     };
@@ -526,9 +636,8 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
     await workspaceDataCollection(app.mongo, workspace._id).insertOne(
       requestDoc as never,
     );
-    return { request: serializeDoc(requestDoc) };
+    return { request: normalizeRequest(serializeDoc(requestDoc) as RequestDoc) };
   });
-
   app.patch<{
     Params: { requestId: string };
     Body: Partial<RequestDoc> & { workspaceId: string };
@@ -537,21 +646,44 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
     { preHandler: app.authenticate },
     async (request) => {
       const workspace = await requireWorkspace(app, request.body.workspaceId);
-      const requestDoc = await requireRequestDoc(
-        app,
-        workspace._id,
-        request.params.requestId,
-      );
-      const project = await requireProject(
-        app,
-        workspace._id,
-        requestDoc.projectId,
-      );
       const user = getRequiredUser(request);
       if (!canAccessWorkspace(user, workspace)) {
         throw app.httpErrors.forbidden(
           "You do not have access to this workspace",
         );
+      }
+
+      const requestDoc = await requireRequestDoc(
+        app,
+        workspace._id,
+        request.params.requestId,
+        user,
+      );
+      const project = await requireProject(
+        app,
+        workspace._id,
+        requestDoc.projectId,
+        user,
+      );
+
+      if ("isPrivate" in request.body && !canManagePrivateEntities(user)) {
+        throw app.httpErrors.forbidden(
+          "Members cannot change private visibility",
+        );
+      }
+
+      if ("folderId" in request.body && request.body.folderId) {
+        const folder = await requireFolder(
+          app,
+          workspace._id,
+          request.body.folderId,
+          user,
+        );
+        if (folder.projectId !== project._id) {
+          throw app.httpErrors.badRequest(
+            "Folder does not belong to the selected project",
+          );
+        }
       }
 
       await app.assertProjectUnlocked(request, project, workspace);
@@ -570,11 +702,16 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
         "auth",
         "folderId",
         "order",
+        "isPrivate",
       ].forEach((key) => {
         if (key in request.body) {
           patch[key] = request.body[key as keyof typeof request.body];
         }
       });
+
+      if ("isPrivate" in patch) {
+        patch.isPrivate = Boolean(patch.isPrivate);
+      }
 
       await workspaceDataCollection(app.mongo, workspace._id).updateOne(
         { _id: toObjectId(requestDoc._id) },
@@ -582,7 +719,12 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
       );
 
       return {
-        request: await requireRequestDoc(app, workspace._id, requestDoc._id),
+        request: await requireRequestDoc(
+          app,
+          workspace._id,
+          requestDoc._id,
+          user,
+        ),
       };
     },
   );
@@ -600,27 +742,31 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
     { preHandler: app.authenticate },
     async (request) => {
       const workspace = await requireWorkspace(app, request.body.workspaceId);
-      const requestDoc = await requireRequestDoc(
-        app,
-        workspace._id,
-        request.params.requestId,
-      );
-      const sourceProject = await requireProject(
-        app,
-        workspace._id,
-        requestDoc.projectId,
-      );
-      const targetProject = await requireProject(
-        app,
-        workspace._id,
-        request.body.targetProjectId,
-      );
       const user = getRequiredUser(request);
       if (!canAccessWorkspace(user, workspace)) {
         throw app.httpErrors.forbidden(
           "You do not have access to this workspace",
         );
       }
+
+      const requestDoc = await requireRequestDoc(
+        app,
+        workspace._id,
+        request.params.requestId,
+        user,
+      );
+      const sourceProject = await requireProject(
+        app,
+        workspace._id,
+        requestDoc.projectId,
+        user,
+      );
+      const targetProject = await requireProject(
+        app,
+        workspace._id,
+        request.body.targetProjectId,
+        user,
+      );
 
       await app.assertProjectUnlocked(request, sourceProject, workspace);
       await app.assertProjectUnlocked(request, targetProject, workspace);
@@ -629,7 +775,12 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
       const targetFolderId = normalizeFolderId(request.body.targetFolderId);
 
       if (targetFolderId) {
-        const targetFolder = await requireFolder(app, workspace._id, targetFolderId);
+        const targetFolder = await requireFolder(
+          app,
+          workspace._id,
+          targetFolderId,
+          user,
+        );
         if (targetFolder.projectId !== targetProject._id) {
           throw app.httpErrors.badRequest(
             "Target folder does not belong to the target project",
@@ -752,7 +903,7 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
       }
 
       return {
-        request: await requireRequestDoc(app, workspace._id, requestDoc._id),
+        request: await requireRequestDoc(app, workspace._id, requestDoc._id, user),
       };
     },
   );
@@ -762,22 +913,25 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
     { preHandler: app.authenticate },
     async (request) => {
       const workspace = await requireWorkspace(app, request.body.workspaceId);
-      const requestDoc = await requireRequestDoc(
-        app,
-        workspace._id,
-        request.params.requestId,
-      );
-      const project = await requireProject(
-        app,
-        workspace._id,
-        requestDoc.projectId,
-      );
       const user = getRequiredUser(request);
       if (!canAccessWorkspace(user, workspace)) {
         throw app.httpErrors.forbidden(
           "You do not have access to this workspace",
         );
       }
+
+      const requestDoc = await requireRequestDoc(
+        app,
+        workspace._id,
+        request.params.requestId,
+        user,
+      );
+      const project = await requireProject(
+        app,
+        workspace._id,
+        requestDoc.projectId,
+        user,
+      );
 
       await app.assertProjectUnlocked(request, project, workspace);
 
@@ -796,6 +950,7 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
           app,
           workspace._id,
           duplicateId.toHexString(),
+          user,
         ),
       };
     },
@@ -833,22 +988,25 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
     { preHandler: app.authenticate },
     async (request) => {
       const workspace = await requireWorkspace(app, request.query.workspaceId);
-      const requestDoc = await requireRequestDoc(
-        app,
-        workspace._id,
-        request.params.requestId,
-      );
-      const project = await requireProject(
-        app,
-        workspace._id,
-        requestDoc.projectId,
-      );
       const user = getRequiredUser(request);
       if (!canAccessWorkspace(user, workspace)) {
         throw app.httpErrors.forbidden(
           "You do not have access to this workspace",
         );
       }
+
+      const requestDoc = await requireRequestDoc(
+        app,
+        workspace._id,
+        request.params.requestId,
+        user,
+      );
+      const project = await requireProject(
+        app,
+        workspace._id,
+        requestDoc.projectId,
+        user,
+      );
 
       await app.assertProjectUnlocked(request, project, workspace);
       await workspaceDataCollection(app.mongo, workspace._id).deleteOne({
@@ -866,17 +1024,19 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
     { preHandler: app.authenticate },
     async (request) => {
       const workspace = await requireWorkspace(app, request.query.workspaceId);
-      const project = await requireProject(
-        app,
-        workspace._id,
-        request.params.projectId,
-      );
       const user = getRequiredUser(request);
       if (!canAccessWorkspace(user, workspace)) {
         throw app.httpErrors.forbidden(
           "You do not have access to this workspace",
         );
       }
+
+      const project = await requireProject(
+        app,
+        workspace._id,
+        request.params.projectId,
+        user,
+      );
 
       await app.assertProjectUnlocked(request, project, workspace);
       const history = serializeDocs(
@@ -895,16 +1055,32 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
     { preHandler: app.authenticate },
     async (request) => {
       const workspace = await requireWorkspace(app, request.body.workspaceId);
-      const project = await requireProject(
-        app,
-        workspace._id,
-        request.body.projectId,
-      );
       const user = getRequiredUser(request);
       if (!canAccessWorkspace(user, workspace)) {
         throw app.httpErrors.forbidden(
           "You do not have access to this workspace",
         );
+      }
+
+      const project = await requireProject(
+        app,
+        workspace._id,
+        request.body.projectId,
+        user,
+      );
+
+      if (request.body.requestId) {
+        const savedRequest = await requireRequestDoc(
+          app,
+          workspace._id,
+          request.body.requestId,
+          user,
+        );
+        if (savedRequest.projectId !== project._id) {
+          throw app.httpErrors.badRequest(
+            "Request does not belong to the selected project",
+          );
+        }
       }
 
       await app.assertProjectUnlocked(request, project, workspace);

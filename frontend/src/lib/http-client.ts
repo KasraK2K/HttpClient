@@ -97,7 +97,7 @@ export const api = {
   updateProject: (
     projectId: string,
     workspaceId: string,
-    values: { name?: string; envVars?: ProjectEnvVar[] },
+    values: { name?: string; envVars?: ProjectEnvVar[]; isPrivate?: boolean },
   ) =>
     requestJson<{ project: ProjectDoc }>(`/projects/${projectId}`, {
       method: "PATCH",
@@ -135,10 +135,14 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ workspaceId, projectId, name }),
     }),
-  updateFolder: (folderId: string, workspaceId: string, name: string) =>
+  updateFolder: (
+    folderId: string,
+    workspaceId: string,
+    values: { name?: string; isPrivate?: boolean },
+  ) =>
     requestJson<{ folder: FolderDoc }>(`/folders/${folderId}`, {
       method: "PATCH",
-      body: JSON.stringify({ workspaceId, name }),
+      body: JSON.stringify({ workspaceId, ...values }),
     }),
   duplicateFolder: (folderId: string, workspaceId: string) =>
     requestJson<{ folder: FolderDoc }>(`/folders/${folderId}/duplicate`, {

@@ -72,6 +72,7 @@ export interface ProjectDoc extends Timestamped {
   createdBy: string;
   passwordHash?: string | null;
   isPasswordProtected: boolean;
+  isPrivate: boolean;
 }
 
 export interface FolderDoc extends Timestamped {
@@ -81,6 +82,7 @@ export interface FolderDoc extends Timestamped {
   projectId: string;
   name: string;
   order: number;
+  isPrivate: boolean;
 }
 
 export interface HeaderRow {
@@ -156,6 +158,7 @@ export interface RequestDoc extends Timestamped {
   auth: RequestAuthConfig;
   responseHistory: RequestHistorySummary[];
   order: number;
+  isPrivate: boolean;
 }
 
 export interface HistoryDoc extends Timestamped {
@@ -274,5 +277,3 @@ export interface ListUsersResponse {
 export interface HistoryResponse {
   history: HistoryDoc[];
 }
-
-

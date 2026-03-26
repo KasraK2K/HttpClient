@@ -28,6 +28,8 @@ import {
   ChevronRight,
   Folder,
   FolderClosed,
+  Eye,
+  EyeOff,
   GripVertical,
   Layers3,
   Plus,
@@ -101,6 +103,7 @@ interface WorkspaceTreeProps {
   activeRequestId?: string;
   canCreateWorkspace: boolean;
   canCreateProject: boolean;
+  canManagePrivacy: boolean;
   onSelectWorkspace: (workspaceId: string) => void;
   onSelectProject: (projectId: string) => void;
   onSelectRequest: (requestId: string) => void;
@@ -120,6 +123,21 @@ interface WorkspaceTreeProps {
   onDeleteFolder: (folderId: string) => void;
   onDuplicateRequest: (requestId: string) => void;
   onDeleteRequest: (requestId: string) => void;
+  onToggleProjectPrivacy: (
+    workspaceId: string,
+    projectId: string,
+    isPrivate: boolean,
+  ) => void;
+  onToggleFolderPrivacy: (
+    workspaceId: string,
+    folderId: string,
+    isPrivate: boolean,
+  ) => void;
+  onToggleRequestPrivacy: (
+    workspaceId: string,
+    requestId: string,
+    isPrivate: boolean,
+  ) => void;
   onWorkspaceReorder: (orderedIds: string[]) => void;
   onProjectReorder: (orderedIds: string[]) => void;
   onFolderReorder: (projectId: string, orderedIds: string[]) => void;
@@ -270,7 +288,37 @@ function TreeNodeContent({
   );
 }
 
+function PrivacyToggleButton({
+  isPrivate,
+  label,
+  onToggle,
+}: {
+  isPrivate: boolean;
+  label: "project" | "folder" | "request";
+  onToggle: (isPrivate: boolean) => void;
+}) {
+  const title = isPrivate
+    ? `Make ${label} visible to members`
+    : `Make ${label} private`;
 
+  return (
+    <button
+      className={cn(
+        "flex h-5 w-5 shrink-0 items-center justify-center rounded-md text-muted/70 transition hover:bg-white/8 hover:text-foreground",
+        isPrivate && "text-amber-200",
+      )}
+      onClick={(event) => {
+        event.stopPropagation();
+        onToggle(!isPrivate);
+      }}
+      type="button"
+      aria-label={title}
+      title={title}
+    >
+      {isPrivate ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+    </button>
+  );
+}
 function DropPlaceholderShell({ children }: { children: ReactNode }) {
   return (
     <div className="ml-5 rounded-md border border-dashed border-accent/45 bg-accent/8 px-2 py-1">
@@ -356,6 +404,8 @@ function RequestItem({
   onRenameRequest,
   onDuplicateRequest,
   onDeleteRequest,
+  onTogglePrivacy,
+  canManagePrivacy,
   isDragging = false,
   isDropTarget = false,
 }: {
@@ -365,6 +415,8 @@ function RequestItem({
   onRenameRequest: (requestId: string) => void;
   onDuplicateRequest: (requestId: string) => void;
   onDeleteRequest: (requestId: string) => void;
+  onTogglePrivacy: (requestId: string, isPrivate: boolean) => void;
+  canManagePrivacy: boolean;
   isDragging?: boolean;
   isDropTarget?: boolean;
 }) {
@@ -375,10 +427,10 @@ function RequestItem({
         isDragging
           ? "pointer-events-none border border-dashed border-accent/35 bg-white/[0.04] pr-2"
           : isDropTarget
-            ? "bg-accent/10 pr-7 ring-1 ring-inset ring-accent/55"
+            ? cn("bg-accent/10 ring-1 ring-inset ring-accent/55", canManagePrivacy ? "pr-14" : "pr-7")
             : activeRequestId === request._id
-              ? "bg-accent/10 pr-7"
-              : "pr-7 hover:bg-white/[0.035]",
+              ? cn("bg-accent/10", canManagePrivacy ? "pr-14" : "pr-7")
+              : cn(canManagePrivacy ? "pr-14" : "pr-7", "hover:bg-white/[0.035]"),
       )}
     >
       <div className="flex items-center gap-1.5 px-1 py-0.5">
@@ -404,6 +456,15 @@ function RequestItem({
       </div>
       {!isDragging ? (
         <ContextMenus
+          leadingAccessory={
+            canManagePrivacy ? (
+              <PrivacyToggleButton
+                isPrivate={request.isPrivate}
+                label="request"
+                onToggle={(isPrivate) => onTogglePrivacy(request._id, isPrivate)}
+              />
+            ) : null
+          }
           onRename={() => onRenameRequest(request._id)}
           onDuplicate={() => onDuplicateRequest(request._id)}
           onDelete={() => onDeleteRequest(request._id)}
@@ -412,7 +473,6 @@ function RequestItem({
     </div>
   );
 }
-
 function reorderIds(items: SortableItem[], activeId: string, overId: string) {
   const oldIndex = items.findIndex((item) => item._id === activeId);
   const newIndex = items.findIndex((item) => item._id === overId);
@@ -433,6 +493,7 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
     activeRequestId,
     canCreateWorkspace,
     canCreateProject,
+    canManagePrivacy,
     onSelectWorkspace,
     onSelectProject,
     onSelectRequest,
@@ -452,6 +513,9 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
     onDeleteFolder,
     onDuplicateRequest,
     onDeleteRequest,
+    onToggleProjectPrivacy,
+    onToggleFolderPrivacy,
+    onToggleRequestPrivacy,
     onWorkspaceReorder,
     onProjectReorder,
     onFolderReorder,
@@ -1231,10 +1295,10 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                                   isDragging
                                     ? "pointer-events-none border border-dashed border-accent/35 bg-white/[0.04] pr-2"
                                     : isProjectDropTarget
-                                      ? "bg-accent/10 pr-7 ring-1 ring-inset ring-accent/55"
+                                      ? cn("bg-accent/10 ring-1 ring-inset ring-accent/55", canManagePrivacy ? "pr-14" : "pr-7")
                                       : project._id === activeProjectId
-                                        ? "bg-white/[0.05] pr-7"
-                                        : "pr-7 hover:bg-white/[0.03]",
+                                        ? cn("bg-white/[0.05]", canManagePrivacy ? "pr-14" : "pr-7")
+                                        : cn(canManagePrivacy ? "pr-14" : "pr-7", "hover:bg-white/[0.03]"),
                                 )}
                               >
                                 <div className="flex items-center gap-0.5 px-1 py-0.5">
@@ -1260,28 +1324,45 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                                       <ChevronRight className="h-3.5 w-3.5" />
                                     )}
                                   </button>
-                                  <button
-                                    className="min-w-0 flex-1 text-left"
-                                    onClick={() => {
-                                      setExpandedProjects((state) => ({
-                                        ...state,
-                                        [project._id]: true,
-                                      }));
-                                      onSelectProject(project._id);
-                                    }}
-                                    type="button"
-                                  >
-                                    <TreeNodeContent
-                                      icon={
-                                        <Workflow className="h-3.5 w-3.5 text-sky-300" />
-                                      }
-                                      name={project.name}
-                                      meta={projectMeta}
-                                    />
-                                  </button>
+                                  <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                                    <span className="shrink-0">
+                                      <Workflow className="h-3.5 w-3.5 text-sky-300" />
+                                    </span>
+                                    <button
+                                      className={cn(
+                                        "min-w-0 flex-1 truncate text-left text-[13px] leading-5 text-foreground",
+                                        project._id === activeProjectId && "font-medium",
+                                      )}
+                                      onClick={() => {
+                                        setExpandedProjects((state) => ({
+                                          ...state,
+                                          [project._id]: true,
+                                        }));
+                                        onSelectProject(project._id);
+                                      }}
+                                      type="button"
+                                      title={project.name}
+                                    >
+                                      {project.name}
+                                    </button>
+                                    <span className="shrink-0 text-[10px] text-muted">
+                                      {projectMeta}
+                                    </span>
+                                  </div>
                                 </div>
                                 {!isDragging ? (
                                   <ContextMenus
+                                    leadingAccessory={
+                                      canManagePrivacy ? (
+                                        <PrivacyToggleButton
+                                          isPrivate={project.isPrivate}
+                                          label="project"
+                                          onToggle={(isPrivate) =>
+                                            onToggleProjectPrivacy(workspace._id, project._id, isPrivate)
+                                          }
+                                        />
+                                      ) : null
+                                    }
                                     onCreate={() => onCreateRequest(project._id)}
                                     onRename={() => onRenameProject(project._id)}
                                     onDuplicate={() => onDuplicateProject(project._id)}
@@ -1322,6 +1403,10 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                                                 onRenameRequest={onRenameRequest}
                                                 onDuplicateRequest={onDuplicateRequest}
                                                 onDeleteRequest={onDeleteRequest}
+                                                onTogglePrivacy={(requestId, isPrivate) =>
+                                                  onToggleRequestPrivacy(workspace._id, requestId, isPrivate)
+                                                }
+                                                canManagePrivacy={canManagePrivacy}
                                                 isDragging={isDragging}
                                                 isDropTarget={isDropTarget("request", request._id)}
                                               />
@@ -1373,8 +1458,8 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                                             isDragging
                                               ? "pointer-events-none border border-dashed border-accent/35 bg-white/[0.04] pr-2"
                                               : isFolderDropTarget
-                                                ? "bg-accent/10 pr-7 ring-1 ring-inset ring-accent/55"
-                                                : "pr-7 hover:bg-white/[0.03]",
+                                                ? cn("bg-accent/10 ring-1 ring-inset ring-accent/55", canManagePrivacy ? "pr-14" : "pr-7")
+                                                : cn(canManagePrivacy ? "pr-14" : "pr-7", "hover:bg-white/[0.03]"),
                                           )}
                                         >
                                           <div className="flex items-center gap-0.5 px-1 py-0.5">
@@ -1400,25 +1485,38 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                                                 <ChevronRight className="h-3.5 w-3.5" />
                                               )}
                                             </button>
-                                            <div className="min-w-0 flex-1">
-                                              <TreeNodeContent
-                                                icon={
-                                                  isExpandedFolder ? (
-                                                    <Folder className="h-3.5 w-3.5 text-amber-300" />
-                                                  ) : (
-                                                    <FolderClosed className="h-3.5 w-3.5 text-amber-300" />
-                                                  )
-                                                }
-                                                name={folder.name}
-                                                meta={formatCount(
-                                                  folder.requests.length,
-                                                  "request",
+                                            <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                                              <span className="shrink-0">
+                                                {isExpandedFolder ? (
+                                                  <Folder className="h-3.5 w-3.5 text-amber-300" />
+                                                ) : (
+                                                  <FolderClosed className="h-3.5 w-3.5 text-amber-300" />
                                                 )}
-                                              />
+                                              </span>
+                                              <span
+                                                className="min-w-0 flex-1 truncate text-[13px] leading-5 text-foreground"
+                                                title={folder.name}
+                                              >
+                                                {folder.name}
+                                              </span>
+                                              <span className="shrink-0 text-[10px] text-muted">
+                                                {formatCount(folder.requests.length, "request")}
+                                              </span>
                                             </div>
                                           </div>
                                           {!isDragging ? (
                                             <ContextMenus
+                                              leadingAccessory={
+                                                canManagePrivacy ? (
+                                                  <PrivacyToggleButton
+                                                    isPrivate={folder.isPrivate}
+                                                    label="folder"
+                                                    onToggle={(isPrivate) =>
+                                                      onToggleFolderPrivacy(workspace._id, folder._id, isPrivate)
+                                                    }
+                                                  />
+                                                ) : null
+                                              }
                                               onCreate={() =>
                                                 onCreateRequest(project._id, folder._id)
                                               }
@@ -1463,6 +1561,10 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                                                           onRenameRequest={onRenameRequest}
                                                           onDuplicateRequest={onDuplicateRequest}
                                                           onDeleteRequest={onDeleteRequest}
+                                                         onTogglePrivacy={(requestId, isPrivate) =>
+                                                           onToggleRequestPrivacy(workspace._id, requestId, isPrivate)
+                                                         }
+                                                         canManagePrivacy={canManagePrivacy}
                                                           isDragging={isDragging}
                                                           isDropTarget={isDropTarget("request", request._id)}
                                                         />

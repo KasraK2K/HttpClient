@@ -93,7 +93,7 @@ const workspaceRoutes: FastifyPluginAsync = async (app) => {
 
       await app.assertWorkspaceUnlocked(request, workspace);
       return {
-        tree: await buildWorkspaceTree(app.mongo, workspace),
+        tree: await buildWorkspaceTree(app.mongo, workspace, user),
       };
     },
   );

@@ -19,6 +19,7 @@ import {
   withoutPassword,
 } from "./collections.js";
 import type { Db } from "mongodb";
+import { canViewEntity } from "../lib/permissions.js";
 
 function sanitizeWorkspace(workspace: WorkspaceMeta): WorkspaceMeta {
   return {
@@ -28,11 +29,26 @@ function sanitizeWorkspace(workspace: WorkspaceMeta): WorkspaceMeta {
   };
 }
 
-function sanitizeProject<T extends ProjectDoc>(project: T): T {
+function normalizeProject<T extends ProjectDoc>(project: T): T {
   return {
     ...project,
     passwordHash: null,
     isPasswordProtected: false,
+    isPrivate: Boolean(project.isPrivate),
+  };
+}
+
+function normalizeFolder<T extends FolderDoc>(folder: T): T {
+  return {
+    ...folder,
+    isPrivate: Boolean(folder.isPrivate),
+  };
+}
+
+function normalizeRequest<T extends RequestDoc>(request: T): T {
+  return {
+    ...request,
+    isPrivate: Boolean(request.isPrivate),
   };
 }
 
@@ -112,6 +128,7 @@ export async function getWorkspaceById(
 export async function buildWorkspaceTree(
   db: Db,
   workspace: WorkspaceMeta,
+  user: AdminUser | User,
 ): Promise<WorkspaceTree> {
   const records = serializeDocs(
     await workspaceDataCollection(db, workspace._id)
@@ -120,23 +137,37 @@ export async function buildWorkspaceTree(
       .toArray(),
   ) as Array<ProjectDoc | FolderDoc | RequestDoc | HistoryDoc>;
 
-  const projects = records.filter(
-    (record): record is ProjectDoc => record.entityType === "project",
+  const projects = records
+    .filter((record): record is ProjectDoc => record.entityType === "project")
+    .map(normalizeProject);
+  const folders = records
+    .filter((record): record is FolderDoc => record.entityType === "folder")
+    .map(normalizeFolder);
+  const requests = records
+    .filter((record): record is RequestDoc => record.entityType === "request")
+    .map(normalizeRequest);
+
+  const visibleProjects = projects.filter((project) => canViewEntity(user, project));
+  const visibleProjectIds = new Set(visibleProjects.map((project) => project._id));
+  const visibleFolders = folders.filter(
+    (folder) =>
+      visibleProjectIds.has(folder.projectId) && canViewEntity(user, folder),
   );
-  const folders = records.filter(
-    (record): record is FolderDoc => record.entityType === "folder",
-  );
-  const requests = records.filter(
-    (record): record is RequestDoc => record.entityType === "request",
+  const visibleFolderIds = new Set(visibleFolders.map((folder) => folder._id));
+  const visibleRequests = requests.filter(
+    (request) =>
+      visibleProjectIds.has(request.projectId) &&
+      canViewEntity(user, request) &&
+      (!request.folderId || visibleFolderIds.has(request.folderId)),
   );
 
-  const projectTree = projects.map((project) => {
-    const projectFolders = folders
+  const projectTree = visibleProjects.map((project) => {
+    const projectFolders = visibleFolders
       .filter((folder) => folder.projectId === project._id)
       .sort((a, b) => a.order - b.order)
       .map((folder) => ({
         ...folder,
-        requests: requests
+        requests: visibleRequests
           .filter(
             (request) =>
               request.projectId === project._id &&
@@ -146,9 +177,9 @@ export async function buildWorkspaceTree(
       }));
 
     return {
-      ...sanitizeProject(project),
+      ...project,
       folders: projectFolders,
-      requests: requests
+      requests: visibleRequests
         .filter(
           (request) => request.projectId === project._id && !request.folderId,
         )

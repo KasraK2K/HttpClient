@@ -1,10 +1,14 @@
 import type {
   AdminUser,
+  FolderDoc,
   ProjectDoc,
+  RequestDoc,
   User,
   WorkspaceMeta,
 } from "@restify/shared";
 import type { FastifyRequest } from "fastify";
+
+type PrivateEntity = Pick<ProjectDoc | FolderDoc | RequestDoc, "isPrivate">;
 
 export function getRequiredUser(request: FastifyRequest): AdminUser | User {
   if (!request.currentUser) {
@@ -42,4 +46,15 @@ export function canAccessWorkspace(
     workspace.ownerId === user._id ||
     workspace.members.some((member) => member.userId === user._id)
   );
+}
+
+export function canManagePrivateEntities(user: AdminUser | User): boolean {
+  return user.role !== "member";
+}
+
+export function canViewEntity(
+  user: AdminUser | User,
+  entity?: PrivateEntity | null,
+): boolean {
+  return !entity || !Boolean(entity.isPrivate) || canManagePrivateEntities(user);
 }

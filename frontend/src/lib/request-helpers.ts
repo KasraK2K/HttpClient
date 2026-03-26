@@ -58,8 +58,8 @@ export function createEmptyRequest(
     },
     responseHistory: [] as RequestHistorySummary[],
     order: 0,
+    isPrivate: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
 }
-

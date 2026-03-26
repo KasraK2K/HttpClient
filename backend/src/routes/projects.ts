@@ -1,5 +1,11 @@
+import type {
+  AdminUser,
+  ProjectDoc,
+  ProjectEnvVar,
+  User,
+  WorkspaceMeta,
+} from "@restify/shared";
 import type { FastifyPluginAsync } from "fastify";
-import type { ProjectDoc, ProjectEnvVar, WorkspaceMeta } from "@restify/shared";
 import { getWorkspaceById } from "../db/bootstrap.js";
 import {
   createId,
@@ -10,9 +16,22 @@ import {
 } from "../db/collections.js";
 import {
   canAccessWorkspace,
+  canManagePrivateEntities,
   canManageProject,
+  canViewEntity,
   getRequiredUser,
 } from "../lib/permissions.js";
+
+type SessionUser = AdminUser | User;
+
+function normalizeProject(project: ProjectDoc): ProjectDoc {
+  return {
+    ...project,
+    passwordHash: null,
+    isPasswordProtected: false,
+    isPrivate: Boolean(project.isPrivate),
+  };
+}
 
 async function requireWorkspace(
   app: Parameters<FastifyPluginAsync>[0],
@@ -40,6 +59,7 @@ async function requireProject(
   app: Parameters<FastifyPluginAsync>[0],
   workspaceId: string,
   projectId?: string,
+  user?: SessionUser,
 ): Promise<ProjectDoc> {
   const normalizedProjectId = projectId?.trim();
   if (!normalizedProjectId) {
@@ -59,7 +79,13 @@ async function requireProject(
   if (!project) {
     throw app.httpErrors.notFound("Project not found");
   }
-  return serializeDoc(project) as ProjectDoc;
+
+  const normalizedProject = normalizeProject(serializeDoc(project) as ProjectDoc);
+  if (user && !canViewEntity(user, normalizedProject)) {
+    throw app.httpErrors.notFound("Project not found");
+  }
+
+  return normalizedProject;
 }
 
 function clampOrder(value: number | undefined, max: number) {
@@ -108,6 +134,7 @@ const projectRoutes: FastifyPluginAsync = async (app) => {
         createdBy: user._id,
         passwordHash: null,
         isPasswordProtected: false,
+        isPrivate: false,
         createdAt: now,
         updatedAt: now,
       };
@@ -115,23 +142,23 @@ const projectRoutes: FastifyPluginAsync = async (app) => {
       await workspaceDataCollection(app.mongo, workspace._id).insertOne(
         project as never,
       );
-      return { project: serializeDoc(project) };
+      return { project: normalizeProject(serializeDoc(project) as ProjectDoc) };
     },
   );
 
   app.patch<{
     Params: { projectId: string };
-    Body: { workspaceId: string; name?: string; envVars?: ProjectEnvVar[] };
+    Body: {
+      workspaceId: string;
+      name?: string;
+      envVars?: ProjectEnvVar[];
+      isPrivate?: boolean;
+    };
   }>(
     "/projects/:projectId",
     { preHandler: app.authenticate },
     async (request) => {
       const workspace = await requireWorkspace(app, request.body.workspaceId);
-      const project = await requireProject(
-        app,
-        workspace._id,
-        request.params.projectId,
-      );
       const user = getRequiredUser(request);
       if (!canAccessWorkspace(user, workspace)) {
         throw app.httpErrors.forbidden(
@@ -139,21 +166,53 @@ const projectRoutes: FastifyPluginAsync = async (app) => {
         );
       }
 
+      const project = await requireProject(
+        app,
+        workspace._id,
+        request.params.projectId,
+        user,
+      );
+
+      if (
+        "isPrivate" in request.body &&
+        !canManagePrivateEntities(user)
+      ) {
+        throw app.httpErrors.forbidden(
+          "Members cannot change private visibility",
+        );
+      }
+
+      const patch: Record<string, unknown> = {
+        updatedAt: isoNow(),
+      };
+
+      if ("name" in request.body) {
+        const name = request.body.name?.trim();
+        if (!name) {
+          throw app.httpErrors.badRequest("Project name is required");
+        }
+        patch.name = name;
+      }
+
+      if ("envVars" in request.body) {
+        patch.envVars = request.body.envVars ?? [];
+      }
+
+      if ("isPrivate" in request.body) {
+        patch.isPrivate = Boolean(request.body.isPrivate);
+      }
+
       await app.assertProjectUnlocked(request, project, workspace);
 
       await workspaceDataCollection(app.mongo, workspace._id).updateOne(
         { _id: toObjectId(project._id) },
         {
-          $set: {
-            ...(request.body.name ? { name: request.body.name.trim() } : {}),
-            ...(request.body.envVars ? { envVars: request.body.envVars } : {}),
-            updatedAt: isoNow(),
-          },
+          $set: patch,
         },
       );
 
       return {
-        project: await requireProject(app, workspace._id, project._id),
+        project: await requireProject(app, workspace._id, project._id, user),
       };
     },
   );
@@ -177,12 +236,13 @@ const projectRoutes: FastifyPluginAsync = async (app) => {
         app,
         request.body.targetWorkspaceId,
       );
+      const user = getRequiredUser(request);
       const project = await requireProject(
         app,
         sourceWorkspace._id,
         request.params.projectId,
+        user,
       );
-      const user = getRequiredUser(request);
 
       if (sourceWorkspace._id === targetWorkspace._id) {
         return { project };
@@ -254,7 +314,12 @@ const projectRoutes: FastifyPluginAsync = async (app) => {
       );
 
       return {
-        project: await requireProject(app, targetWorkspace._id, project._id),
+        project: await requireProject(
+          app,
+          targetWorkspace._id,
+          project._id,
+          user,
+        ),
       };
     },
   );
@@ -264,12 +329,13 @@ const projectRoutes: FastifyPluginAsync = async (app) => {
     { preHandler: app.authenticate },
     async (request) => {
       const workspace = await requireWorkspace(app, request.body.workspaceId);
+      const user = getRequiredUser(request);
       const project = await requireProject(
         app,
         workspace._id,
         request.params.projectId,
+        user,
       );
-      const user = getRequiredUser(request);
       if (!canManageProject(user, project, workspace)) {
         throw app.httpErrors.forbidden(
           "Only the project owner, workspace owner, or superadmin can duplicate this project",
@@ -325,6 +391,7 @@ const projectRoutes: FastifyPluginAsync = async (app) => {
           app,
           workspace._id,
           idMap.get(project._id)!,
+          user,
         ),
       };
     },
@@ -363,12 +430,13 @@ const projectRoutes: FastifyPluginAsync = async (app) => {
     { preHandler: app.authenticate },
     async (request) => {
       const workspace = await requireWorkspace(app, request.query.workspaceId);
+      const user = getRequiredUser(request);
       const project = await requireProject(
         app,
         workspace._id,
         request.params.projectId,
+        user,
       );
-      const user = getRequiredUser(request);
       if (!canManageProject(user, project, workspace)) {
         throw app.httpErrors.forbidden(
           "Only the project owner, workspace owner, or superadmin can delete this project",

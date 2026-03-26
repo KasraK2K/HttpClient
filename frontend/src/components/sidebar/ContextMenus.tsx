@@ -1,5 +1,5 @@
 import { Copy, EllipsisVertical, PenSquare, Plus, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "../ui/button";
 
@@ -8,6 +8,7 @@ interface ContextMenusProps {
   onRename?: () => void;
   onDuplicate?: () => void;
   onDelete?: () => void;
+  leadingAccessory?: ReactNode;
 }
 
 const MENU_WIDTH = 152;
@@ -18,6 +19,7 @@ export function ContextMenus({
   onRename,
   onDuplicate,
   onDelete,
+  leadingAccessory,
 }: ContextMenusProps) {
   const [open, setOpen] = useState(false);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
@@ -178,9 +180,10 @@ export function ContextMenus({
     <>
       <div
         ref={rootRef}
-        className="pointer-events-none absolute right-0 top-1/2 z-20 -translate-y-1/2 opacity-0 transition group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100"
+        className="pointer-events-none absolute right-0 top-1/2 z-20 flex -translate-y-1/2 items-center gap-0.5 opacity-0 transition group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100"
         onClick={(event) => event.stopPropagation()}
       >
+        {leadingAccessory ? <div className="flex items-center">{leadingAccessory}</div> : null}
         <button
           ref={triggerRef}
           className="flex h-6 w-6 items-center justify-center rounded-md text-muted transition hover:bg-white/[0.08] hover:text-foreground"
@@ -195,3 +198,4 @@ export function ContextMenus({
     </>
   );
 }
+
