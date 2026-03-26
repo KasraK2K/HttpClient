@@ -90,6 +90,7 @@ export function EnvVarEditor({
           <Button
             variant="secondary"
             onClick={() => onChange([...envVars, { key: "", value: "" }])}
+            disabled={!projectName}
           >
             <Plus className="h-4 w-4" />
             Add Variable

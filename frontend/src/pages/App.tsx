@@ -325,6 +325,17 @@ export default function App() {
     selectRequest(firstRequest);
   };
 
+  const handleSelectRequest = (requestId: string) => {
+    if (activeWorkspaceId) {
+      const match = findRequestInTree(activeWorkspaceId, requestId);
+      if (match && match.project._id !== activeProjectId) {
+        selectProject(match.project._id);
+      }
+    }
+
+    selectRequest(requestId);
+  };
+
   const openCreateWorkspaceDialog = () => {
     if (!canCreateWorkspace) {
       reportError(new Error("Members cannot create workspaces."));
@@ -956,7 +967,7 @@ export default function App() {
               handleSelectWorkspace(workspaceId).catch(reportError)
             }
             onSelectProject={handleSelectProject}
-            onSelectRequest={selectRequest}
+            onSelectRequest={handleSelectRequest}
             canCreateWorkspace={canCreateWorkspace}
             canCreateProject={canCreateProject}
             onCreateWorkspace={openCreateWorkspaceDialog}
