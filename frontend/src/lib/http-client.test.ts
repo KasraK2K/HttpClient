@@ -28,6 +28,24 @@ describe("api", () => {
     );
   });
 
+  it("extracts the message from JSON error responses", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      text: async () =>
+        JSON.stringify({
+          statusCode: 401,
+          error: "Unauthorized",
+          message: "Invalid username or password",
+        }),
+    } as Response);
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      api.login({ username: "demo", password: "wrong" }),
+    ).rejects.toThrow("Invalid username or password");
+  });
+
   it("forwards the abort signal when executing a request", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,

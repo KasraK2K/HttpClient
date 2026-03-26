@@ -15,6 +15,7 @@ import type {
   WorkspaceMeta,
   WorkspaceTreeResponse,
 } from "@restify/shared";
+import { extractApiErrorMessage } from "./errors";
 
 async function requestJson<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
@@ -30,7 +31,9 @@ async function requestJson<T>(path: string, init: RequestInit = {}): Promise<T> 
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(text || `Request failed with ${response.status}`);
+    throw new Error(
+      extractApiErrorMessage(text) ?? `Request failed with ${response.status}`,
+    );
   }
 
   if (response.status === 204) {

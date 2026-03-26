@@ -19,6 +19,7 @@ import { METHOD_TEXT_STYLES } from "../lib/methods";
 import { createEmptyRequest } from "../lib/request-helpers";
 import type { InspectorTab } from "../types";
 import { useActiveRequestStore } from "../store/activeRequest";
+import { showErrorToast, showSuccessToast } from "../store/toasts";
 import { useAuthStore } from "../store/auth";
 import { useEnvironmentStore } from "../store/environment";
 import { useHistoryStore } from "../store/history";
@@ -49,9 +50,7 @@ function getStoredInspectorTab(): InspectorTab {
 }
 
 function reportError(error: unknown) {
-  const message =
-    error instanceof Error ? error.message : "Something went wrong";
-  window.alert(message);
+  showErrorToast(error);
 }
 
 function isAbortError(error: unknown): boolean {
@@ -551,6 +550,7 @@ export default function App() {
     if (renameDialog.kind === "workspace") {
       await api.renameWorkspace(renameDialog.workspaceId, name);
       await refreshWorkspaces();
+      showSuccessToast(`Saved workspace name as ${name}.`, "Workspace Saved");
       return;
     }
 
@@ -569,6 +569,7 @@ export default function App() {
         { name },
       );
       await refreshTree(renameDialog.workspaceId);
+      showSuccessToast(`Saved project name as ${name}.`, "Project Saved");
       return;
     }
 
@@ -587,6 +588,7 @@ export default function App() {
         name,
       );
       await refreshTree(renameDialog.workspaceId);
+      showSuccessToast(`Saved folder name as ${name}.`, "Folder Saved");
       return;
     }
 
@@ -603,6 +605,7 @@ export default function App() {
       { workspaceId: renameDialog.workspaceId, name },
     );
     await refreshTree(renameDialog.workspaceId);
+    showSuccessToast(`Saved request name as ${name}.`, "Request Saved");
   };
 
   const createRequest = async (
@@ -747,6 +750,7 @@ export default function App() {
       workspaceId: draft.workspaceId,
     });
     await refreshTree(draft.workspaceId);
+    showSuccessToast(`Saved ${draft.name}.`, "Request Saved");
   };
 
   const sendRequest = async (payload: Parameters<typeof api.execute>[0]) => {
@@ -791,6 +795,10 @@ export default function App() {
       envVars: envVars[activeProject._id] ?? [],
     });
     await refreshTree(activeWorkspace._id);
+    showSuccessToast(
+      `Saved environment variables for ${activeProject.name}.`,
+      "Environment Saved",
+    );
   };
 
   const refreshUsers = async () => {

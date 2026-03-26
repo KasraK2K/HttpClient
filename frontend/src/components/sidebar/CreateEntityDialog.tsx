@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { showErrorToast, showWarningToast } from "../../store/toasts";
 import { Button } from "../ui/button";
 import { Dialog } from "../ui/dialog";
 import { Input } from "../ui/input";
@@ -29,41 +30,36 @@ export function CreateEntityDialog({
   onSubmit,
 }: CreateEntityDialogProps) {
   const [name, setName] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (open) {
       setName(initialValue ?? "");
-      setError(null);
       setIsSubmitting(false);
       return;
     }
 
     setName("");
-    setError(null);
     setIsSubmitting(false);
   }, [initialValue, open]);
 
   const handleSubmit = async () => {
     const trimmedName = name.trim();
     if (!trimmedName) {
-      setError(`${label} name is required`);
+      showWarningToast(`${label} name is required`, "Missing Information");
       return;
     }
 
     setIsSubmitting(true);
-    setError(null);
 
     try {
       await onSubmit(trimmedName);
       onOpenChange(false);
     } catch (submitError) {
-      setError(
-        submitError instanceof Error
-          ? submitError.message
-          : `Unable to ${actionVerb} ${label.toLowerCase()}`,
-      );
+      showErrorToast(submitError, {
+        title: actionVerb === "rename" ? "Rename Failed" : "Create Failed",
+        fallbackMessage: `Unable to ${actionVerb} ${label.toLowerCase()}`,
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -92,7 +88,6 @@ export function CreateEntityDialog({
             placeholder={placeholder}
           />
         </div>
-        {error ? <p className="text-sm text-rose-300">{error}</p> : null}
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             Cancel

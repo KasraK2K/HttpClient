@@ -3,6 +3,7 @@ import { Save, TerminalSquare } from "lucide-react";
 import { useMemo } from "react";
 import { useCtrlEnter } from "../../hooks/use-ctrl-enter";
 import { buildCurlCommand } from "../../lib/curl";
+import { showErrorToast, showSuccessToast } from "../../store/toasts";
 import { createHeaderRow, createQueryParamRow } from "../../lib/request-helpers";
 import {
   buildExecuteRequestPayload,
@@ -86,8 +87,15 @@ export function RequestBuilder({
 
     try {
       await navigator.clipboard.writeText(buildCurlCommand(sendPayload));
-    } catch {
-      return;
+      showSuccessToast(
+        "cURL command copied to your clipboard.",
+        "cURL Copied",
+      );
+    } catch (error) {
+      showErrorToast(error, {
+        title: "Copy Failed",
+        fallbackMessage: "Unable to copy the cURL command",
+      });
     }
   };
 

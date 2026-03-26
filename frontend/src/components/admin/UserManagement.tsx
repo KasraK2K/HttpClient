@@ -2,6 +2,7 @@ import type { User, WorkspaceMeta } from "@restify/shared";
 import { Plus, Shield, Trash2, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { cn } from "../../lib/cn";
+import { showErrorToast, showWarningToast } from "../../store/toasts";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import {
@@ -150,7 +151,6 @@ export function UserManagement({
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState<UserRole>("member");
   const [workspaceIds, setWorkspaceIds] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [pendingUserIds, setPendingUserIds] = useState<string[]>([]);
 
@@ -180,17 +180,19 @@ export function UserManagement({
     const trimmedUsername = username.trim();
 
     if (!trimmedUsername || !password || !confirmPassword) {
-      setError("Username, password, and confirm password are required");
+      showWarningToast(
+        "Username, password, and confirm password are required",
+        "Missing Information",
+      );
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      showWarningToast("Passwords do not match", "Check Passwords");
       return;
     }
 
     setIsCreating(true);
-    setError(null);
 
     try {
       await onCreate({
@@ -205,11 +207,10 @@ export function UserManagement({
       setRole("member");
       setWorkspaceIds([]);
     } catch (createError) {
-      setError(
-        createError instanceof Error
-          ? createError.message
-          : "Unable to create user",
-      );
+      showErrorToast(createError, {
+        title: "Create User Failed",
+        fallbackMessage: "Unable to create user",
+      });
     } finally {
       setIsCreating(false);
     }
@@ -222,6 +223,11 @@ export function UserManagement({
     setUserPending(userId, true);
     try {
       await onUpdate(userId, payload);
+    } catch (updateError) {
+      showErrorToast(updateError, {
+        title: "Update User Failed",
+        fallbackMessage: "Unable to update user",
+      });
     } finally {
       setUserPending(userId, false);
     }
@@ -231,6 +237,11 @@ export function UserManagement({
     setUserPending(userId, true);
     try {
       await onDelete(userId);
+    } catch (deleteError) {
+      showErrorToast(deleteError, {
+        title: "Delete User Failed",
+        fallbackMessage: "Unable to delete user",
+      });
     } finally {
       setUserPending(userId, false);
     }
@@ -310,11 +321,6 @@ export function UserManagement({
             />
           </div>
 
-          {error ? (
-            <div className="rounded-xl border border-rose-400/20 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
-              {error}
-            </div>
-          ) : null}
 
           <Button
             className="h-10 w-full justify-center"
