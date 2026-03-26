@@ -908,7 +908,7 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
       }
 
       await app.assertProjectUnlocked(request, project, workspace);
-      const result = await executeHttpRequest(request.body);
+      const result = await executeHttpRequest(request.body, request.signal);
       const now = isoNow();
 
       const historyRecord = {

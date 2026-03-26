@@ -1,4 +1,4 @@
-import { SendHorizontal } from "lucide-react";
+import { LoaderCircle, SendHorizontal } from "lucide-react";
 import type { VariableResolution } from "../../types";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -9,6 +9,7 @@ interface URLBarProps {
   resolution: VariableResolution;
   onChange: (value: string) => void;
   onSend: () => void;
+  onCancel: () => void;
   isSending: boolean;
 }
 
@@ -17,6 +18,7 @@ export function URLBar({
   resolution,
   onChange,
   onSend,
+  onCancel,
   isSending,
 }: URLBarProps) {
   return (
@@ -29,13 +31,18 @@ export function URLBar({
           placeholder="https://api.example.com/users/{{userId}}"
         />
         <Button
+          variant={isSending ? "destructive" : "default"}
           className="h-11 shrink-0 justify-center px-5 font-semibold"
-          onClick={onSend}
-          disabled={isSending || !value.trim()}
-          title="Send request (Ctrl+Enter)"
+          onClick={isSending ? onCancel : onSend}
+          disabled={!isSending && !value.trim()}
+          title={isSending ? "Cancel request" : "Send request (Ctrl+Enter)"}
         >
-          <SendHorizontal className="h-4 w-4" />
-          {isSending ? "Sending..." : "Send"}
+          {isSending ? (
+            <LoaderCircle className="h-4 w-4 animate-spin" />
+          ) : (
+            <SendHorizontal className="h-4 w-4" />
+          )}
+          {isSending ? "Cancel" : "Send"}
         </Button>
       </div>
       <VariableBadges resolution={resolution} />

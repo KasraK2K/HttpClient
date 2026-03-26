@@ -1,6 +1,6 @@
 import type { HistoryDoc, RequestDoc, User } from "@restify/shared";
 import { Activity, FileText, Settings2, Users } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CreateSuperuserPage } from "../components/auth/CreateSuperuserPage";
 import { LoginPage } from "../components/auth/LoginPage";
 import { UserManagement } from "../components/admin/UserManagement";
@@ -52,6 +52,10 @@ function reportError(error: unknown) {
   const message =
     error instanceof Error ? error.message : "Something went wrong";
   window.alert(message);
+}
+
+function isAbortError(error: unknown): boolean {
+  return error instanceof Error && error.name === "AbortError";
 }
 
 type CreateDialogState =
@@ -139,6 +143,7 @@ export default function App() {
   const [createDialog, setCreateDialog] = useState<CreateDialogState>(null);
   const [renameDialog, setRenameDialog] = useState<RenameDialogState>(null);
   const [historyDetailsEntry, setHistoryDetailsEntry] = useState<HistoryDoc | null>(null);
+  const sendAbortControllerRef = useRef<AbortController | null>(null);
 
   const normalizedInspectorTab =
     user?.role === "superadmin" || inspectorTab !== "admin"
@@ -165,6 +170,12 @@ export default function App() {
       return;
     }
   }, [normalizedInspectorTab]);
+
+  useEffect(() => {
+    return () => {
+      sendAbortControllerRef.current?.abort();
+    };
+  }, []);
 
   const activeWorkspace = useMemo(
     () =>
@@ -721,9 +732,15 @@ export default function App() {
   };
 
   const sendRequest = async (payload: Parameters<typeof api.execute>[0]) => {
+    if (isSending) {
+      return;
+    }
+
+    const abortController = new AbortController();
+    sendAbortControllerRef.current = abortController;
     setSending(true);
     try {
-      const result = await api.execute(payload);
+      const result = await api.execute(payload, abortController.signal);
       setResponse(result);
       if (activeProject) {
         const { history } = await api.getProjectHistory(
@@ -733,10 +750,19 @@ export default function App() {
         setHistory(activeProject._id, history);
       }
     } catch (error) {
-      reportError(error);
+      if (!isAbortError(error)) {
+        reportError(error);
+      }
     } finally {
+      if (sendAbortControllerRef.current === abortController) {
+        sendAbortControllerRef.current = null;
+      }
       setSending(false);
     }
+  };
+
+  const cancelRequest = () => {
+    sendAbortControllerRef.current?.abort();
   };
 
   const updateEnvironment = async () => {
@@ -1005,6 +1031,7 @@ export default function App() {
             onDraftChange={setDraft}
             onActiveTabChange={setActiveTab}
             onSave={() => saveRequest().catch(reportError)}
+            onCancel={cancelRequest}
             onSend={(payload) => sendRequest(payload).catch(reportError)}
           />
         }

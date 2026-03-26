@@ -28,6 +28,7 @@ interface RequestBuilderProps {
   onDraftChange: (draft: RequestDoc) => void;
   onActiveTabChange: (tab: BuilderTab) => void;
   onSave: () => void;
+  onCancel: () => void;
   onSend: (payload: ExecuteRequestPayload) => void;
 }
 
@@ -39,6 +40,7 @@ export function RequestBuilder({
   onDraftChange,
   onActiveTabChange,
   onSave,
+  onCancel,
   onSend,
 }: RequestBuilderProps) {
   const resolution = useMemo(
@@ -58,7 +60,7 @@ export function RequestBuilder({
     if (sendPayload) {
       onSend(sendPayload);
     }
-  }, Boolean(sendPayload));
+  }, Boolean(sendPayload) && !isSending);
 
   if (!draft) {
     return (
@@ -129,6 +131,7 @@ export function RequestBuilder({
                 updateDraft({ url, params: buildParamsFromUrl(url) })
               }
               onSend={() => sendPayload && onSend(sendPayload)}
+              onCancel={onCancel}
               isSending={isSending}
             />
           </div>

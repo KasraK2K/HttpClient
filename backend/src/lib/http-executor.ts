@@ -114,6 +114,7 @@ function buildBody(
 
 export async function executeHttpRequest(
   payload: ExecuteRequestPayload,
+  signal?: AbortSignal,
 ): Promise<ExecuteRequestResult> {
   const url = new URL(payload.url);
   const headers = new Headers();
@@ -138,6 +139,7 @@ export async function executeHttpRequest(
     headers,
     body,
     redirect: "manual",
+    signal,
   });
   const durationMs = Math.round(performance.now() - startedAt);
 

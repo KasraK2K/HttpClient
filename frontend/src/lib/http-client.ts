@@ -214,10 +214,11 @@ export const api = {
       `/requests/${requestId}?workspaceId=${workspaceId}`,
       { method: "DELETE" },
     ),
-  execute: (payload: ExecuteRequestPayload) =>
+  execute: (payload: ExecuteRequestPayload, signal?: AbortSignal) =>
     requestJson<ExecuteRequestResult>("/execute", {
       method: "POST",
       body: JSON.stringify(payload),
+      signal,
     }),
   getProjectHistory: (projectId: string, workspaceId: string) =>
     requestJson<HistoryResponse>(
