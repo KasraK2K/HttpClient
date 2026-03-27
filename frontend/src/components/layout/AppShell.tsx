@@ -476,6 +476,14 @@ export function AppShell({
     }) as CSSProperties,
     [builderHeight],
   );
+  const roleLabel =
+    user.role === "superadmin"
+      ? "Super Admin"
+      : user.role === "admin"
+        ? "Admin"
+        : "Member";
+  const roleLabelClassName =
+    user.role === "member" ? "text-muted" : "text-accent/90";
 
   const handleResizeStart = (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (typeof window !== "undefined" && window.innerWidth <= 1280) {
@@ -549,9 +557,7 @@ export function AppShell({
               />
             </nav>
           </div>
-          <div className="pointer-events-none absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 xl:flex">
-            <RoleBadge role={user.role} />
-          </div>
+
           <div className="flex shrink-0 items-center gap-2.5">
             <ThemeSelector
               value={themeId}
@@ -559,11 +565,20 @@ export function AppShell({
               onPreviewTheme={onThemePreview}
               onClearPreview={onThemePreviewEnd}
             />
-            <RoleBadge role={user.role} className="xl:hidden" />
-            <span className="hidden h-6 w-px shrink-0 bg-border/60 sm:block xl:hidden" aria-hidden="true" />
-            <span className="hidden truncate text-sm font-medium text-foreground sm:block max-[900px]:hidden">
-              {user.username}
-            </span>
+            <span className="hidden h-6 w-px shrink-0 bg-border/60 sm:block max-[900px]:hidden" aria-hidden="true" />
+            <div className="hidden items-baseline gap-2 sm:flex max-[900px]:hidden">
+              <span
+                className={cn(
+                  "text-[10px] font-semibold uppercase tracking-[0.14em]",
+                  roleLabelClassName,
+                )}
+              >
+                {roleLabel}
+              </span>
+              <span className="truncate text-sm font-medium text-foreground">
+                {user.username}
+              </span>
+            </div>
             <Button
               className="h-8 rounded-lg px-2.5"
               variant="ghost"
@@ -710,6 +725,7 @@ export function AppShell({
     </div>
   );
 }
+
 
 
 
