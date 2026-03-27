@@ -1,57 +1,43 @@
-<svg width="264" height="52" viewBox="0 0 264 52" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="246" height="76" viewBox="0 0 246 76" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="hcShell" x1="4" y1="4" x2="50" y2="50" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#0F1C2F"/>
-      <stop offset="1" stop-color="#07111E"/>
+    <linearGradient id="hc_http_fill" x1="24" y1="16" x2="141" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#9BE7FF"/>
+      <stop offset="0.5" stop-color="#4EC9FF"/>
+      <stop offset="1" stop-color="#2B72FF"/>
     </linearGradient>
-    <linearGradient id="hcStroke" x1="3" y1="3" x2="49" y2="49" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#B9F1FF" stop-opacity="0.52"/>
-      <stop offset="0.55" stop-color="#60D7FF" stop-opacity="0.34"/>
-      <stop offset="1" stop-color="#10253B" stop-opacity="0.92"/>
+    <linearGradient id="hc_client_fill" x1="128" y1="16" x2="296" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D6FFA5"/>
+      <stop offset="0.45" stop-color="#7AE46E"/>
+      <stop offset="1" stop-color="#16B46C"/>
     </linearGradient>
-    <linearGradient id="hcAccent" x1="15" y1="13" x2="39" y2="37" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#E2F7FF"/>
-      <stop offset="0.45" stop-color="#8EE3FF"/>
-      <stop offset="1" stop-color="#22B8F6"/>
+    <linearGradient id="hc_splash_fill" x1="8" y1="6" x2="92" y2="70" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B8F1FF"/>
+      <stop offset="0.42" stop-color="#4FC7FF"/>
+      <stop offset="1" stop-color="#2357F4"/>
     </linearGradient>
-    <linearGradient id="hcWordmark" x1="107" y1="13" x2="158" y2="29" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#AEEBFF"/>
-      <stop offset="1" stop-color="#43C9FF"/>
-    </linearGradient>
-    <linearGradient id="hcUnderline" x1="66" y1="40" x2="214" y2="40" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#7DD3FC" stop-opacity="0"/>
-      <stop offset="0.16" stop-color="#7DD3FC" stop-opacity="0.88"/>
-      <stop offset="1" stop-color="#7DD3FC" stop-opacity="0.16"/>
-    </linearGradient>
-    <filter id="hcShadow" x="0" y="0" width="54" height="54" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+    <filter id="hc_shadow" x="0" y="0" width="246" height="76" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
       <feFlood flood-opacity="0" result="BackgroundImageFix"/>
       <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-      <feOffset dy="2"/>
-      <feGaussianBlur stdDeviation="2"/>
+      <feOffset dy="4"/>
+      <feGaussianBlur stdDeviation="3"/>
       <feComposite in2="hardAlpha" operator="out"/>
-      <feColorMatrix type="matrix" values="0 0 0 0 0.00784314 0 0 0 0 0.0392157 0 0 0 0 0.0941176 0 0 0 0.38 0"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.0196078 0 0 0 0 0.0470588 0 0 0 0 0.109804 0 0 0 0.35 0"/>
       <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_0_1"/>
       <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_0_1" result="shape"/>
     </filter>
   </defs>
-  <g filter="url(#hcShadow)">
-    <rect x="2" y="2" width="48" height="48" rx="16" fill="url(#hcShell)"/>
-    <rect x="2.75" y="2.75" width="46.5" height="46.5" rx="15.25" stroke="url(#hcStroke)" stroke-width="1.5"/>
-    <rect x="9.5" y="11" width="9.5" height="30" rx="4.75" fill="#0C2033" stroke="#8EE3FF" stroke-opacity="0.14"/>
-    <rect x="16.5" y="10" width="22.5" height="20" rx="6.5" fill="#0C2136" stroke="#8EE3FF" stroke-opacity="0.18"/>
-    <rect x="19.5" y="14" width="11.5" height="2.5" rx="1.25" fill="url(#hcAccent)"/>
-    <rect x="19.5" y="18.75" width="15.75" height="2.5" rx="1.25" fill="#D8F6FF" fill-opacity="0.34"/>
-    <rect x="19.5" y="23.5" width="9" height="2.5" rx="1.25" fill="#D8F6FF" fill-opacity="0.2"/>
-    <rect x="23" y="33" width="16" height="7.5" rx="3.75" fill="#081321" stroke="#8EE3FF" stroke-opacity="0.16"/>
-    <path d="M14.5 20.5C18.2 20.5 19.2 20.9 21.5 22.8C23.4 24.4 25.1 25 27.6 25H34" stroke="url(#hcAccent)" stroke-width="2.2" stroke-linecap="round"/>
-    <circle cx="13.75" cy="20.5" r="2.5" fill="#7DD3FC"/>
-    <circle cx="24.5" cy="25" r="2.5" fill="#38BDF8"/>
-    <path d="M31.5 22.2L35 25L31.5 27.8" stroke="#E7FAFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M27.5 37H30" stroke="#7DD3FC" stroke-width="1.7" stroke-linecap="round"/>
-    <path d="M33.5 35.4L32 37L33.5 38.6" stroke="#7DD3FC" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <g filter="url(#hc_shadow)">
+    <g>
+      <path d="M25.5 37.5C11.5 34.5 8 18.5 21.5 12C27 3.5 40.5 2.5 50 8C64 4 78 12 79.5 24C89.5 30 90 45.5 79 52.5C77 64.5 60 70.5 47.5 64.5C39 69.5 22.5 67.5 18.5 56.5C6.5 52 7.5 37.5 25.5 37.5Z" fill="url(#hc_splash_fill)" stroke="#0A1630" stroke-width="4" stroke-linejoin="round"/>
+      <circle cx="17.5" cy="20.5" r="5.5" fill="#78D9FF" stroke="#0A1630" stroke-width="3"/>
+      <circle cx="71.5" cy="13.5" r="4.5" fill="#7AD0FF" stroke="#0A1630" stroke-width="3"/>
+      <circle cx="82.5" cy="39.5" r="5" fill="#3D8DFF" stroke="#0A1630" stroke-width="3"/>
+      <path d="M28 19C34 12 46 10 57 14" stroke="#EAFBFF" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+    </g>
+    <g font-family="Arial Rounded MT Bold, Segoe UI Rounded, Trebuchet MS, Segoe UI, sans-serif" font-weight="900" paint-order="stroke fill markers" stroke-linejoin="round" stroke-linecap="round">
+      <text x="25" y="58" fill="url(#hc_http_fill)" stroke="#081325" stroke-width="7" font-size="50" transform="rotate(-6 43 43)">H</text>
+      <text x="57" y="58" fill="url(#hc_http_fill)" stroke="#081325" stroke-width="7" font-size="42" letter-spacing="-1.4">ttp</text>
+      <text x="111" y="58" fill="url(#hc_client_fill)" stroke="#081325" stroke-width="7" font-size="42" letter-spacing="-1.6">Client</text>
+    </g>
   </g>
-  <text x="66" y="22" fill="#E6EEF7" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="0.15">Http</text>
-  <text x="112" y="22" fill="url(#hcWordmark)" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" letter-spacing="0.15">Client</text>
-  <text x="66" y="34.5" fill="#8FA8BF" font-family="Segoe UI, Arial, sans-serif" font-size="7.6" font-weight="700" letter-spacing="1.45">REQUESTS  |  VARIABLES  |  HISTORY</text>
-  <path d="M66 39.5H214" stroke="url(#hcUnderline)" stroke-width="1.5" stroke-linecap="round"/>
 </svg>

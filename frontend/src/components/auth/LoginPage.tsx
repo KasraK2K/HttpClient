@@ -1,5 +1,6 @@
-import { LockKeyhole, LogIn } from "lucide-react";
+import { LockKeyhole } from "lucide-react";
 import { useState } from "react";
+import httpClientLogo from "../../assets/httpclient-logo.svg";
 import { showErrorToast } from "../../store/toasts";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -29,17 +30,19 @@ export function LoginPage({ onSubmit }: LoginPageProps) {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
-      <Card className="w-full max-w-md overflow-hidden">
-        <CardHeader className="border-b border-white/10 bg-white/5">
-          <div className="flex items-center gap-3">
-            <div className="rounded-2xl bg-accent/20 p-3 text-accent">
-              <LogIn className="h-5 w-5" />
-            </div>
+    <div className="flex min-h-screen items-center justify-center px-4 py-8">
+      <Card className="w-full max-w-md overflow-hidden border-white/10 bg-slate-950/80 shadow-[0_24px_80px_rgba(2,6,23,0.42)]">
+        <CardHeader className="border-b border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-6">
+          <div className="space-y-4">
+            <img
+              src={httpClientLogo}
+              alt="HttpClient"
+              className="block h-10 w-auto max-w-[184px]"
+            />
             <div>
-              <CardTitle>Sign In To HttpClient</CardTitle>
+              <CardTitle>Sign In</CardTitle>
               <p className="mt-1 text-sm text-muted">
-                REST-only workspace access with secure cookie sessions.
+                Access your REST workspaces, request history, and saved environments.
               </p>
             </div>
           </div>
