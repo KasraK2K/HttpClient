@@ -5,7 +5,7 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
       className={cn(
-        "rounded-xl border border-border/55 bg-card/86 shadow-glow backdrop-blur-xl",
+        "relative isolate overflow-hidden rounded-xl bg-card/86 shadow-glow ring-1 ring-inset ring-border/55 backdrop-blur-xl",
         className,
       )}
       {...props}
@@ -37,3 +37,5 @@ export function CardTitle({ className, ...props }: HTMLAttributes<HTMLHeadingEle
 export function CardContent({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return <div className={cn("p-4", className)} {...props} />;
 }
+
+

@@ -145,27 +145,36 @@ function ContextCrumb({
   );
 }
 
-function RoleBadge({ role }: { role: AdminUser["role"] | User["role"] }) {
+function RoleBadge({
+  role,
+  className,
+}: {
+  role: AdminUser["role"] | User["role"];
+  className?: string;
+}) {
   let label = "Member";
-  let icon = <UserIcon className="h-3 w-3" />;
+  let icon = <UserIcon className="h-3.5 w-3.5" />;
   let badgeClassName =
-    "border-border/55 bg-[rgb(var(--surface-2)/0.72)] text-foreground/82";
+    "border-border/60 bg-[rgb(var(--surface-3)/0.78)] text-foreground/88 shadow-[inset_0_1px_0_rgb(255_255_255/0.06)]";
 
   if (role === "superadmin") {
     label = "Super Admin";
-    icon = <ShieldCheck className="h-3 w-3" />;
-    badgeClassName = "border-sky-400/20 bg-sky-400/10 text-sky-200";
+    icon = <ShieldCheck className="h-3.5 w-3.5" />;
+    badgeClassName =
+      "border-sky-300/30 bg-[linear-gradient(135deg,rgba(14,165,233,0.28),rgba(37,99,235,0.22))] text-sky-50 shadow-[0_12px_28px_rgba(14,165,233,0.16)]";
   } else if (role === "admin") {
     label = "Admin";
-    icon = <Shield className="h-3 w-3" />;
-    badgeClassName = "border-emerald-400/18 bg-emerald-400/10 text-emerald-200";
+    icon = <Shield className="h-3.5 w-3.5" />;
+    badgeClassName =
+      "border-emerald-300/28 bg-[linear-gradient(135deg,rgba(16,185,129,0.28),rgba(5,150,105,0.2))] text-emerald-50 shadow-[0_12px_28px_rgba(16,185,129,0.14)]";
   }
 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
+        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-semibold tracking-[0.04em] backdrop-blur-md",
         badgeClassName,
+        className,
       )}
     >
       {icon}
@@ -505,7 +514,7 @@ export function AppShell({
   return (
     <div className="flex h-screen flex-col overflow-hidden">
       <header className="shrink-0 border-b border-border/60 bg-[rgb(var(--header-bg)/0.94)] px-4 py-2.5 shadow-[0_14px_32px_rgb(var(--shadow)/0.12),inset_0_-1px_0_rgb(var(--header-border)/0.42)] backdrop-blur-xl sm:px-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="relative flex flex-wrap items-center justify-between gap-3 xl:flex-nowrap">
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <img
               src={httpClientLogo}
@@ -540,6 +549,9 @@ export function AppShell({
               />
             </nav>
           </div>
+          <div className="pointer-events-none absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 xl:flex">
+            <RoleBadge role={user.role} />
+          </div>
           <div className="flex shrink-0 items-center gap-2.5">
             <ThemeSelector
               value={themeId}
@@ -547,8 +559,8 @@ export function AppShell({
               onPreviewTheme={onThemePreview}
               onClearPreview={onThemePreviewEnd}
             />
-            <RoleBadge role={user.role} />
-            <span className="hidden h-6 w-px shrink-0 bg-border/60 sm:block" aria-hidden="true" />
+            <RoleBadge role={user.role} className="xl:hidden" />
+            <span className="hidden h-6 w-px shrink-0 bg-border/60 sm:block xl:hidden" aria-hidden="true" />
             <span className="hidden truncate text-sm font-medium text-foreground sm:block max-[900px]:hidden">
               {user.username}
             </span>
@@ -570,7 +582,7 @@ export function AppShell({
         style={mainStyle}
         className="grid min-h-0 flex-1 grid-cols-[var(--sidebar-width)_minmax(0,1fr)_var(--inspector-width)] gap-4 overflow-hidden p-3 sm:gap-5 sm:p-5 max-[1280px]:grid-cols-1 max-[1280px]:overflow-y-auto"
       >
-        <aside className="relative min-h-0 overflow-hidden">
+        <aside className="relative min-h-0 overflow-hidden rounded-xl">
           {sidebar}
           <button
             className="group absolute inset-y-3 -right-4 flex w-8 cursor-col-resize items-center justify-center max-[1280px]:hidden"
@@ -597,8 +609,8 @@ export function AppShell({
           style={centerStyle}
           className="grid min-h-0 grid-rows-[var(--builder-height)_minmax(240px,1fr)] gap-4 overflow-hidden"
         >
-          <div className="min-h-0 overflow-hidden">{builder}</div>
-          <div className="relative min-h-0 overflow-hidden">
+          <div className="min-h-0 overflow-hidden rounded-xl">{builder}</div>
+          <div className="relative min-h-0 overflow-hidden rounded-xl">
             <button
               className="group absolute left-0 -top-4 z-10 flex h-8 w-full cursor-row-resize items-center justify-center max-[1280px]:hidden"
               onPointerDown={handleCenterResizeStart}
@@ -623,7 +635,7 @@ export function AppShell({
         </section>
         <aside
           className={cn(
-            "relative min-h-0 overflow-hidden",
+            "relative min-h-0 overflow-hidden rounded-[1.1rem]",
             isInspectorCollapsed && "max-[1280px]:w-[52px] max-[1280px]:justify-self-end",
           )}
         >
@@ -648,7 +660,7 @@ export function AppShell({
               />
             </button>
           ) : null}
-          <div className="flex h-full min-h-0 overflow-hidden rounded-[1.1rem] border border-border/55 bg-card/86 shadow-glow backdrop-blur-xl">
+          <div className="relative isolate flex h-full min-h-0 overflow-hidden rounded-[1.1rem] bg-card/86 shadow-glow ring-1 ring-inset ring-border/55 backdrop-blur-xl">
             <div
               className={cn(
                 "min-w-0 flex-1 overflow-hidden transition-[width,opacity] duration-200",
@@ -698,4 +710,8 @@ export function AppShell({
     </div>
   );
 }
+
+
+
+
 

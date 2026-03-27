@@ -312,13 +312,8 @@ export function ThemeSelector({
         <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-accent/14 text-accent">
           <Palette className="h-4 w-4" />
         </span>
-        <span className="hidden min-w-0 text-left sm:block">
-          <span className="block truncate text-xs uppercase tracking-[0.16em] text-muted">
-            Theme
-          </span>
-          <span className="block truncate text-sm font-medium text-foreground">
-            {currentTheme.name}
-          </span>
+        <span className="hidden min-w-0 truncate text-sm font-medium text-foreground sm:block">
+          {currentTheme.name}
         </span>
         <ChevronDown className={cn("h-4 w-4 shrink-0 transition", open && "rotate-180")} />
       </button>
@@ -326,3 +321,4 @@ export function ThemeSelector({
     </div>
   );
 }
+
