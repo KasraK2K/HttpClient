@@ -151,10 +151,6 @@ function sortByOrder<T extends { order: number }>(items: T[]): T[] {
   return [...items].sort((a, b) => a.order - b.order);
 }
 
-function formatCount(value: number, singular: string, plural = `${singular}s`) {
-  return `${value} ${value === 1 ? singular : plural}`;
-}
-
 function normalizeFolderId(folderId?: string | null) {
   return folderId ?? null;
 }
@@ -352,16 +348,11 @@ function DropPlaceholderTarget({
 }
 
 function ProjectDropPlaceholder({ project }: { project: TreeProject }) {
-  const requestCount =
-    project.requests.length +
-    project.folders.reduce((total, folder) => total + folder.requests.length, 0);
-
   return (
     <DropPlaceholderShell>
       <TreeNodeContent
         icon={<Workflow className="h-3.5 w-3.5 text-sky-300" />}
         name={project.name}
-        meta={`${project.folders.length} fld | ${requestCount} req`}
       />
     </DropPlaceholderShell>
   );
@@ -373,7 +364,6 @@ function FolderDropPlaceholder({ folder }: { folder: TreeFolder }) {
       <TreeNodeContent
         icon={<Folder className="h-3.5 w-3.5 text-amber-300" />}
         name={folder.name}
-        meta={formatCount(folder.requests.length, "request")}
       />
     </DropPlaceholderShell>
   );
@@ -1201,10 +1191,6 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
               const workspaceProjectPreview = getProjectDropPreview(workspace._id);
               const isExpandedWorkspace = isActiveWorkspace;
               const isWorkspaceDropTarget = isDropTarget("workspace", workspace._id);
-              const workspaceMeta = workspaceTree
-                ? formatCount(workspaceProjects.length, "project")
-                : "Open";
-
               return {
                 row: (dragHandle, isDragging) => (
                   <div
@@ -1245,7 +1231,6 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                         <TreeNodeContent
                           icon={<Layers3 className="h-3.5 w-3.5 text-accent" />}
                           name={workspace.name}
-                          meta={workspaceMeta}
                         />
                       </button>
                     </div>
@@ -1275,14 +1260,6 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                         const isProjectDropTarget = isDropTarget("project", project._id);
                         const projectRequestPreview = getRequestDropPreview(project._id);
                         const projectFolderPreview = getFolderDropPreview(project._id);
-                        const requestCount =
-                          project.requests.length +
-                          project.folders.reduce(
-                            (total, folder) => total + folder.requests.length,
-                            0,
-                          );
-                        const projectMeta = `${project.folders.length} fld | ${requestCount} req`;
-
                         return {
                           row: (dragHandle, isDragging) => (
                             <div className="space-y-0.5">
@@ -1345,9 +1322,7 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                                     >
                                       {project.name}
                                     </button>
-                                    <span className="shrink-0 text-[10px] text-muted">
-                                      {projectMeta}
-                                    </span>
+
                                   </div>
                                 </div>
                                 {!isDragging ? (
@@ -1499,9 +1474,7 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                                               >
                                                 {folder.name}
                                               </span>
-                                              <span className="shrink-0 text-[10px] text-muted">
-                                                {formatCount(folder.requests.length, "request")}
-                                              </span>
+
                                             </div>
                                           </div>
                                           {!isDragging ? (
