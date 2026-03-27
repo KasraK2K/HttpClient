@@ -1,4 +1,4 @@
-import type { HistoryDoc, RequestDoc, User } from "@restify/shared";
+﻿import type { HistoryDoc, RequestDoc, User } from "@restify/shared";
 import { Activity, FileText, Settings2, Users } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CreateSuperuserPage } from "../components/auth/CreateSuperuserPage";
@@ -16,6 +16,12 @@ import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { api } from "../lib/http-client";
+import {
+  applyTheme,
+  getStoredThemeId,
+  persistThemeId,
+  type ThemeId,
+} from "../lib/themes";
 import { METHOD_TEXT_STYLES } from "../lib/methods";
 import { createEmptyRequest } from "../lib/request-helpers";
 import {
@@ -156,6 +162,8 @@ export default function App() {
   const [renameDialog, setRenameDialog] = useState<RenameDialogState>(null);
   const [importDialog, setImportDialog] = useState<ImportDialogState>(null);
   const [historyDetailsEntry, setHistoryDetailsEntry] = useState<HistoryDoc | null>(null);
+  const [selectedThemeId, setSelectedThemeId] = useState<ThemeId>(getStoredThemeId);
+  const [previewThemeId, setPreviewThemeId] = useState<ThemeId | null>(null);
   const sendAbortControllerRef = useRef<AbortController | null>(null);
   const canCreateWorkspace = user?.role !== "member";
   const canCreateProject = user?.role !== "member";
@@ -164,6 +172,21 @@ export default function App() {
     user?.role === "superadmin" || inspectorTab !== "admin"
       ? inspectorTab
       : "environment";
+  const activeThemeId = previewThemeId ?? selectedThemeId;
+  useEffect(() => {
+    applyTheme(activeThemeId);
+  }, [activeThemeId]);
+
+  useEffect(() => {
+    persistThemeId(selectedThemeId);
+  }, [selectedThemeId]);
+
+  useEffect(() => {
+    if (!user) {
+      setPreviewThemeId(null);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (normalizedInspectorTab !== inspectorTab) {
       setInspectorTab(normalizedInspectorTab);
@@ -1075,6 +1098,10 @@ export default function App() {
         activeWorkspaceName={activeWorkspace?.name}
         activeProjectName={activeProject?.name}
         activeRequestName={activeRequest?.name}
+        themeId={selectedThemeId}
+        onThemeChange={setSelectedThemeId}
+        onThemePreview={setPreviewThemeId}
+        onThemePreviewEnd={() => setPreviewThemeId(null)}
         onLogout={logout}
         sidebar={
           <WorkspaceTree
@@ -1271,7 +1298,7 @@ export default function App() {
                   {activeHistory.map((entry: HistoryDoc) => (
                     <div
                       key={entry._id}
-                      className="rounded-2xl border border-white/8 bg-white/4 p-3"
+                      className="rounded-2xl border border-border/45 bg-[rgb(var(--surface-2)/0.48)] p-3"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0 flex-1">
@@ -1365,6 +1392,7 @@ export default function App() {
     </>
   );
 }
+
 
 
 

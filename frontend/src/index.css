@@ -1,9 +1,42 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
   color-scheme: dark;
+  --background: 11 16 32;
+  --foreground: 229 237 249;
+  --card: 17 24 43;
+  --accent: 97 176 255;
+  --accent-foreground: 6 12 24;
+  --border: 36 48 77;
+  --muted: 149 164 198;
+  --shadow: 7 12 24;
+  --surface-1: 9 17 31;
+  --surface-2: 18 27 46;
+  --surface-3: 27 39 65;
+  --header-bg: 5 11 24;
+  --header-border: 40 52 81;
+  --app-bg-start: #09111f;
+  --app-bg-mid: #0b1020;
+  --app-bg-end: #070b14;
+  --app-glow-left: rgba(97, 176, 255, 0.18);
+  --app-glow-right: rgba(33, 208, 143, 0.14);
+  --input-bg: 14 22 39;
+  --input-bg-focus: 21 31 53;
+  --editor-bg: 11 18 32;
+  --editor-gutter-border: rgba(255, 255, 255, 0.08);
+  --editor-gutter-text: rgba(148, 163, 184, 0.72);
+  --editor-selection: rgba(97, 176, 255, 0.26);
+  --editor-active-line: rgba(255, 255, 255, 0.04);
+  --editor-caret: #7cc4ff;
+  --scrollbar-thumb-start: rgba(124, 196, 255, 0.35);
+  --scrollbar-thumb-end: rgba(97, 176, 255, 0.22);
+  --scrollbar-thumb-start-hover: rgba(145, 211, 255, 0.5);
+  --scrollbar-thumb-end-hover: rgba(97, 176, 255, 0.35);
+  --scrollbar-thumb-start-active: rgba(145, 211, 255, 0.62);
+  --scrollbar-thumb-end-active: rgba(97, 176, 255, 0.45);
+  --scrollbar-track-line: rgba(255, 255, 255, 0.05);
 }
 
 html {
@@ -17,24 +50,20 @@ body {
   overflow: hidden;
   font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
   background:
-    radial-gradient(
-      circle at top left,
-      rgba(97, 176, 255, 0.10),
-      transparent 28%
-    ),
-    radial-gradient(
-      circle at top right,
-      rgba(33, 208, 143, 0.08),
-      transparent 24%
-    ),
-    linear-gradient(180deg, #09111f 0%, #0b1020 48%, #070b14 100%);
-  color: #e5edf9;
+    radial-gradient(circle at top left, var(--app-glow-left), transparent 28%),
+    radial-gradient(circle at top right, var(--app-glow-right), transparent 24%),
+    linear-gradient(180deg, var(--app-bg-start) 0%, var(--app-bg-mid) 48%, var(--app-bg-end) 100%);
+  color: rgb(var(--foreground));
 }
 
 * {
   box-sizing: border-box;
   scrollbar-width: thin;
-  scrollbar-color: rgba(124, 196, 255, 0.28) rgba(255, 255, 255, 0.02);
+  scrollbar-color: var(--scrollbar-thumb-start) transparent;
+}
+
+*::selection {
+  background: var(--editor-selection);
 }
 
 #root {
@@ -53,12 +82,13 @@ textarea {
   position: fixed;
   z-index: 100;
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0.75rem;
-  background: #020617;
-  padding: 0.25rem;
-  box-shadow: 0 16px 40px rgba(2, 6, 23, 0.45);
+  border: 1px solid rgb(var(--border) / 0.55);
+  border-radius: 0.9rem;
+  background: linear-gradient(180deg, rgb(var(--surface-1) / 0.98), rgb(var(--card) / 0.97));
+  padding: 0.3rem;
+  box-shadow: 0 18px 48px rgb(var(--shadow) / 0.28);
   overscroll-behavior: contain;
+  backdrop-filter: blur(20px);
 }
 
 .app-dropdown-trigger {
@@ -68,11 +98,11 @@ textarea {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgb(var(--border) / 0.55);
   border-radius: 0.75rem;
-  background: #020617;
+  background: rgb(var(--surface-2) / 0.72);
   padding: 0 0.75rem;
-  color: #e5edf9;
+  color: rgb(var(--foreground));
   font-size: 0.875rem;
   line-height: 1.25rem;
   outline: none;
@@ -84,12 +114,12 @@ textarea {
 }
 
 .app-dropdown-trigger:hover {
-  border-color: rgba(255, 255, 255, 0.2);
-  background: #0f172a;
+  border-color: rgb(var(--accent) / 0.28);
+  background: rgb(var(--surface-3) / 0.84);
 }
 
 .app-dropdown-trigger:focus-visible {
-  box-shadow: 0 0 0 1px rgba(124, 196, 255, 0.45);
+  box-shadow: 0 0 0 1px rgb(var(--accent) / 0.42);
 }
 
 .app-dropdown-item {
@@ -97,8 +127,9 @@ textarea {
   height: 2.25rem;
   width: 100%;
   align-items: center;
-  border-radius: 0.5rem;
+  border-radius: 0.6rem;
   padding: 0 0.625rem;
+  color: rgb(var(--foreground));
   font-size: 0.875rem;
   line-height: 1.25rem;
   transition: background-color 150ms ease, color 150ms ease;
@@ -106,7 +137,7 @@ textarea {
 
 .app-dropdown-item:focus-visible {
   outline: none;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgb(var(--surface-3) / 0.86);
 }
 
 ::-webkit-scrollbar {
@@ -122,8 +153,8 @@ textarea {
   background: linear-gradient(
     to right,
     transparent calc(50% - 0.5px),
-    rgba(255, 255, 255, 0.05) calc(50% - 0.5px),
-    rgba(255, 255, 255, 0.05) calc(50% + 0.5px),
+    var(--scrollbar-track-line) calc(50% - 0.5px),
+    var(--scrollbar-track-line) calc(50% + 0.5px),
     transparent calc(50% + 0.5px)
   );
 }
@@ -132,8 +163,8 @@ textarea {
   background: linear-gradient(
     to bottom,
     transparent calc(50% - 0.5px),
-    rgba(255, 255, 255, 0.05) calc(50% - 0.5px),
-    rgba(255, 255, 255, 0.05) calc(50% + 0.5px),
+    var(--scrollbar-track-line) calc(50% - 0.5px),
+    var(--scrollbar-track-line) calc(50% + 0.5px),
     transparent calc(50% + 0.5px)
   );
 }
@@ -143,20 +174,16 @@ textarea {
   min-width: 36px;
   border: 3px solid transparent;
   border-radius: 999px;
-  background: linear-gradient(
-    180deg,
-    rgba(124, 196, 255, 0.35),
-    rgba(97, 176, 255, 0.22)
-  );
+  background: linear-gradient(180deg, var(--scrollbar-thumb-start), var(--scrollbar-thumb-end));
   background-clip: padding-box;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 0 0 1px rgb(var(--border) / 0.18);
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(
     180deg,
-    rgba(145, 211, 255, 0.50),
-    rgba(97, 176, 255, 0.35)
+    var(--scrollbar-thumb-start-hover),
+    var(--scrollbar-thumb-end-hover)
   );
   background-clip: padding-box;
 }
@@ -164,8 +191,8 @@ textarea {
 ::-webkit-scrollbar-thumb:active {
   background: linear-gradient(
     180deg,
-    rgba(145, 211, 255, 0.62),
-    rgba(97, 176, 255, 0.45)
+    var(--scrollbar-thumb-start-active),
+    var(--scrollbar-thumb-end-active)
   );
   background-clip: padding-box;
 }
@@ -182,15 +209,15 @@ textarea {
 .request-body-editor {
   width: 100%;
   height: 100%;
-  background: #0b1220;
+  background: rgb(var(--editor-bg));
 }
 
 .request-body-editor .cm-editor {
   width: 100%;
   height: 100%;
   min-height: 100%;
-  background: #0b1220;
-  color: #e5edf9;
+  background: rgb(var(--editor-bg));
+  color: rgb(var(--foreground));
 }
 
 .request-body-editor .cm-scroller,
@@ -200,33 +227,31 @@ textarea {
 }
 
 .request-body-editor .cm-gutters {
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
-  color: rgba(148, 163, 184, 0.72);
+  border-right: 1px solid var(--editor-gutter-border);
+  color: var(--editor-gutter-text);
 }
 
 .request-body-editor .cm-content {
   padding: 0.9rem 1rem;
-  caret-color: #7cc4ff;
+  caret-color: var(--editor-caret);
 }
 
 .request-body-editor .cm-focused {
-  outline: 1px solid rgba(124, 196, 255, 0.3);
+  outline: 1px solid rgb(var(--accent) / 0.3);
   outline-offset: -1px;
 }
 
 .request-body-editor .cm-activeLine,
 .request-body-editor .cm-activeLineGutter {
-  background: rgba(255, 255, 255, 0.04) !important;
+  background: var(--editor-active-line) !important;
 }
 
 .request-body-editor .cm-selectionBackground,
 .request-body-editor ::selection {
-  background: rgba(97, 176, 255, 0.26) !important;
+  background: var(--editor-selection) !important;
 }
 
 .request-body-editor .cm-cursor,
 .request-body-editor .cm-dropCursor {
-  border-left-color: #7cc4ff;
+  border-left-color: var(--editor-caret);
 }
-
-

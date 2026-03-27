@@ -1,4 +1,4 @@
-import { LockKeyhole } from "lucide-react";
+﻿import { LockKeyhole } from "lucide-react";
 import { useState } from "react";
 import httpClientLogo from "../../assets/httpclient-logo.svg";
 import { showErrorToast } from "../../store/toasts";
@@ -30,20 +30,27 @@ export function LoginPage({ onSubmit }: LoginPageProps) {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 py-8">
-      <Card className="w-full max-w-md overflow-hidden border-white/10 bg-slate-950/80 shadow-[0_24px_80px_rgba(2,6,23,0.42)]">
-        <CardHeader className="border-b border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-6">
-          <div className="space-y-4">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-8">
+      <div className="pointer-events-none absolute left-[10%] top-[12%] h-40 w-40 rounded-full bg-accent/10 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-[10%] right-[8%] h-44 w-44 rounded-full bg-[rgb(var(--surface-3)/0.42)] blur-3xl" />
+      <Card className="relative w-full max-w-md overflow-hidden rounded-[1.6rem] border-border/60 bg-[linear-gradient(180deg,rgb(var(--surface-1)/0.94),rgb(var(--card)/0.92))] shadow-[0_30px_90px_rgb(var(--shadow)/0.32)]">
+        <CardHeader className="border-b border-border/45 bg-[linear-gradient(180deg,rgb(var(--surface-2)/0.78),rgb(var(--surface-1)/0.42))] p-6">
+          <div className="space-y-5">
             <img
               src={httpClientLogo}
               alt="HttpClient"
               className="block h-10 w-auto max-w-[184px]"
             />
-            <div>
-              <CardTitle>Sign In</CardTitle>
-              <p className="mt-1 text-sm text-muted">
-                Access your REST workspaces, request history, and saved environments.
-              </p>
+            <div className="flex items-start gap-3">
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-accent/20 bg-accent/12 text-accent shadow-[0_10px_24px_rgb(var(--accent)/0.18)]">
+                <LockKeyhole className="h-5 w-5" />
+              </span>
+              <div>
+                <CardTitle className="text-base">Sign In</CardTitle>
+                <p className="mt-1 text-sm leading-6 text-muted">
+                  Access your REST workspaces, saved environments, and recent request history.
+                </p>
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -66,7 +73,7 @@ export function LoginPage({ onSubmit }: LoginPageProps) {
             />
           </div>
           <Button
-            className="w-full"
+            className="mt-2 h-11 w-full rounded-xl"
             onClick={() => void handleSubmit()}
             disabled={isSubmitting || !username || !password}
           >

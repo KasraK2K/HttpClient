@@ -1,4 +1,4 @@
-import { ChevronDown } from "lucide-react";
+﻿import { ChevronDown } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -237,7 +237,7 @@ export function DropdownSelect<T extends string>({
                     aria-selected={isSelected}
                     className={cn(
                       "app-dropdown-item",
-                      isHighlighted && !isSelected && "bg-white/[0.08] text-foreground",
+                      isHighlighted && !isSelected && "bg-[rgb(var(--surface-3)/0.86)] text-foreground",
                       itemClassName,
                       getItemClassName?.(option, isSelected),
                     )}

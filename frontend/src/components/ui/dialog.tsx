@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, type ReactNode } from "react";
+﻿import { useEffect, useId, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
 import { cn } from "../../lib/cn";
 
@@ -115,7 +115,7 @@ export function Dialog({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-[rgb(var(--background)/0.78)] px-4 backdrop-blur-md"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) {
           onOpenChange(false);
@@ -130,7 +130,7 @@ export function Dialog({
         aria-describedby={description ? descriptionId : undefined}
         tabIndex={-1}
         className={cn(
-          "flex max-h-[calc(100vh-2rem)] min-h-0 w-full max-w-lg flex-col rounded-xl border border-white/10 bg-slate-950 p-6 shadow-glow outline-none",
+          "flex max-h-[calc(100vh-2rem)] min-h-0 w-full max-w-lg flex-col rounded-[1.35rem] border border-border/55 bg-[linear-gradient(180deg,rgb(var(--surface-1)/0.98),rgb(var(--card)/0.97))] p-6 shadow-[0_30px_80px_rgb(var(--shadow)/0.34)] outline-none",
           className,
         )}
         onMouseDown={(event) => event.stopPropagation()}
@@ -148,7 +148,7 @@ export function Dialog({
           </div>
           <button
             type="button"
-            className="rounded-lg p-1 text-muted transition hover:bg-white/8 hover:text-foreground"
+            className="rounded-lg border border-border/40 bg-[rgb(var(--surface-2)/0.62)] p-1 text-muted transition hover:bg-[rgb(var(--surface-3)/0.76)] hover:text-foreground"
             onClick={() => onOpenChange(false)}
             aria-label="Close dialog"
           >

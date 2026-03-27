@@ -1,4 +1,4 @@
-import * as React from "react";
+﻿import * as React from "react";
 import { cn } from "../../lib/cn";
 
 interface TabsContextValue {
@@ -36,7 +36,7 @@ export function TabsList({
     <div
       role="tablist"
       className={cn(
-        "inline-flex rounded-lg border border-white/10 bg-white/[0.04] p-0.5",
+        "inline-flex rounded-lg border border-border/50 bg-[rgb(var(--surface-2)/0.62)] p-0.5",
         className,
       )}
       {...props}
@@ -129,10 +129,10 @@ export function TabsTrigger({
       data-tabs-value={value}
       disabled={disabled}
       className={cn(
-        "rounded-[6px] px-3 py-1.5 text-[13px] leading-5 transition focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/45 disabled:cursor-not-allowed disabled:opacity-50",
+        "rounded-[7px] px-3 py-1.5 text-[13px] leading-5 transition focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent/45 disabled:cursor-not-allowed disabled:opacity-50",
         active
-          ? "bg-accent text-slate-950"
-          : "text-muted hover:bg-white/6 hover:text-foreground",
+          ? "bg-accent text-[rgb(var(--accent-foreground))] shadow-[0_10px_24px_rgb(var(--accent)/0.2)]"
+          : "text-muted hover:bg-[rgb(var(--surface-3)/0.76)] hover:text-foreground",
         className,
       )}
       onClick={(event) => {

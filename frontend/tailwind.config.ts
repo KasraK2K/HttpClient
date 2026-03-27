@@ -1,4 +1,4 @@
-import type { Config } from "tailwindcss";
+﻿import type { Config } from "tailwindcss";
 
 export default {
   darkMode: ["class"],
@@ -6,15 +6,15 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: "#0b1020",
-        foreground: "#e5edf9",
-        card: "#11182b",
-        accent: "#61b0ff",
-        border: "#24304d",
-        muted: "#95a4c6",
+        background: "rgb(var(--background) / <alpha-value>)",
+        foreground: "rgb(var(--foreground) / <alpha-value>)",
+        card: "rgb(var(--card) / <alpha-value>)",
+        accent: "rgb(var(--accent) / <alpha-value>)",
+        border: "rgb(var(--border) / <alpha-value>)",
+        muted: "rgb(var(--muted) / <alpha-value>)",
       },
       boxShadow: {
-        glow: "0 0 0 1px rgba(97,176,255,0.2), 0 20px 50px rgba(7,12,24,0.45)",
+        glow: "0 0 0 1px rgb(var(--accent) / 0.14), 0 22px 55px rgb(var(--shadow) / 0.36)",
       },
     },
   },

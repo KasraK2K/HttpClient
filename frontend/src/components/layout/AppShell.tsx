@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   CSSProperties,
   PointerEvent as ReactPointerEvent,
   ReactNode,
@@ -18,8 +18,9 @@ import {
 import type { AdminUser, User } from "@restify/shared";
 import httpClientLogo from "../../assets/httpclient-logo.svg";
 import { cn } from "../../lib/cn";
-
+import type { ThemeId } from "../../lib/themes";
 import { Button } from "../ui/button";
+import { ThemeSelector } from "./ThemeSelector";
 
 const SIDEBAR_WIDTH_KEY = "httpclient.sidebar-width";
 const INSPECTOR_WIDTH_KEY = "httpclient.inspector-width";
@@ -42,6 +43,10 @@ interface AppShellProps {
   activeWorkspaceName?: string;
   activeProjectName?: string;
   activeRequestName?: string;
+  themeId: ThemeId;
+  onThemeChange: (themeId: ThemeId) => void;
+  onThemePreview: (themeId: ThemeId) => void;
+  onThemePreviewEnd: () => void;
   sidebar: ReactNode;
   builder: ReactNode;
   response: ReactNode;
@@ -130,7 +135,7 @@ function ContextCrumb({
           value
             ? isCurrent
               ? "font-medium text-foreground"
-              : "text-slate-300"
+              : "text-foreground/72"
             : "text-muted",
         )}
       >
@@ -143,7 +148,8 @@ function ContextCrumb({
 function RoleBadge({ role }: { role: AdminUser["role"] | User["role"] }) {
   let label = "Member";
   let icon = <UserIcon className="h-3 w-3" />;
-  let badgeClassName = "border-white/10 bg-white/[0.04] text-slate-200";
+  let badgeClassName =
+    "border-border/55 bg-[rgb(var(--surface-2)/0.72)] text-foreground/82";
 
   if (role === "superadmin") {
     label = "Super Admin";
@@ -173,6 +179,10 @@ export function AppShell({
   activeWorkspaceName,
   activeProjectName,
   activeRequestName,
+  themeId,
+  onThemeChange,
+  onThemePreview,
+  onThemePreviewEnd,
   sidebar,
   builder,
   response,
@@ -494,7 +504,7 @@ export function AppShell({
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
-      <header className="shrink-0 border-b border-white/10 bg-slate-950/70 px-4 py-2.5 backdrop-blur sm:px-5">
+      <header className="shrink-0 border-b border-border/60 bg-[rgb(var(--header-bg)/0.84)] px-4 py-2.5 shadow-[inset_0_-1px_0_rgb(var(--header-border)/0.3)] backdrop-blur-xl sm:px-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <img
@@ -502,7 +512,7 @@ export function AppShell({
               alt="HttpClient"
               className="h-8 w-auto max-w-[180px] shrink-0 sm:h-9 sm:max-w-[208px]"
             />
-            <span className="hidden h-6 w-px shrink-0 bg-white/10 sm:block" aria-hidden="true" />
+            <span className="hidden h-6 w-px shrink-0 bg-border/60 sm:block" aria-hidden="true" />
             <nav
               className="hidden min-w-0 flex-wrap items-center gap-2.5 sm:flex"
               aria-label="Current request context"
@@ -513,14 +523,14 @@ export function AppShell({
                 value={activeWorkspaceName}
                 emptyLabel="Select workspace"
               />
-              <span className="h-4 w-px shrink-0 bg-white/10" aria-hidden="true" />
+              <span className="h-4 w-px shrink-0 bg-border/60" aria-hidden="true" />
               <ContextCrumb
                 icon={<Workflow className="h-3.5 w-3.5" />}
                 label="Project"
                 value={activeProjectName}
                 emptyLabel="Select project"
               />
-              <span className="h-4 w-px shrink-0 bg-white/10" aria-hidden="true" />
+              <span className="h-4 w-px shrink-0 bg-border/60" aria-hidden="true" />
               <ContextCrumb
                 icon={<Send className="h-3.5 w-3.5" />}
                 label="Request"
@@ -531,8 +541,14 @@ export function AppShell({
             </nav>
           </div>
           <div className="flex shrink-0 items-center gap-2.5">
+            <ThemeSelector
+              value={themeId}
+              onChange={onThemeChange}
+              onPreviewTheme={onThemePreview}
+              onClearPreview={onThemePreviewEnd}
+            />
             <RoleBadge role={user.role} />
-            <span className="hidden h-6 w-px shrink-0 bg-white/10 sm:block" aria-hidden="true" />
+            <span className="hidden h-6 w-px shrink-0 bg-border/60 sm:block" aria-hidden="true" />
             <span className="hidden truncate text-sm font-medium text-foreground sm:block max-[900px]:hidden">
               {user.username}
             </span>
@@ -557,7 +573,7 @@ export function AppShell({
         <aside className="relative min-h-0 overflow-hidden">
           {sidebar}
           <button
-            className="group absolute -right-4 inset-y-3 flex w-8 cursor-col-resize items-center justify-center max-[1280px]:hidden"
+            className="group absolute inset-y-3 -right-4 flex w-8 cursor-col-resize items-center justify-center max-[1280px]:hidden"
             onPointerDown={handleResizeStart}
             type="button"
             aria-label="Resize sidebar"
@@ -565,12 +581,12 @@ export function AppShell({
             <span
               className={cn(
                 "h-full w-px transition",
-                isResizingSidebar ? "bg-accent/80" : "bg-white/10",
+                isResizingSidebar ? "bg-accent/80" : "bg-border/75",
               )}
             />
             <span
               className={cn(
-                "absolute left-1/2 top-1/2 h-14 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10 bg-slate-950/90 opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100",
+                "absolute left-1/2 top-1/2 h-14 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border/60 bg-[rgb(var(--surface-3)/0.94)] opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100",
                 isResizingSidebar && "border-accent/30 bg-accent/20 opacity-100",
               )}
             />
@@ -579,12 +595,12 @@ export function AppShell({
         <section
           ref={centerSectionRef}
           style={centerStyle}
-          className="grid min-h-0 overflow-hidden grid-rows-[var(--builder-height)_minmax(240px,1fr)] gap-4"
+          className="grid min-h-0 grid-rows-[var(--builder-height)_minmax(240px,1fr)] gap-4 overflow-hidden"
         >
           <div className="min-h-0 overflow-hidden">{builder}</div>
           <div className="relative min-h-0 overflow-hidden">
             <button
-              className="group absolute -top-4 left-0 z-10 flex h-8 w-full cursor-row-resize items-center justify-center max-[1280px]:hidden"
+              className="group absolute left-0 -top-4 z-10 flex h-8 w-full cursor-row-resize items-center justify-center max-[1280px]:hidden"
               onPointerDown={handleCenterResizeStart}
               type="button"
               aria-label="Resize request builder and response viewer"
@@ -592,12 +608,12 @@ export function AppShell({
               <span
                 className={cn(
                   "h-px w-full transition",
-                  isResizingCenter ? "bg-accent/80" : "bg-white/10",
+                  isResizingCenter ? "bg-accent/80" : "bg-border/75",
                 )}
               />
               <span
                 className={cn(
-                  "absolute left-1/2 top-1/2 h-2 w-14 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10 bg-slate-950/90 opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100",
+                  "absolute left-1/2 top-1/2 h-2 w-14 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border/60 bg-[rgb(var(--surface-3)/0.94)] opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100",
                   isResizingCenter && "border-accent/30 bg-accent/20 opacity-100",
                 )}
               />
@@ -613,7 +629,7 @@ export function AppShell({
         >
           {!isInspectorCollapsed ? (
             <button
-              className="group absolute -left-4 inset-y-3 z-10 flex w-8 cursor-col-resize items-center justify-center max-[1280px]:hidden"
+              className="group absolute inset-y-3 -left-4 z-10 flex w-8 cursor-col-resize items-center justify-center max-[1280px]:hidden"
               onPointerDown={handleInspectorResizeStart}
               type="button"
               aria-label="Resize right sidebar"
@@ -621,18 +637,18 @@ export function AppShell({
               <span
                 className={cn(
                   "h-full w-px transition",
-                  isResizingInspector ? "bg-accent/80" : "bg-white/10",
+                  isResizingInspector ? "bg-accent/80" : "bg-border/75",
                 )}
               />
               <span
                 className={cn(
-                  "absolute left-1/2 top-1/2 h-14 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10 bg-slate-950/90 opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100",
+                  "absolute left-1/2 top-1/2 h-14 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-border/60 bg-[rgb(var(--surface-3)/0.94)] opacity-0 shadow-lg transition group-hover:opacity-100 group-focus-visible:opacity-100",
                   isResizingInspector && "border-accent/30 bg-accent/20 opacity-100",
                 )}
               />
             </button>
           ) : null}
-          <div className="flex h-full min-h-0 overflow-hidden rounded-xl border border-white/10 bg-card/85 shadow-glow backdrop-blur">
+          <div className="flex h-full min-h-0 overflow-hidden rounded-[1.1rem] border border-border/55 bg-card/86 shadow-glow backdrop-blur-xl">
             <div
               className={cn(
                 "min-w-0 flex-1 overflow-hidden transition-[width,opacity] duration-200",
@@ -647,12 +663,12 @@ export function AppShell({
             </div>
             <div
               className={cn(
-                "flex w-[52px] shrink-0 flex-col items-center gap-3 bg-white/[0.02] px-2 py-3",
-                !isInspectorCollapsed && "border-l border-white/8",
+                "flex w-[52px] shrink-0 flex-col items-center gap-3 bg-[rgb(var(--surface-2)/0.56)] px-2 py-3",
+                !isInspectorCollapsed && "border-l border-border/40",
               )}
             >
               <button
-                className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-muted transition hover:bg-white/[0.08] hover:text-foreground"
+                className="flex h-8 w-8 items-center justify-center rounded-full border border-border/55 bg-[rgb(var(--surface-1)/0.74)] text-muted transition hover:bg-[rgb(var(--surface-2)/0.84)] hover:text-foreground"
                 onClick={() => setIsInspectorCollapsed((value) => !value)}
                 type="button"
                 aria-label={
@@ -682,11 +698,3 @@ export function AppShell({
     </div>
   );
 }
-
-
-
-
-
-
-
-
