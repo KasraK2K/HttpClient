@@ -33,6 +33,7 @@ import {
   FileUp,
   GripVertical,
   Layers3,
+  Minus,
   Plus,
   Workflow,
 } from "lucide-react";
@@ -183,6 +184,7 @@ function getFolderContainerKey(projectId: string, parentFolderId?: string | null
 const SIDEBAR_EXPANSION_STORAGE_KEY = "httpclient.sidebar-expansion";
 
 interface SidebarExpansionState {
+  workspaces: Record<string, boolean>;
   projects: Record<string, boolean>;
   folders: Record<string, boolean>;
 }
@@ -197,26 +199,28 @@ function isBooleanRecord(value: unknown): value is Record<string, boolean> {
 
 function loadSidebarExpansionState(): SidebarExpansionState {
   if (typeof window === "undefined") {
-    return { projects: {}, folders: {} };
+    return { workspaces: {}, projects: {}, folders: {} };
   }
 
   try {
     const rawValue = window.localStorage.getItem(SIDEBAR_EXPANSION_STORAGE_KEY);
     if (!rawValue) {
-      return { projects: {}, folders: {} };
+      return { workspaces: {}, projects: {}, folders: {} };
     }
 
     const parsedValue = JSON.parse(rawValue) as {
+      workspaces?: unknown;
       projects?: unknown;
       folders?: unknown;
     };
 
     return {
+      workspaces: isBooleanRecord(parsedValue.workspaces) ? parsedValue.workspaces : {},
       projects: isBooleanRecord(parsedValue.projects) ? parsedValue.projects : {},
       folders: isBooleanRecord(parsedValue.folders) ? parsedValue.folders : {},
     };
   } catch {
-    return { projects: {}, folders: {} };
+    return { workspaces: {}, projects: {}, folders: {} };
   }
 }
 
@@ -235,6 +239,9 @@ function persistSidebarExpansionState(state: SidebarExpansionState) {
   }
 }
 
+function collectFolderIds(folders: TreeFolder[]): string[] {
+  return folders.flatMap((folder) => [folder._id, ...collectFolderIds(folder.folders)]);
+}
 
 function getDragEntityId(data: TreeDragData) {
   switch (data.kind) {
@@ -388,6 +395,43 @@ function PrivacyToggleButton({
       title={title}
     >
       {isPrivate ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+    </button>
+  );
+}
+
+function SubtreeToggleButton({
+  isExpanded,
+  label,
+  onToggle,
+  disabled = false,
+}: {
+  isExpanded: boolean;
+  label: "workspace" | "project" | "folder";
+  onToggle: () => void;
+  disabled?: boolean;
+}) {
+  const title = disabled
+    ? `No nested items inside ${label}`
+    : isExpanded
+      ? `Collapse all inside ${label}`
+      : `Expand all inside ${label}`;
+
+  return (
+    <button
+      className={cn(
+        "rounded-md p-0.5 text-muted transition hover:bg-white/8 hover:text-foreground",
+        disabled && "pointer-events-none opacity-40",
+      )}
+      onClick={(event) => {
+        event.stopPropagation();
+        onToggle();
+      }}
+      type="button"
+      aria-label={title}
+      title={title}
+      disabled={disabled}
+    >
+      {isExpanded ? <Minus className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
     </button>
   );
 }
@@ -597,6 +641,9 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   );
+  const [expandedWorkspaces, setExpandedWorkspaces] = useState<Record<string, boolean>>(
+    () => loadSidebarExpansionState().workspaces,
+  );
   const [expandedProjects, setExpandedProjects] = useState<Record<string, boolean>>(
     () => loadSidebarExpansionState().projects,
   );
@@ -660,10 +707,78 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
 
   useEffect(() => {
     persistSidebarExpansionState({
+      workspaces: expandedWorkspaces,
       projects: expandedProjects,
       folders: expandedFolders,
     });
-  }, [expandedFolders, expandedProjects]);
+  }, [expandedFolders, expandedProjects, expandedWorkspaces]);
+
+  const isWorkspaceExpanded = useCallback(
+    (workspaceId: string) => expandedWorkspaces[workspaceId] ?? workspaceId === activeWorkspaceId,
+    [activeWorkspaceId, expandedWorkspaces],
+  );
+  const isProjectExpanded = useCallback(
+    (projectId: string) => expandedProjects[projectId] ?? projectId === activeProjectId,
+    [activeProjectId, expandedProjects],
+  );
+  const isFolderExpanded = useCallback(
+    (folderId: string) => expandedFolders[folderId] ?? true,
+    [expandedFolders],
+  );
+  const setWorkspaceExpansionState = useCallback(
+    (workspaceIds: string[], expanded: boolean) => {
+      if (workspaceIds.length === 0) {
+        return;
+      }
+
+      setExpandedWorkspaces((state) => {
+        const nextState = { ...state };
+
+        workspaceIds.forEach((workspaceId) => {
+          nextState[workspaceId] = expanded;
+        });
+
+        return nextState;
+      });
+    },
+    [],
+  );
+  const setProjectExpansionState = useCallback(
+    (projectIds: string[], expanded: boolean) => {
+      if (projectIds.length === 0) {
+        return;
+      }
+
+      setExpandedProjects((state) => {
+        const nextState = { ...state };
+
+        projectIds.forEach((projectId) => {
+          nextState[projectId] = expanded;
+        });
+
+        return nextState;
+      });
+    },
+    [],
+  );
+  const setFolderExpansionState = useCallback(
+    (folderIds: string[], expanded: boolean) => {
+      if (folderIds.length === 0) {
+        return;
+      }
+
+      setExpandedFolders((state) => {
+        const nextState = { ...state };
+
+        folderIds.forEach((folderId) => {
+          nextState[folderId] = expanded;
+        });
+
+        return nextState;
+      });
+    },
+    [],
+  );
 
   const requestById = useMemo(() => {
     const map: Record<string, RequestDoc> = {};
@@ -1433,7 +1548,8 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
               parentFolderId: folder.parentFolderId ?? null,
             })}
             renderItem={(folder) => {
-              const isExpandedFolder = expandedFolders[folder._id] ?? true;
+              const isExpandedFolder = isFolderExpanded(folder._id);
+              const folderSubtreeIds = collectFolderIds([folder]);
               const isFolderDropTarget = isDropTarget("folder", folder._id);
               const folderRequestPreview = getRequestDropPreview(projectId, folder._id);
               const childFolderPreview = getFolderDropPreview(projectId, folder._id);
@@ -1483,6 +1599,16 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                             <ChevronRight className="h-3.5 w-3.5" />
                           )}
                         </button>
+                        <SubtreeToggleButton
+                          isExpanded={isExpandedFolder}
+                          label="folder"
+                          onToggle={() =>
+                            setFolderExpansionState(
+                              folderSubtreeIds,
+                              !isExpandedFolder,
+                            )
+                          }
+                        />
                         <div className="flex min-w-0 flex-1 items-center gap-1.5">
                           <span className="shrink-0">
                             {isExpandedFolder ? (
@@ -1645,8 +1771,12 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
             renderItem={(workspace) => {
               const isActiveWorkspace = workspace._id === activeWorkspaceId;
               const workspaceProjects = projectsByWorkspace[workspace._id] ?? [];
+              const workspaceProjectIds = workspaceProjects.map((project) => project._id);
+              const workspaceFolderIds = workspaceProjects.flatMap((project) =>
+                collectFolderIds(project.folders),
+              );
               const workspaceProjectPreview = getProjectDropPreview(workspace._id);
-              const isExpandedWorkspace = isActiveWorkspace;
+              const isExpandedWorkspace = isWorkspaceExpanded(workspace._id);
               const isWorkspaceDropTarget = isDropTarget("workspace", workspace._id);
 
               return {
@@ -1667,7 +1797,12 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                       {dragHandle}
                       <button
                         className="rounded-md p-0.5 text-muted transition hover:bg-white/8 hover:text-foreground"
-                        onClick={() => onSelectWorkspace(workspace._id)}
+                        onClick={() =>
+                          setExpandedWorkspaces((state) => ({
+                            ...state,
+                            [workspace._id]: !isExpandedWorkspace,
+                          }))
+                        }
                         type="button"
                         aria-label={
                           isExpandedWorkspace
@@ -1681,9 +1816,31 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                           <ChevronRight className="h-3.5 w-3.5" />
                         )}
                       </button>
+                      <SubtreeToggleButton
+                        isExpanded={isExpandedWorkspace}
+                        label="workspace"
+                        onToggle={() => {
+                          const nextExpanded = !isExpandedWorkspace;
+                          setWorkspaceExpansionState(
+                            [workspace._id],
+                            nextExpanded,
+                          );
+                          setProjectExpansionState(
+                            workspaceProjectIds,
+                            nextExpanded,
+                          );
+                          setFolderExpansionState(
+                            workspaceFolderIds,
+                            nextExpanded,
+                          );
+                        }}
+                      />
                       <button
                         className="min-w-0 flex-1 text-left"
-                        onClick={() => onSelectWorkspace(workspace._id)}
+                        onClick={() => {
+                          setWorkspaceExpansionState([workspace._id], true);
+                          onSelectWorkspace(workspace._id);
+                        }}
                         type="button"
                       >
                         <TreeNodeContent
@@ -1735,9 +1892,8 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                           projectId: project._id,
                         })}
                         renderItem={(project) => {
-                          const isExpandedProject =
-                            expandedProjects[project._id] ??
-                            project._id === activeProjectId;
+                          const isExpandedProject = isProjectExpanded(project._id);
+                          const projectFolderIds = collectFolderIds(project.folders);
                           const isProjectDropTarget = isDropTarget("project", project._id);
                           const projectRequestPreview = getRequestDropPreview(project._id);
                           const projectFolderPreview = getFolderDropPreview(project._id, null);
@@ -1792,6 +1948,21 @@ export function WorkspaceTree(props: WorkspaceTreeProps) {
                                         <ChevronRight className="h-3.5 w-3.5" />
                                       )}
                                     </button>
+                                    <SubtreeToggleButton
+                                      isExpanded={isExpandedProject}
+                                      label="project"
+                                      onToggle={() => {
+                                        const nextExpanded = !isExpandedProject;
+                                        setProjectExpansionState(
+                                          [project._id],
+                                          nextExpanded,
+                                        );
+                                        setFolderExpansionState(
+                                          projectFolderIds,
+                                          nextExpanded,
+                                        );
+                                      }}
+                                    />
                                     <div className="flex min-w-0 flex-1 items-center gap-1.5">
                                       <span className="shrink-0">
                                         <Workflow className="h-3.5 w-3.5 text-sky-300" />
