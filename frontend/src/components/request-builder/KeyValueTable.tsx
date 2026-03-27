@@ -86,7 +86,7 @@ export function KeyValueTable<T extends Row>({
         {rows.map((row, index) => (
           <div
             key={row.id}
-            className="rounded-lg border border-white/8 bg-slate-950/30 p-3 md:rounded-none md:border-0 md:bg-transparent md:p-0"
+            className="rounded-xl border border-border/45 bg-[rgb(var(--surface-2)/0.42)] p-3 md:rounded-none md:border-0 md:bg-transparent md:p-0"
           >
             <div className={`grid gap-3 md:items-center md:gap-2 ${desktopGridClass}`}>
               <div className="space-y-1.5">
@@ -121,7 +121,7 @@ export function KeyValueTable<T extends Row>({
                   <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted md:hidden">
                     Enabled
                   </div>
-                  <label className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-xs text-muted transition hover:bg-white/8">
+                  <label className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border/55 bg-[rgb(var(--surface-2)/0.68)] px-3 text-xs text-muted transition hover:bg-[rgb(var(--surface-3)/0.82)]">
                     <input
                       checked={row.enabled}
                       onChange={(event) =>
@@ -140,7 +140,7 @@ export function KeyValueTable<T extends Row>({
               <div className="flex items-end justify-end md:justify-center">
                 <Button
                   variant="ghost"
-                  className="h-10 w-10 rounded-lg p-0 text-rose-300 hover:text-rose-200"
+                  className="h-10 w-10 rounded-lg p-0 text-[rgb(var(--danger-text))] hover:bg-[var(--danger-hover-bg)] hover:text-[rgb(var(--danger-hover-text))]"
                   onClick={() => removeRow(index)}
                   aria-label={`Remove ${keyLabel.toLowerCase()} row ${index + 1}`}
                   title="Remove row"

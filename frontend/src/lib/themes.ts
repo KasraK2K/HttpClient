@@ -1,4 +1,4 @@
-﻿export type ThemeMode = "light" | "dark";
+export type ThemeMode = "light" | "dark";
 
 export interface ThemePreview {
   backdrop: string;
@@ -528,9 +528,9 @@ export const APP_THEMES: AppTheme[] = [
       "--app-bg-end": "#ffe8e0",
       "--app-glow-left": "rgba(249, 115, 22, 0.14)",
       "--app-glow-right": "rgba(251, 113, 133, 0.1)",
-      "--input-bg": "255 255 255",
-      "--input-bg-focus": "255 250 248",
-      "--editor-bg": "255 252 250",
+      "--input-bg": "255 246 241",
+      "--input-bg-focus": "255 239 232",
+      "--editor-bg": "255 241 234",
       "--editor-gutter-border": "rgba(67, 32, 30, 0.08)",
       "--editor-gutter-text": "rgba(126, 93, 88, 0.72)",
       "--editor-selection": "rgba(249, 115, 22, 0.16)",
@@ -704,4 +704,6 @@ export function applyTheme(themeId: ThemeId) {
 export function applyStoredTheme() {
   applyTheme(getStoredThemeId());
 }
+
+
 

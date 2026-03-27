@@ -2,6 +2,7 @@ import type { ProjectEnvVar, RequestBodyConfig } from "@restify/shared";
 import { json } from "@codemirror/lang-json";
 import { oneDark } from "@codemirror/theme-one-dark";
 import CodeMirror from "@uiw/react-codemirror";
+import { useEffect, useState } from "react";
 import {
   resolveRequestBodyResolution,
   resolveVariableInputs,
@@ -32,11 +33,40 @@ const BODY_TYPE_OPTIONS: Array<DropdownOption<RequestBodyConfig["type"]>> = [
   },
 ];
 
+function getDocumentThemeMode() {
+  if (typeof document === "undefined") {
+    return "dark" as const;
+  }
+
+  return document.documentElement.dataset.themeMode === "light"
+    ? ("light" as const)
+    : ("dark" as const);
+}
+
 export function BodyEditor({ value, envVars, onChange }: BodyEditorProps) {
+  const [themeMode, setThemeMode] = useState(getDocumentThemeMode);
   const resolution =
     value.type === "json" || value.type === "text"
       ? resolveVariableInputs([value.content ?? ""], envVars)
       : resolveRequestBodyResolution(value, envVars);
+
+  useEffect(() => {
+    if (typeof document === "undefined") {
+      return;
+    }
+
+    const root = document.documentElement;
+    const observer = new MutationObserver(() => {
+      setThemeMode(getDocumentThemeMode());
+    });
+
+    observer.observe(root, {
+      attributes: true,
+      attributeFilter: ["data-theme-mode"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div className="flex h-full min-h-0 w-full min-w-0 flex-col gap-3">
@@ -48,16 +78,16 @@ export function BodyEditor({ value, envVars, onChange }: BodyEditorProps) {
         triggerClassName="max-w-full sm:w-[220px]"
         getItemClassName={(_option, isSelected) =>
           isSelected
-            ? "bg-accent text-slate-950"
-            : "text-foreground hover:bg-white/[0.06]"
+            ? "bg-accent text-[rgb(var(--accent-foreground))]"
+            : "text-foreground hover:bg-[rgb(var(--surface-3)/0.78)]"
         }
       />
       {value.type === "json" || value.type === "text" ? (
         <>
-          <div className="min-h-0 w-full min-w-0 flex-1 overflow-hidden rounded-xl border border-white/10 bg-[#0b1220] shadow-inner shadow-black/20">
+          <div className="min-h-0 w-full min-w-0 flex-1 overflow-hidden rounded-xl border border-border/55 bg-[rgb(var(--editor-bg))] shadow-inner">
             <CodeMirror
               className="request-body-editor h-full w-full text-sm"
-              theme={oneDark}
+              theme={themeMode === "dark" ? oneDark : undefined}
               value={value.content ?? ""}
               height="100%"
               extensions={value.type === "json" ? [json()] : []}

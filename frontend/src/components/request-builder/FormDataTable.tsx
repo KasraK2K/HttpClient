@@ -115,7 +115,7 @@ export function FormDataTable({ rows, envVars, onChange }: FormDataTableProps) {
 
   return (
     <div className="space-y-3">
-      <div className="hidden md:grid md:grid-cols-[minmax(0,1fr)_120px_minmax(0,1fr)_78px_44px] md:gap-2 md:px-1 text-xs uppercase tracking-wide text-muted">
+      <div className="hidden text-xs uppercase tracking-wide text-muted md:grid md:grid-cols-[minmax(0,1fr)_120px_minmax(0,1fr)_78px_44px] md:gap-2 md:px-1">
         <span>Field</span>
         <span>Type</span>
         <span>Value</span>
@@ -130,7 +130,7 @@ export function FormDataTable({ rows, envVars, onChange }: FormDataTableProps) {
           return (
             <div
               key={row.id}
-              className="rounded-lg border border-white/8 bg-slate-950/30 p-3 md:rounded-none md:border-0 md:bg-transparent md:p-0"
+              className="rounded-xl border border-border/45 bg-[rgb(var(--surface-2)/0.42)] p-3 md:rounded-none md:border-0 md:bg-transparent md:p-0"
             >
               <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_120px_minmax(0,1fr)_78px_44px] md:items-center md:gap-2">
                 <div className="space-y-1.5">
@@ -156,8 +156,8 @@ export function FormDataTable({ rows, envVars, onChange }: FormDataTableProps) {
                     triggerClassName="h-10 rounded-xl px-3 text-sm"
                     getItemClassName={(_option, isSelected) =>
                       isSelected
-                        ? "bg-accent text-slate-950"
-                        : "text-foreground hover:bg-white/[0.06]"
+                        ? "bg-accent text-[rgb(var(--accent-foreground))]"
+                        : "text-foreground hover:bg-[rgb(var(--surface-3)/0.78)]"
                     }
                   />
                 </div>
@@ -175,9 +175,9 @@ export function FormDataTable({ rows, envVars, onChange }: FormDataTableProps) {
                       className="h-10"
                     />
                   ) : (
-                    <div className="rounded-xl border border-white/10 bg-white/5 p-2.5">
+                    <div className="rounded-xl border border-border/55 bg-[rgb(var(--surface-2)/0.58)] p-2.5">
                       <div className="flex flex-wrap items-center gap-2">
-                        <label className="inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/10 bg-slate-950/70 px-3 text-sm text-foreground transition hover:bg-slate-900">
+                        <label className="inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border/55 bg-[rgb(var(--surface-1)/0.92)] px-3 text-sm text-foreground transition hover:bg-[rgb(var(--surface-3)/0.9)]">
                           <input
                             type="file"
                             className="hidden"
@@ -205,8 +205,8 @@ export function FormDataTable({ rows, envVars, onChange }: FormDataTableProps) {
                         {row.fileName ? (
                           <>
                             <span className="font-medium text-foreground">{row.fileName}</span>
-                            {row.fileContentType ? <><span className="mx-1 text-white/30">&middot;</span>{row.fileContentType}</> : null}
-                            {fileSizeLabel ? <><span className="mx-1 text-white/30">&middot;</span>{fileSizeLabel}</> : null}
+                            {row.fileContentType ? <><span className="mx-1 text-border/90">&middot;</span>{row.fileContentType}</> : null}
+                            {fileSizeLabel ? <><span className="mx-1 text-border/90">&middot;</span>{fileSizeLabel}</> : null}
                           </>
                         ) : (
                           "No file selected"
@@ -219,7 +219,7 @@ export function FormDataTable({ rows, envVars, onChange }: FormDataTableProps) {
                   <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted md:hidden">
                     Enabled
                   </div>
-                  <label className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-xs text-muted transition hover:bg-white/8">
+                  <label className="flex h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border/55 bg-[rgb(var(--surface-2)/0.68)] px-3 text-xs text-muted transition hover:bg-[rgb(var(--surface-3)/0.82)]">
                     <input
                       checked={row.enabled}
                       onChange={(event) =>
@@ -234,7 +234,7 @@ export function FormDataTable({ rows, envVars, onChange }: FormDataTableProps) {
                 <div className="flex items-end justify-end md:self-center md:justify-center">
                   <Button
                     variant="ghost"
-                    className="h-10 w-10 rounded-lg p-0 text-rose-300 hover:text-rose-200"
+                    className="h-10 w-10 rounded-lg p-0 text-[rgb(var(--danger-text))] hover:bg-[var(--danger-hover-bg)] hover:text-[rgb(var(--danger-hover-text))]"
                     onClick={() => removeRow(index)}
                     aria-label={`Remove form-data row ${index + 1}`}
                     title="Remove row"
@@ -259,5 +259,3 @@ export function FormDataTable({ rows, envVars, onChange }: FormDataTableProps) {
     </div>
   );
 }
-
-
