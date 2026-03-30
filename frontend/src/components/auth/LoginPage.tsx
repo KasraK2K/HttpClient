@@ -1,4 +1,4 @@
-﻿import { LockKeyhole } from "lucide-react";
+import { LockKeyhole } from "lucide-react";
 import { useState } from "react";
 import httpClientLogo from "../../assets/httpclient-logo.svg";
 import { showErrorToast } from "../../store/toasts";
@@ -42,7 +42,7 @@ export function LoginPage({ onSubmit }: LoginPageProps) {
               className="block h-10 w-auto max-w-[184px]"
             />
             <div className="flex items-start gap-3">
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-accent/20 bg-accent/12 text-accent shadow-[0_10px_24px_rgb(var(--accent)/0.18)]">
+              <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-accent/20 bg-accent/12 text-accent shadow-[0_10px_24px_rgb(var(--accent)/0.18)]">
                 <LockKeyhole className="h-5 w-5" />
               </span>
               <div>
