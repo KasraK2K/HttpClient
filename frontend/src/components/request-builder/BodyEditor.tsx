@@ -3,15 +3,18 @@ import { json } from "@codemirror/lang-json";
 import { oneDark } from "@codemirror/theme-one-dark";
 import CodeMirror from "@uiw/react-codemirror";
 import { useEffect, useState } from "react";
+import { formatJsonContent } from "../../lib/json-format";
 import {
   resolveRequestBodyResolution,
   resolveVariableInputs,
 } from "../../lib/var-resolver";
 import { createFormValueRow } from "../../lib/request-helpers";
+import { showErrorToast } from "../../store/toasts";
 import {
   DropdownSelect,
   type DropdownOption,
 } from "../ui/DropdownSelect";
+import { Button } from "../ui/button";
 import { KeyValueTable } from "./KeyValueTable";
 import { FormDataTable } from "./FormDataTable";
 import { VariableBadges } from "./VariableBadges";
@@ -49,6 +52,8 @@ export function BodyEditor({ value, envVars, onChange }: BodyEditorProps) {
     value.type === "json" || value.type === "text"
       ? resolveVariableInputs([value.content ?? ""], envVars)
       : resolveRequestBodyResolution(value, envVars);
+  const canFormatJson =
+    value.type === "json" && Boolean((value.content ?? "").trim());
 
   useEffect(() => {
     if (typeof document === "undefined") {
@@ -68,20 +73,52 @@ export function BodyEditor({ value, envVars, onChange }: BodyEditorProps) {
     return () => observer.disconnect();
   }, []);
 
+  const handleFormatJson = () => {
+    if (!canFormatJson) {
+      return;
+    }
+
+    try {
+      onChange({
+        ...value,
+        content: formatJsonContent(value.content ?? ""),
+      });
+    } catch (error) {
+      showErrorToast(error, {
+        title: "Invalid JSON",
+        fallbackMessage: "Fix the JSON syntax before formatting the body.",
+      });
+    }
+  };
+
   return (
     <div className="flex h-full min-h-0 w-full min-w-0 flex-col gap-3">
-      <DropdownSelect
-        value={value.type}
-        options={BODY_TYPE_OPTIONS}
-        onChange={(type) => onChange({ ...value, type })}
-        ariaLabel="Select request body type"
-        triggerClassName="max-w-full sm:w-[220px]"
-        getItemClassName={(_option, isSelected) =>
-          isSelected
-            ? "bg-accent text-[rgb(var(--accent-foreground))]"
-            : "text-foreground hover:bg-[rgb(var(--surface-3)/0.78)]"
-        }
-      />
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+        <DropdownSelect
+          value={value.type}
+          options={BODY_TYPE_OPTIONS}
+          onChange={(type) => onChange({ ...value, type })}
+          ariaLabel="Select request body type"
+          triggerClassName="max-w-full sm:w-[220px]"
+          getItemClassName={(_option, isSelected) =>
+            isSelected
+              ? "bg-accent text-[rgb(var(--accent-foreground))]"
+              : "text-foreground hover:bg-[rgb(var(--surface-3)/0.78)]"
+          }
+        />
+        {value.type === "json" ? (
+          <Button
+            variant="secondary"
+            className="h-10 shrink-0 rounded-xl px-3"
+            onClick={handleFormatJson}
+            disabled={!canFormatJson}
+            aria-label="Format JSON body"
+            title="Format JSON body"
+          >
+            Format JSON
+          </Button>
+        ) : null}
+      </div>
       {value.type === "json" || value.type === "text" ? (
         <>
           <div className="min-h-0 w-full min-w-0 flex-1 overflow-hidden rounded-xl border border-border/55 bg-[rgb(var(--editor-bg))] shadow-inner">
