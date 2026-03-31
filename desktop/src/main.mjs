@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, shell } from "electron";
+import { app, BrowserWindow, dialog, nativeImage, shell } from "electron";
 import fs from "node:fs";
 import path from "node:path";
 
@@ -39,7 +39,18 @@ function isAllowedNavigation(targetUrl, allowedOrigin) {
   }
 }
 
+function createWindowIcon() {
+  if (process.platform === "darwin") {
+    return undefined;
+  }
+
+  const iconPath = path.join(app.getAppPath(), "src", "assets", "window-icon.png");
+  const icon = nativeImage.createFromPath(iconPath);
+  return icon.isEmpty() ? undefined : icon;
+}
+
 function createMainWindow(config) {
+  const icon = createWindowIcon();
   const window = new BrowserWindow({
     width: 1440,
     height: 940,
@@ -47,6 +58,7 @@ function createMainWindow(config) {
     minHeight: 720,
     autoHideMenuBar: true,
     backgroundColor: "#0f1720",
+    ...(icon ? { icon } : {}),
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,

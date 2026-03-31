@@ -1,8 +1,12 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+﻿import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { createInterface } from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+const ResEdit = require("../desktop/node_modules/resedit/dist/index.js");
 
 const VALID_PLATFORMS = new Set(["win", "linux", "mac", "current"]);
 
@@ -117,6 +121,45 @@ function writeGeneratedConfig(domain, targetPlatform) {
   return configPath;
 }
 
+function stampExecutableIcon(executablePath, iconPath) {
+  const data = readFileSync(executablePath);
+  const exe = ResEdit.NtExecutable.from(data, { ignoreCert: true });
+  const resources = ResEdit.NtExecutableResource.from(exe);
+  const iconFile = ResEdit.Data.IconFile.from(readFileSync(iconPath));
+  const groups = ResEdit.Resource.IconGroupEntry.fromEntries(resources.entries);
+  const targetGroup = groups[0] ?? { id: 101, lang: 1033 };
+
+  ResEdit.Resource.IconGroupEntry.replaceIconsForResource(
+    resources.entries,
+    targetGroup.id,
+    targetGroup.lang,
+    iconFile.icons.map((item) => item.data),
+  );
+
+  resources.outputResource(exe);
+  writeFileSync(executablePath, Buffer.from(exe.generate()));
+}
+
+function stampWindowsBuildIcons() {
+  const iconPath = path.resolve("desktop", "build", "icon.ico");
+  const distDir = path.resolve("desktop", "dist");
+  const unpackedExe = path.join(distDir, "win-unpacked", "HttpClient.exe");
+  const rootExecutables = readdirSync(distDir)
+    .filter((entry) => entry.endsWith(".exe"))
+    .map((entry) => path.join(distDir, entry));
+
+  for (const executablePath of [unpackedExe, ...rootExecutables]) {
+    try {
+      stampExecutableIcon(executablePath, iconPath);
+      console.log(`Stamped custom icon into ${path.relative(process.cwd(), executablePath)}`);
+    } catch (error) {
+      console.warn(
+        `Unable to stamp icon into ${path.relative(process.cwd(), executablePath)}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+}
+
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const targetPlatform = resolveTargetPlatform(options.platform);
@@ -174,6 +217,10 @@ async function main() {
 
   if (result.status !== 0) {
     process.exit(result.status ?? 1);
+  }
+
+  if (targetPlatform === "win") {
+    stampWindowsBuildIcons();
   }
 
   console.log("Desktop build finished in desktop/dist");
