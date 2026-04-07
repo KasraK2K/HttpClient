@@ -1,4 +1,4 @@
-import type { AdminUser, User } from "@restify/shared";
+﻿import type { AdminUser, User } from "@restify/shared";
 import { create } from "zustand";
 import { api } from "../lib/http-client";
 
@@ -11,6 +11,7 @@ interface AuthState {
   initialize: () => Promise<void>;
   login: (username: string, password: string) => Promise<void>;
   createSuperuser: (
+    name: string,
     username: string,
     password: string,
     confirmPassword: string,
@@ -54,8 +55,15 @@ export const useAuthStore = create<AuthState>((set) => ({
     const session = await api.login({ username, password });
     set({ user: session.user, needsSuperuser: false, error: undefined });
   },
-  createSuperuser: async (username, password, confirmPassword, setupSecret) => {
+  createSuperuser: async (
+    name,
+    username,
+    password,
+    confirmPassword,
+    setupSecret,
+  ) => {
     const session = await api.createSuperuser({
+      name,
       username,
       password,
       confirmPassword,

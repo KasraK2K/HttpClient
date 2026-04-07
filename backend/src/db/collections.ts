@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   HistoryDoc,
   ProjectDoc,
   RequestDoc,
@@ -9,6 +9,7 @@ import { ObjectId, type Db, type Document, type OptionalId } from "mongodb";
 
 export type AdminRecord = {
   _id: ObjectId;
+  name?: string;
   username: string;
   passwordHash: string;
   role: "superadmin";
@@ -18,6 +19,7 @@ export type AdminRecord = {
 
 export type UserRecord = {
   _id: ObjectId;
+  name?: string;
   username: string;
   passwordHash: string;
   role: "admin" | "member";

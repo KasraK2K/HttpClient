@@ -1,4 +1,4 @@
-export type UserRole = "superadmin" | "admin" | "member";
+﻿export type UserRole = "superadmin" | "admin" | "member";
 
 export type HttpMethod =
   | "GET"
@@ -31,6 +31,7 @@ export interface WorkspaceMember {
 
 export interface BaseUser extends Timestamped {
   _id: string;
+  name: string;
   username: string;
   role: UserRole;
   passwordHash?: string;
@@ -203,8 +204,37 @@ export interface LoginPayload {
 }
 
 export interface CreateSuperuserPayload extends LoginPayload {
+  name: string;
   confirmPassword: string;
   setupSecret?: string;
+}
+
+export interface UpdateProfilePayload {
+  name: string;
+}
+
+export interface ChangeMyPasswordPayload {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface CreateUserPayload {
+  name: string;
+  username: string;
+  password: string;
+  role: "admin" | "member";
+  workspaceIds?: string[];
+}
+
+export interface UpdateUserPayload {
+  role?: "admin" | "member";
+  workspaceIds?: string[];
+}
+
+export interface ChangeUserPasswordPayload {
+  newPassword: string;
+  confirmPassword: string;
 }
 
 export interface MeResponse {
@@ -294,5 +324,3 @@ export interface ListUsersResponse {
 export interface HistoryResponse {
   history: HistoryDoc[];
 }
-
-

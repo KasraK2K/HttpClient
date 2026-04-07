@@ -1,6 +1,6 @@
-import fp from "fastify-plugin";
+﻿import fp from "fastify-plugin";
 import { MongoClient } from "mongodb";
-import { hasAnyAdmins } from "../db/bootstrap.js";
+import { hasAnyAdmins, migrateUserNames } from "../db/bootstrap.js";
 import {
   adminsCollection,
   usersCollection,
@@ -35,6 +35,11 @@ export default fp(async function mongodbPlugin(app) {
     { unique: true },
   );
   await workspaceMetaCollection(database).createIndex({ ownerId: 1, order: 1 });
+
+  const userNameMigration = await migrateUserNames(database);
+  if (userNameMigration.admins > 0 || userNameMigration.users > 0) {
+    app.log.info(userNameMigration, "Migrated user names from legacy username-only records");
+  }
 
   const migrationResult = await migrateStoredSecrets(
     database,

@@ -1,4 +1,4 @@
-import { ShieldCheck } from "lucide-react";
+﻿import { ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { showErrorToast } from "../../store/toasts";
 import { Button } from "../ui/button";
@@ -8,6 +8,7 @@ import { Input } from "../ui/input";
 interface CreateSuperuserPageProps {
   requiresSetupSecret: boolean;
   onSubmit: (
+    name: string,
     username: string,
     password: string,
     confirmPassword: string,
@@ -19,6 +20,7 @@ export function CreateSuperuserPage({
   requiresSetupSecret,
   onSubmit,
 }: CreateSuperuserPageProps) {
+  const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -29,6 +31,7 @@ export function CreateSuperuserPage({
     setIsSubmitting(true);
     try {
       await onSubmit(
+        name,
         username,
         password,
         confirmPassword,
@@ -68,6 +71,14 @@ export function CreateSuperuserPage({
           </div>
         </CardHeader>
         <CardContent className="grid gap-4 p-6 md:grid-cols-2">
+          <div className="space-y-2 md:col-span-2">
+            <label className="text-sm text-muted">Name</label>
+            <Input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Jane Admin"
+            />
+          </div>
           <div className="space-y-2 md:col-span-2">
             <label className="text-sm text-muted">Username</label>
             <Input
@@ -110,6 +121,7 @@ export function CreateSuperuserPage({
             onClick={() => void handleSubmit()}
             disabled={
               isSubmitting ||
+              !name ||
               !username ||
               !password ||
               !confirmPassword ||

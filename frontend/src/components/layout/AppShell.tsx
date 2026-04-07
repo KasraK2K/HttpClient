@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   CSSProperties,
   PointerEvent as ReactPointerEvent,
   ReactNode,
@@ -540,6 +540,7 @@ export function AppShell({
         : "Member";
   const roleLabelClassName =
     user.role === "member" ? "text-muted" : "text-accent/90";
+  const displayName = user.name?.trim() || user.username;
 
   const handleResizeStart = (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (
@@ -640,18 +641,20 @@ export function AppShell({
                 onClearPreview={onThemePreviewEnd}
               />
               <span className="hidden h-6 w-px shrink-0 bg-border/60 sm:block max-[900px]:hidden" aria-hidden="true" />
-              <div className="hidden items-baseline gap-2 sm:flex max-[900px]:hidden">
-                <span
-                  className={cn(
-                    "text-[10px] font-semibold uppercase tracking-[0.14em]",
-                    roleLabelClassName,
-                  )}
-                >
-                  {roleLabel}
-                </span>
-                <span className="truncate text-sm font-medium text-foreground">
-                  {user.username}
-                </span>
+              <div className="hidden min-w-0 items-center gap-3 sm:flex max-[900px]:hidden">
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-medium text-foreground">
+                    {displayName}
+                  </div>
+                  <div
+                    className={cn(
+                      "mt-0.5 text-[10px] font-semibold uppercase tracking-[0.14em]",
+                      roleLabelClassName,
+                    )}
+                  >
+                    {roleLabel}
+                  </div>
+                </div>
               </div>
               <Button
                 className="h-8 rounded-lg px-2.5"
@@ -769,3 +772,9 @@ export function AppShell({
     </AppShellPanelControlsContext.Provider>
   );
 }
+
+
+
+
+
+

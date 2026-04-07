@@ -1,6 +1,9 @@
-import type {
+﻿import type {
   BootstrapStatusResponse,
+  ChangeMyPasswordPayload,
+  ChangeUserPasswordPayload,
   CreateSuperuserPayload,
+  CreateUserPayload,
   ExecuteRequestPayload,
   ExecuteRequestResult,
   FolderDoc,
@@ -14,6 +17,8 @@ import type {
   ProjectDoc,
   ProjectEnvVar,
   RequestDoc,
+  UpdateProfilePayload,
+  UpdateUserPayload,
   User,
   WorkspaceMeta,
   WorkspaceTreeResponse,
@@ -58,6 +63,16 @@ export const api = {
   createSuperuser: (body: CreateSuperuserPayload) =>
     requestJson<MeResponse>("/auth/bootstrap-superuser", {
       method: "POST",
+      body: JSON.stringify(body),
+    }),
+  updateMyProfile: (body: UpdateProfilePayload) =>
+    requestJson<MeResponse>("/auth/me/profile", {
+      method: "PATCH",
+      body: JSON.stringify(body),
+    }),
+  changeMyPassword: (body: ChangeMyPasswordPayload) =>
+    requestJson<{ success: boolean }>("/auth/me/password", {
+      method: "PATCH",
       body: JSON.stringify(body),
     }),
   logout: () =>
@@ -247,26 +262,21 @@ export const api = {
       `/projects/${projectId}/history?workspaceId=${workspaceId}`,
     ),
   listUsers: () => requestJson<ListUsersResponse>("/admin/users"),
-  createUser: (payload: {
-    username: string;
-    password: string;
-    role: "admin" | "member";
-    workspaceIds?: string[];
-  }) =>
+  createUser: (payload: CreateUserPayload) =>
     requestJson<{ user: User }>("/admin/users", {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  updateUser: (
-    userId: string,
-    payload: {
-      username?: string;
-      password?: string;
-      role?: "admin" | "member";
-      workspaceIds?: string[];
-    },
-  ) =>
+  updateUser: (userId: string, payload: UpdateUserPayload) =>
     requestJson<{ user: User }>(`/admin/users/${userId}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  changeUserPassword: (
+    userId: string,
+    payload: ChangeUserPasswordPayload,
+  ) =>
+    requestJson<{ success: boolean }>(`/admin/users/${userId}/password`, {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
@@ -275,8 +285,3 @@ export const api = {
       method: "DELETE",
     }),
 };
-
-
-
-
-

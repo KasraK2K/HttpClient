@@ -1,8 +1,9 @@
-import type { HistoryDoc, RequestDoc, User } from "@restify/shared";
-import { Activity, FileText, Settings2, Users } from "lucide-react";
+﻿import type { HistoryDoc, RequestDoc, User } from "@restify/shared";
+import { Activity, CircleUserRound, FileText, Settings2, Users } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CreateSuperuserPage } from "../components/auth/CreateSuperuserPage";
 import { LoginPage } from "../components/auth/LoginPage";
+import { AccountSettings } from "../components/account/AccountSettings";
 import { UserManagement } from "../components/admin/UserManagement";
 import { EnvVarEditor } from "../components/environment/EnvVarEditor";
 import { HistoryDetailsDialog } from "../components/history/HistoryDetailsDialog";
@@ -42,6 +43,7 @@ const INSPECTOR_TAB_STORAGE_KEY = "httpclient.inspector-tab";
 const INSPECTOR_TABS: InspectorTab[] = [
   "environment",
   "history",
+  "account",
   "admin",
 ];
 
@@ -129,6 +131,7 @@ export default function App() {
     login,
     createSuperuser,
     logout,
+    setUser,
   } = useAuthStore();
   const {
     workspaces,
@@ -963,6 +966,19 @@ export default function App() {
     setUsers(response.users);
   };
 
+  const handleUpdateProfile = async (payload: { name: string }) => {
+    const response = await api.updateMyProfile(payload);
+    setUser(response.user);
+  };
+
+  const handleChangeMyPassword = async (payload: {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+  }) => {
+    await api.changeMyPassword(payload);
+  };
+
   const deleteEntity = async (label: string, action: () => Promise<void>) => {
     if (!window.confirm(`Delete ${label}?`)) {
       return;
@@ -1100,7 +1116,6 @@ export default function App() {
   const currentUser = user;
 
   function InspectorPanel() {
-
     return (
       <Tabs
         value={normalizedInspectorTab}
@@ -1122,6 +1137,14 @@ export default function App() {
             title="History"
           >
             <Activity className="h-4 w-4" />
+          </TabsTrigger>
+          <TabsTrigger
+            value="account"
+            className="inline-flex h-9 w-9 items-center justify-center p-0"
+            aria-label="Account"
+            title="Account"
+          >
+            <CircleUserRound className="h-4 w-4" />
           </TabsTrigger>
           {currentUser.role === "superadmin" ? (
             <TabsTrigger
@@ -1192,6 +1215,13 @@ export default function App() {
             </CardContent>
           </Card>
         </TabsContent>
+        <TabsContent value="account">
+          <AccountSettings
+            user={currentUser}
+            onUpdateProfile={handleUpdateProfile}
+            onChangePassword={handleChangeMyPassword}
+          />
+        </TabsContent>
         {currentUser.role === "superadmin" ? (
           <TabsContent value="admin">
             <UserManagement
@@ -1200,6 +1230,9 @@ export default function App() {
               onCreate={(payload) => api.createUser(payload).then(refreshUsers)}
               onUpdate={(userId, payload) =>
                 api.updateUser(userId, payload).then(refreshUsers)
+              }
+              onChangePassword={(userId, payload) =>
+                api.changeUserPassword(userId, payload).then(refreshUsers)
               }
               onDelete={(userId) =>
                 deleteEntity("user", () =>
@@ -1212,6 +1245,7 @@ export default function App() {
       </Tabs>
     );
   }
+
   return (
     <>
       <AppShell
@@ -1404,6 +1438,16 @@ export default function App() {
     </>
   );
 }
+
+
+
+
+
+
+
+
+
+
 
 
 

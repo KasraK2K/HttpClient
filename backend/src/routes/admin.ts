@@ -1,10 +1,14 @@
+﻿import type {
+  ChangeUserPasswordPayload,
+  CreateUserPayload,
+  UpdateUserPayload,
+  User,
+} from "@restify/shared";
 import type { FastifyPluginAsync } from "fastify";
-import type { User } from "@restify/shared";
+import { sanitizeAuthUser } from "../db/bootstrap.js";
 import {
   createId,
   isoNow,
-  serializeDoc,
-  serializeDocs,
   toObjectId,
   usersCollection,
   workspaceMetaCollection,
@@ -37,6 +41,19 @@ async function syncWorkspaceMemberships(
   );
 }
 
+function getTrimmedRequiredValue(
+  value: string | undefined,
+  fieldName: string,
+  app: Parameters<FastifyPluginAsync>[0],
+): string {
+  const trimmedValue = value?.trim();
+  if (!trimmedValue) {
+    throw app.httpErrors.badRequest(`${fieldName} is required`);
+  }
+
+  return trimmedValue;
+}
+
 const adminRoutes: FastifyPluginAsync = async (app) => {
   app.get("/admin/users", { preHandler: app.authenticate }, async (request) => {
     if (getRequiredUser(request).role !== "superadmin") {
@@ -45,64 +62,66 @@ const adminRoutes: FastifyPluginAsync = async (app) => {
       );
     }
 
-    const users = serializeDocs(
-      await usersCollection(app.mongo)
-        .find({})
-        .sort({ createdAt: -1 })
-        .toArray(),
-    ) as User[];
+    const users = await usersCollection(app.mongo)
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+
     return {
-      users: users.map((user) => ({ ...user, passwordHash: undefined })),
+      users: users.map((user) => sanitizeAuthUser(user) as User),
     };
   });
 
-  app.post<{
-    Body: {
-      username: string;
-      password: string;
-      role: "admin" | "member";
-      workspaceIds?: string[];
-    };
-  }>("/admin/users", { preHandler: app.authenticate }, async (request) => {
-    const currentUser = getRequiredUser(request);
-    if (currentUser.role !== "superadmin") {
-      throw app.httpErrors.forbidden("Only the superadmin can create users");
-    }
+  app.post<{ Body: CreateUserPayload }>(
+    "/admin/users",
+    { preHandler: app.authenticate },
+    async (request) => {
+      const currentUser = getRequiredUser(request);
+      if (currentUser.role !== "superadmin") {
+        throw app.httpErrors.forbidden("Only the superadmin can create users");
+      }
 
-    const now = isoNow();
-    const userId = createId();
-    const userRecord = {
-      _id: userId,
-      username: request.body.username.trim(),
-      passwordHash: await hashPassword(request.body.password),
-      role: request.body.role,
-      createdBy: currentUser._id,
-      workspaceIds: request.body.workspaceIds ?? [],
-      createdAt: now,
-      updatedAt: now,
-    };
+      const name = getTrimmedRequiredValue(request.body.name, "Name", app);
+      const username = getTrimmedRequiredValue(
+        request.body.username,
+        "Username",
+        app,
+      );
+      if (!request.body.password) {
+        throw app.httpErrors.badRequest("Password is required");
+      }
 
-    await usersCollection(app.mongo).insertOne(userRecord as never);
-    await syncWorkspaceMemberships(
-      app,
-      userId.toHexString(),
-      userRecord.workspaceIds,
-      userRecord.role,
-    );
+      const now = isoNow();
+      const userId = createId();
+      const userRecord = {
+        _id: userId,
+        name,
+        username,
+        passwordHash: await hashPassword(request.body.password),
+        role: request.body.role,
+        createdBy: currentUser._id,
+        workspaceIds: request.body.workspaceIds ?? [],
+        createdAt: now,
+        updatedAt: now,
+      };
 
-    return {
-      user: { ...(serializeDoc(userRecord) as User), passwordHash: undefined },
-    };
-  });
+      await usersCollection(app.mongo).insertOne(userRecord as never);
+      await syncWorkspaceMemberships(
+        app,
+        userId.toHexString(),
+        userRecord.workspaceIds,
+        userRecord.role,
+      );
+
+      return {
+        user: sanitizeAuthUser(userRecord) as User,
+      };
+    },
+  );
 
   app.patch<{
     Params: { userId: string };
-    Body: {
-      username?: string;
-      password?: string;
-      role?: "admin" | "member";
-      workspaceIds?: string[];
-    };
+    Body: UpdateUserPayload;
   }>(
     "/admin/users/:userId",
     { preHandler: app.authenticate },
@@ -119,12 +138,6 @@ const adminRoutes: FastifyPluginAsync = async (app) => {
       }
 
       const patch: Record<string, unknown> = { updatedAt: isoNow() };
-      if (request.body.username) {
-        patch.username = request.body.username.trim();
-      }
-      if (request.body.password) {
-        patch.passwordHash = await hashPassword(request.body.password);
-      }
       if (request.body.role) {
         patch.role = request.body.role;
       }
@@ -140,18 +153,57 @@ const adminRoutes: FastifyPluginAsync = async (app) => {
         app,
         request.params.userId,
         request.body.workspaceIds ?? existingUser.workspaceIds,
-        (request.body.role ?? existingUser.role) as "admin" | "member",
+        request.body.role ?? existingUser.role,
       );
 
       const updatedUser = await usersCollection(app.mongo).findOne({
         _id: existingUser._id,
       });
       return {
-        user: {
-          ...(serializeDoc(updatedUser!) as User),
-          passwordHash: undefined,
-        },
+        user: sanitizeAuthUser(updatedUser!) as User,
       };
+    },
+  );
+
+  app.patch<{
+    Params: { userId: string };
+    Body: ChangeUserPasswordPayload;
+  }>(
+    "/admin/users/:userId/password",
+    { preHandler: app.authenticate },
+    async (request) => {
+      if (getRequiredUser(request).role !== "superadmin") {
+        throw app.httpErrors.forbidden(
+          "Only the superadmin can change user passwords",
+        );
+      }
+
+      const { newPassword, confirmPassword } = request.body;
+      if (!newPassword) {
+        throw app.httpErrors.badRequest("New password is required");
+      }
+      if (newPassword !== confirmPassword) {
+        throw app.httpErrors.badRequest("Passwords do not match");
+      }
+
+      const existingUser = await usersCollection(app.mongo).findOne({
+        _id: toObjectId(request.params.userId),
+      });
+      if (!existingUser) {
+        throw app.httpErrors.notFound("User not found");
+      }
+
+      await usersCollection(app.mongo).updateOne(
+        { _id: existingUser._id },
+        {
+          $set: {
+            passwordHash: await hashPassword(newPassword),
+            updatedAt: isoNow(),
+          },
+        },
+      );
+
+      return { success: true };
     },
   );
 

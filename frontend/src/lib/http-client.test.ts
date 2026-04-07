@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+﻿import { afterEach, describe, expect, it, vi } from "vitest";
 import { api } from "./http-client";
 
 describe("api", () => {
@@ -59,6 +59,7 @@ describe("api", () => {
       }),
     );
   });
+
   it("extracts the message from JSON error responses", async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: false,
@@ -107,5 +108,52 @@ describe("api", () => {
 
     expect(init.signal).toBe(controller.signal);
   });
-});
 
+  it("sends the profile update payload when updating the signed-in user", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ user: { _id: "user-1", name: "Jane" } }),
+    } as Response);
+    vi.stubGlobal("fetch", fetchMock);
+
+    await api.updateMyProfile({ name: "Jane" });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/auth/me/profile",
+      expect.objectContaining({
+        method: "PATCH",
+        credentials: "include",
+        body: JSON.stringify({ name: "Jane" }),
+      }),
+    );
+  });
+
+  it("sends the admin password reset payload", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ success: true }),
+    } as Response);
+    vi.stubGlobal("fetch", fetchMock);
+
+    await api.changeUserPassword("user-1", {
+      newPassword: "new-secret",
+      confirmPassword: "new-secret",
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/admin/users/user-1/password",
+      expect.objectContaining({
+        method: "PATCH",
+        credentials: "include",
+        body: JSON.stringify({
+          newPassword: "new-secret",
+          confirmPassword: "new-secret",
+        }),
+      }),
+    );
+  });
+});

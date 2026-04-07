@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   AdminUser,
   FolderDoc,
   FolderTree,
@@ -10,8 +10,11 @@ import type {
   WorkspaceMeta,
 } from "@restify/shared";
 import {
+  type AdminRecord,
+  type UserRecord,
   toObjectId,
   adminsCollection,
+  isoNow,
   serializeDoc,
   serializeDocs,
   usersCollection,
@@ -79,6 +82,51 @@ function normalizeFolderId(folderId?: string | null) {
   return folderId ?? null;
 }
 
+export function resolveUserName(name: string | null | undefined, username: string) {
+  const trimmedName = name?.trim();
+  return trimmedName || username;
+}
+
+function withResolvedName<T extends { name?: string | null; username: string }>(
+  user: T,
+): Omit<T, "name"> & { name: string } {
+  return {
+    ...user,
+    name: resolveUserName(user.name, user.username),
+  };
+}
+
+export function sanitizeAuthUser(
+  user: AdminRecord | UserRecord,
+): AdminUser | User {
+  return withoutPassword(
+    serializeDoc(withResolvedName(user))!,
+  ) as AdminUser | User;
+}
+
+export async function migrateUserNames(
+  db: Db,
+): Promise<{ admins: number; users: number }> {
+  const missingNameFilter = {
+    $or: [{ name: { $exists: false } }, { name: null }, { name: "" }],
+  };
+  const migratedAt = isoNow();
+
+  const [adminsResult, usersResult] = await Promise.all([
+    adminsCollection(db).updateMany(missingNameFilter as never, [
+      { $set: { name: "$username", updatedAt: migratedAt } },
+    ]),
+    usersCollection(db).updateMany(missingNameFilter as never, [
+      { $set: { name: "$username", updatedAt: migratedAt } },
+    ]),
+  ]);
+
+  return {
+    admins: adminsResult.modifiedCount,
+    users: usersResult.modifiedCount,
+  };
+}
+
 export async function hasAnyAdmins(db: Db): Promise<boolean> {
   const count = await adminsCollection(db).countDocuments({}, { limit: 1 });
   return count > 0;
@@ -87,10 +135,11 @@ export async function hasAnyAdmins(db: Db): Promise<boolean> {
 export async function findUserByUsername(db: Db, username: string) {
   const admin = await adminsCollection(db).findOne({ username });
   if (admin) {
-    return admin;
+    return withResolvedName(admin);
   }
 
-  return usersCollection(db).findOne({ username });
+  const user = await usersCollection(db).findOne({ username });
+  return user ? withResolvedName(user) : null;
 }
 
 export async function findSessionUserById(
@@ -101,7 +150,7 @@ export async function findSessionUserById(
     .findOne({ _id: toObjectId(userId) })
     .catch(() => null);
   if (adminById) {
-    return withoutPassword(serializeDoc(adminById)!) as AdminUser;
+    return sanitizeAuthUser(adminById);
   }
 
   const userById = await usersCollection(db)
@@ -111,7 +160,7 @@ export async function findSessionUserById(
     return null;
   }
 
-  return withoutPassword(serializeDoc(userById)!) as User;
+  return sanitizeAuthUser(userById);
 }
 
 export async function listAccessibleWorkspaces(
@@ -250,3 +299,4 @@ export async function buildWorkspaceTree(
     projects: projectTree.sort((a, b) => a.order - b.order),
   };
 }
+
