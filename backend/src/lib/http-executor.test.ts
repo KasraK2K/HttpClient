@@ -32,7 +32,14 @@ describe("executeHttpRequest", () => {
       body: { type: "none" },
     };
 
-    await executeHttpRequest(payload, controller.signal);
+    await executeHttpRequest(
+      payload,
+      {
+        allowPrivateNetworkTargets: true,
+        allowedOutboundHosts: [],
+      },
+      controller.signal,
+    );
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [, init] = fetchMock.mock.calls[0] as [URL, RequestInit];
@@ -40,3 +47,4 @@ describe("executeHttpRequest", () => {
     expect(init.signal).toBe(controller.signal);
   });
 });
+

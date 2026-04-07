@@ -276,6 +276,11 @@ export function HistoryDetailsDialog({
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge>{formatAuthTypeLabel(snapshot.auth.type)}</Badge>
                 </div>
+                {snapshot.secretsRedacted ? (
+                  <div className="text-xs text-muted">
+                    Sensitive auth and header values are redacted from history for security.
+                  </div>
+                ) : null}
                 {snapshot.auth.type === "none" ? (
                   <div className="rounded-xl border border-dashed border-border/55 bg-[rgb(var(--surface-1)/0.58)] px-4 py-6 text-sm text-muted">
                     This request was sent without auth.
@@ -379,6 +384,7 @@ export function HistoryDetailsDialog({
     </Dialog>
   );
 }
+
 
 
 

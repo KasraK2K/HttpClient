@@ -123,6 +123,7 @@ export default function App() {
   const {
     user,
     needsSuperuser,
+    requiresSetupSecret,
     isInitializing,
     initialize,
     login,
@@ -1084,7 +1085,12 @@ export default function App() {
   }
 
   if (needsSuperuser && !user) {
-    return <CreateSuperuserPage onSubmit={createSuperuser} />;
+    return (
+      <CreateSuperuserPage
+        requiresSetupSecret={requiresSetupSecret}
+        onSubmit={createSuperuser}
+      />
+    );
   }
 
   if (!user) {
@@ -1398,6 +1404,7 @@ export default function App() {
     </>
   );
 }
+
 
 
 

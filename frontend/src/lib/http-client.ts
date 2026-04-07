@@ -1,4 +1,5 @@
 import type {
+  BootstrapStatusResponse,
   CreateSuperuserPayload,
   ExecuteRequestPayload,
   ExecuteRequestResult,
@@ -47,7 +48,7 @@ async function requestJson<T>(path: string, init: RequestInit = {}): Promise<T> 
 
 export const api = {
   bootstrapStatus: () =>
-    requestJson<{ needsSuperuser: boolean }>("/auth/bootstrap-status"),
+    requestJson<BootstrapStatusResponse>("/auth/bootstrap-status"),
   me: () => requestJson<MeResponse>("/auth/me"),
   login: (body: LoginPayload) =>
     requestJson<MeResponse>("/auth/login", {
@@ -274,5 +275,8 @@ export const api = {
       method: "DELETE",
     }),
 };
+
+
+
 
 

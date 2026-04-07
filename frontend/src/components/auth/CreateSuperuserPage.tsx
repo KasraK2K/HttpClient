@@ -1,4 +1,4 @@
-﻿import { ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { showErrorToast } from "../../store/toasts";
 import { Button } from "../ui/button";
@@ -6,23 +6,34 @@ import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Input } from "../ui/input";
 
 interface CreateSuperuserPageProps {
+  requiresSetupSecret: boolean;
   onSubmit: (
     username: string,
     password: string,
     confirmPassword: string,
+    setupSecret?: string,
   ) => Promise<void>;
 }
 
-export function CreateSuperuserPage({ onSubmit }: CreateSuperuserPageProps) {
+export function CreateSuperuserPage({
+  requiresSetupSecret,
+  onSubmit,
+}: CreateSuperuserPageProps) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [setupSecret, setSetupSecret] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      await onSubmit(username, password, confirmPassword);
+      await onSubmit(
+        username,
+        password,
+        confirmPassword,
+        requiresSetupSecret ? setupSecret : undefined,
+      );
     } catch (submitError) {
       showErrorToast(submitError, {
         title: "Account Setup Failed",
@@ -48,6 +59,11 @@ export function CreateSuperuserPage({ onSubmit }: CreateSuperuserPageProps) {
               <p className="mt-1 text-sm leading-6 text-muted">
                 HttpClient found an empty admins collection, so the first secure account starts here.
               </p>
+              {requiresSetupSecret ? (
+                <p className="mt-2 text-xs leading-5 text-muted">
+                  This server requires the one-time setup secret from your deployment environment before the first superuser can be created.
+                </p>
+              ) : null}
             </div>
           </div>
         </CardHeader>
@@ -60,6 +76,17 @@ export function CreateSuperuserPage({ onSubmit }: CreateSuperuserPageProps) {
               placeholder="superadmin"
             />
           </div>
+          {requiresSetupSecret ? (
+            <div className="space-y-2 md:col-span-2">
+              <label className="text-sm text-muted">Setup Secret</label>
+              <Input
+                type="password"
+                value={setupSecret}
+                onChange={(event) => setSetupSecret(event.target.value)}
+                placeholder="Deployment setup secret"
+              />
+            </div>
+          ) : null}
           <div className="space-y-2">
             <label className="text-sm text-muted">Password</label>
             <Input
@@ -81,7 +108,13 @@ export function CreateSuperuserPage({ onSubmit }: CreateSuperuserPageProps) {
           <Button
             className="mt-1 h-11 rounded-xl md:col-span-2"
             onClick={() => void handleSubmit()}
-            disabled={isSubmitting || !username || !password || !confirmPassword}
+            disabled={
+              isSubmitting ||
+              !username ||
+              !password ||
+              !confirmPassword ||
+              (requiresSetupSecret && !setupSecret)
+            }
           >
             {isSubmitting ? "Creating Account..." : "Create Superuser"}
           </Button>

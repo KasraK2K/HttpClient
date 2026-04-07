@@ -6,6 +6,10 @@ import type {
   HeaderRow,
   QueryParamRow,
 } from "@restify/shared";
+import {
+  assertAllowedOutboundUrl,
+  type OutboundRequestPolicy,
+} from "./outbound-request-policy.js";
 
 function applyEnabledKeyValues(target: Headers, rows: HeaderRow[]): void {
   rows
@@ -114,8 +118,10 @@ function buildBody(
 
 export async function executeHttpRequest(
   payload: ExecuteRequestPayload,
+  policy: OutboundRequestPolicy,
   signal?: AbortSignal,
 ): Promise<ExecuteRequestResult> {
+  await assertAllowedOutboundUrl(payload.url, policy);
   const url = new URL(payload.url);
   const headers = new Headers();
   applyEnabledKeyValues(headers, payload.headers);

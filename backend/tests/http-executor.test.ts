@@ -13,16 +13,22 @@ describe("executeHttpRequest", () => {
       }),
     );
 
-    const result = await executeHttpRequest({
-      workspaceId: "workspace-1",
-      projectId: "project-1",
-      method: "GET",
-      url: "https://example.com",
-      headers: [],
-      params: [],
-      body: { type: "none" },
-      auth: { type: "none" },
-    });
+    const result = await executeHttpRequest(
+      {
+        workspaceId: "workspace-1",
+        projectId: "project-1",
+        method: "GET",
+        url: "https://example.com",
+        headers: [],
+        params: [],
+        body: { type: "none" },
+        auth: { type: "none" },
+      },
+      {
+        allowPrivateNetworkTargets: false,
+        allowedOutboundHosts: ["example.com"],
+      },
+    );
 
     expect(result.status).toBe(200);
     expect(result.textBody).toBe("hello");

@@ -11,14 +11,18 @@ services:
     environment:
       NODE_ENV: production
       BACKEND_PORT: "3500"
-      MONGODB_URI: mongodb://mongodb:27017/restify
+      MONGODB_URI: "mongodb://${MONGODB_APP_USERNAME:-httpclient}:${MONGODB_APP_PASSWORD:?Set MONGODB_APP_PASSWORD in .env}@mongodb:27017/${MONGODB_DATABASE:-restify}?authSource=${MONGODB_DATABASE:-restify}"
       MONGODB_SERVER_SELECTION_TIMEOUT_MS: "${MONGODB_SERVER_SELECTION_TIMEOUT_MS:-5000}"
-      JWT_SECRET: "${JWT_SECRET:-replace-with-a-long-random-secret}"
+      JWT_SECRET: "${JWT_SECRET:?Set JWT_SECRET in .env}"
+      DATA_ENCRYPTION_KEY: "${DATA_ENCRYPTION_KEY:?Set DATA_ENCRYPTION_KEY in .env}"
+      SUPERUSER_BOOTSTRAP_SECRET: "${SUPERUSER_BOOTSTRAP_SECRET:-}"
       COOKIE_NAME: "${COOKIE_NAME:-restify_session}"
       COOKIE_DOMAIN: "${COOKIE_DOMAIN:-}"
-      COOKIE_SECURE: "${COOKIE_SECURE:-false}"
+      COOKIE_SECURE: "${COOKIE_SECURE:-auto}"
       FRONTEND_ORIGIN: "${DOCKER_FRONTEND_ORIGIN:-http://localhost:3500,http://127.0.0.1:3500}"
       UNLOCK_TTL_MINUTES: "${UNLOCK_TTL_MINUTES:-15}"
+      ALLOW_PRIVATE_NETWORK_TARGETS: "${ALLOW_PRIVATE_NETWORK_TARGETS:-false}"
+      ALLOWED_OUTBOUND_HOSTS: "${ALLOWED_OUTBOUND_HOSTS:-}"
     ports:
       - "${APP_PORT:-3500}:3500"
 
@@ -26,13 +30,24 @@ services:
     image: mongo:7
     container_name: httpclient-mongodb
     restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGODB_ROOT_USERNAME:-root}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGODB_ROOT_PASSWORD:?Set MONGODB_ROOT_PASSWORD in .env}"
+      MONGODB_DATABASE: "${MONGODB_DATABASE:-restify}"
+      MONGODB_APP_USERNAME: "${MONGODB_APP_USERNAME:-httpclient}"
+      MONGODB_APP_PASSWORD: "${MONGODB_APP_PASSWORD:?Set MONGODB_APP_PASSWORD in .env}"
     ports:
-      - "${MONGODB_PORT:-27017}:27017"
+      - "${MONGODB_BIND_ADDRESS:-127.0.0.1}:${MONGODB_PORT:-27017}:27017"
     volumes:
       - mongodb_data:/data/db
       - ./backup:/backup
+      - ./docker/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     healthcheck:
-      test: ["CMD-SHELL", "mongosh --quiet --eval \"db.adminCommand({ ping: 1 }).ok\" || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "mongosh --quiet --host 127.0.0.1 --port 27017 --username \"$$MONGODB_APP_USERNAME\" --password \"$$MONGODB_APP_PASSWORD\" --authenticationDatabase \"$$MONGODB_DATABASE\" --eval \"db.adminCommand({ ping: 1 }).ok\" || exit 1"
+        ]
       interval: 10s
       timeout: 5s
       retries: 10

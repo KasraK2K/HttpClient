@@ -31,7 +31,7 @@ function isAllowedOrigin(origin: string, config: AppConfig): boolean {
 }
 
 export async function buildApp(config: AppConfig = loadConfig()) {
-  const app = Fastify({ logger: true });
+  const app = Fastify({ logger: true, trustProxy: true });
   app.decorate("config", config);
 
   await app.register(fastifySensible);

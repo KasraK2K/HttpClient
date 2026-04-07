@@ -10,16 +10,16 @@ HttpClient is a browser-based REST API client built as a multi-package repo with
 ## Local development
 
 1. Install dependencies with `npm install`
-2. Copy `.env.example` to `backend/.env` or the repo root `.env` if you want to override defaults
+2. Copy `.env.example` to the repo root `.env` and set strong values for the MongoDB, JWT, encryption, and bootstrap secrets
 3. Start MongoDB with `npm run db:up`
 4. Run `npm run dev`
 5. Open the local Vite URL shown in the terminal, usually `http://127.0.0.1:3030`
 
-The backend defaults to a local MongoDB database and secure cookie session, and `compose.yaml` starts MongoDB on the expected local port so the app can boot without extra setup. Backups are written into `./backup` by running `npm run db:backup` when the MongoDB container is up.
+The backend expects an authenticated local MongoDB database, and `compose.yaml` binds MongoDB to `127.0.0.1` by default so Docker does not expose it publicly on your server. Backups are written into `./backup` by running `npm run db:backup` when the MongoDB container is up.
 
 The frontend dev server uses `127.0.0.1` and starts at port `3030` because some Windows setups reserve port `5173`, which causes Vite to fail with `EACCES`. If `3030` is busy, Vite will automatically move to the next available local port.
 
-The backend now defaults to port `3500` and the frontend proxy reads the same `BACKEND_PORT` value from the shared env file. In development, a legacy `PORT=4000` setting is also remapped to `3500` so older local env files do not keep hitting the Windows `EACCES` socket restriction on port `4000`.
+The backend now defaults to port `3500` and the frontend proxy reads the same `BACKEND_PORT` value from the shared env file. In development, a legacy `PORT=4000` setting is also remapped to `3500` so older local env files do not keep hitting the Windows `EACCES` socket restriction on port `4000`. The request runner blocks private-network targets in production by default; for local-only testing you can keep `ALLOW_PRIVATE_NETWORK_TARGETS=true` in `backend/.env`.
 
 The root install bootstraps `shared/`, `backend/`, `frontend/`, and `desktop/` automatically, so it works even on npm versions that do not support the `workspace:*` protocol.
 
@@ -51,7 +51,7 @@ Run the full application with:
 
 - `npm run docker:up`
 
-Open the app at `http://localhost:3500`. The backend serves the built frontend from the same container, MongoDB runs in Docker, and backups can be written into `./backup` with:
+Open the app at `http://localhost:3500`. The backend serves the built frontend from the same container, MongoDB runs in Docker with authentication enabled, and backups can be written into `./backup` with:
 
 - `npm run db:backup`
 
@@ -64,8 +64,12 @@ Useful Docker commands:
 Optional Docker env overrides from `.env`:
 
 - `APP_PORT` changes the published app port
-- `MONGODB_PORT` changes the published MongoDB port
+- `MONGODB_PORT` changes the published MongoDB port on the loopback bind address
 - `DOCKER_FRONTEND_ORIGIN` overrides the browser origin allowed by the production container
+- `MONGODB_BIND_ADDRESS` controls which host interface publishes MongoDB; keep the default `127.0.0.1` on servers
+- `SUPERUSER_BOOTSTRAP_SECRET` protects the first superuser setup flow
+- `DATA_ENCRYPTION_KEY` encrypts stored request auth and project environment secrets at rest
+- `ALLOW_PRIVATE_NETWORK_TARGETS` and `ALLOWED_OUTBOUND_HOSTS` control SSRF protections for the server-side request runner
 - `DOCKER_MONGODB_BACKUP_URI` overrides the MongoDB URI used by `mongodump` inside the container
 
 ## Nginx on a server
@@ -102,3 +106,11 @@ In the current Docker setup, both Nginx locations still proxy to `127.0.0.1:3500
 - `npm run db:remove` removes the MongoDB container and its Docker volume
 - `npm run db:logs`
 - `npm run db:backup`
+
+
+## Security notes
+
+- MongoDB is authenticated and bound to loopback by default in compose.yaml, which addresses the same kind of public exposure warning DigitalOcean sends for Docker-published databases.
+- On a server, keep MongoDB off the public internet and put the app behind Nginx or another reverse proxy when possible.
+- The first superuser bootstrap route should only be used with SUPERUSER_BOOTSTRAP_SECRET set in production.
+

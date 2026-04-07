@@ -20,7 +20,15 @@ import {
   withoutPassword,
 } from "./collections.js";
 import type { Db } from "mongodb";
+import { loadConfig } from "../config.js";
 import { canViewEntity } from "../lib/permissions.js";
+import {
+  revealProjectEnvVarsFromStorage,
+  revealRequestAuthFromStorage,
+  revealRequestHeadersFromStorage,
+} from "../lib/secure-storage.js";
+
+const defaultDataEncryptionKey = loadConfig().dataEncryptionKey;
 
 function sanitizeWorkspace(workspace: WorkspaceMeta): WorkspaceMeta {
   return {
@@ -33,6 +41,10 @@ function sanitizeWorkspace(workspace: WorkspaceMeta): WorkspaceMeta {
 function normalizeProject<T extends ProjectDoc>(project: T): T {
   return {
     ...project,
+    envVars: revealProjectEnvVarsFromStorage(
+      project.envVars,
+      defaultDataEncryptionKey,
+    ),
     passwordHash: null,
     isPasswordProtected: false,
     isPrivate: Boolean(project.isPrivate),
@@ -50,6 +62,11 @@ function normalizeFolder<T extends FolderDoc>(folder: T): T {
 function normalizeRequest<T extends RequestDoc>(request: T): T {
   return {
     ...request,
+    headers: revealRequestHeadersFromStorage(
+      request.headers,
+      defaultDataEncryptionKey,
+    ),
+    auth: revealRequestAuthFromStorage(request.auth, defaultDataEncryptionKey),
     isPrivate: Boolean(request.isPrivate),
   };
 }
@@ -233,5 +250,3 @@ export async function buildWorkspaceTree(
     projects: projectTree.sort((a, b) => a.order - b.order),
   };
 }
-
-

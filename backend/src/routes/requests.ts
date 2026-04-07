@@ -25,6 +25,14 @@ import {
   canViewEntity,
   getRequiredUser,
 } from "../lib/permissions.js";
+import {
+  protectRequestAuthForStorage,
+  protectRequestHeadersForStorage,
+  revealProjectEnvVarsFromStorage,
+  revealRequestAuthFromStorage,
+  revealRequestHeadersFromStorage,
+  sanitizeHistorySnapshot,
+} from "../lib/secure-storage.js";
 
 async function requireWorkspace(
   app: Parameters<FastifyPluginAsync>[0],
@@ -39,9 +47,13 @@ async function requireWorkspace(
 
 type SessionUser = AdminUser | User;
 
-function normalizeProject(project: ProjectDoc): ProjectDoc {
+function normalizeProject(
+  project: ProjectDoc,
+  dataEncryptionKey: string,
+): ProjectDoc {
   return {
     ...project,
+    envVars: revealProjectEnvVarsFromStorage(project.envVars, dataEncryptionKey),
     passwordHash: null,
     isPasswordProtected: false,
     isPrivate: Boolean(project.isPrivate),
@@ -56,10 +68,25 @@ function normalizeFolder(folder: FolderDoc): FolderDoc {
   };
 }
 
-function normalizeRequest(request: RequestDoc): RequestDoc {
+function normalizeRequest(
+  request: RequestDoc,
+  dataEncryptionKey: string,
+): RequestDoc {
   return {
     ...request,
+    headers: revealRequestHeadersFromStorage(request.headers, dataEncryptionKey),
+    auth: revealRequestAuthFromStorage(request.auth, dataEncryptionKey),
     isPrivate: Boolean(request.isPrivate),
+  };
+}
+
+function toStoredRequestFields(
+  request: Pick<RequestDoc, "headers" | "auth">,
+  dataEncryptionKey: string,
+) {
+  return {
+    headers: protectRequestHeadersForStorage(request.headers, dataEncryptionKey),
+    auth: protectRequestAuthForStorage(request.auth, dataEncryptionKey),
   };
 }
 
@@ -76,7 +103,10 @@ async function requireProject(
     throw app.httpErrors.notFound("Project not found");
   }
 
-  const normalizedProject = normalizeProject(serializeDoc(project) as ProjectDoc);
+  const normalizedProject = normalizeProject(
+    serializeDoc(project) as ProjectDoc,
+    app.config.dataEncryptionKey,
+  );
   if (user && !canViewEntity(user, normalizedProject)) {
     throw app.httpErrors.notFound("Project not found");
   }
@@ -144,7 +174,10 @@ async function requireRequestDoc(
     throw app.httpErrors.notFound("Request not found");
   }
 
-  const normalizedRequest = normalizeRequest(serializeDoc(requestDoc) as RequestDoc);
+  const normalizedRequest = normalizeRequest(
+    serializeDoc(requestDoc) as RequestDoc,
+    app.config.dataEncryptionKey,
+  );
   if (user && !canViewEntity(user, normalizedRequest)) {
     throw app.httpErrors.notFound("Request not found");
   }
@@ -229,7 +262,9 @@ async function listRequestsInFolders(
     await workspaceDataCollection(app.mongo, workspaceId)
       .find({ entityType: "request", folderId: { $in: folderIds } })
       .toArray(),
-  ) as RequestDoc[]).map(normalizeRequest);
+  ) as RequestDoc[]).map((request) =>
+    normalizeRequest(request, app.config.dataEncryptionKey),
+  );
 }
 
 async function trimHistory(
@@ -284,13 +319,14 @@ function buildHistoryRequestSnapshot(
     }
   }
 
-  return {
+  return sanitizeHistorySnapshot({
     headers: payload.headers,
     params: payload.params,
     body: payload.body,
     auth: payload.auth,
     computedHeaders: Object.fromEntries(computedHeaders.entries()),
-  };
+    secretsRedacted: true,
+  });
 }
 
 const requestRoutes: FastifyPluginAsync = async (app) => {
@@ -508,6 +544,7 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
       if (requestDocs.length > 0) {
         const clonedRequests = requestDocs.map((requestDoc) => ({
           ...requestDoc,
+          ...toStoredRequestFields(requestDoc, app.config.dataEncryptionKey),
           _id: createId(),
           folderId: requestDoc.folderId
             ? idMap.get(requestDoc.folderId) ?? requestDoc.folderId
@@ -865,10 +902,9 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
       name: request.body.name,
       method: request.body.method,
       url: request.body.url,
-      headers: request.body.headers,
+      ...toStoredRequestFields(request.body, app.config.dataEncryptionKey),
       params: request.body.params,
       body: request.body.body,
-      auth: request.body.auth,
       responseHistory: [],
       order: request.body.order,
       isPrivate: false,
@@ -879,7 +915,12 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
     await workspaceDataCollection(app.mongo, workspace._id).insertOne(
       requestDoc as never,
     );
-    return { request: normalizeRequest(serializeDoc(requestDoc) as RequestDoc) };
+    return {
+      request: normalizeRequest(
+        serializeDoc(requestDoc) as RequestDoc,
+        app.config.dataEncryptionKey,
+      ),
+    };
   });
   app.patch<{
     Params: { requestId: string };
@@ -954,6 +995,20 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
 
       if ("isPrivate" in patch) {
         patch.isPrivate = Boolean(patch.isPrivate);
+      }
+
+      if ("headers" in patch && Array.isArray(patch.headers)) {
+        patch.headers = protectRequestHeadersForStorage(
+          patch.headers,
+          app.config.dataEncryptionKey,
+        );
+      }
+
+      if ("auth" in patch && patch.auth) {
+        patch.auth = protectRequestAuthForStorage(
+          patch.auth as RequestDoc["auth"],
+          app.config.dataEncryptionKey,
+        );
       }
 
       await workspaceDataCollection(app.mongo, workspace._id).updateOne(
@@ -1182,6 +1237,7 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
       const now = isoNow();
       await workspaceDataCollection(app.mongo, workspace._id).insertOne({
         ...requestDoc,
+        ...toStoredRequestFields(requestDoc, app.config.dataEncryptionKey),
         _id: duplicateId,
         name: `${requestDoc.name} Copy`,
         responseHistory: [],
@@ -1327,7 +1383,14 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
       }
 
       await app.assertProjectUnlocked(request, project, workspace);
-      const result = await executeHttpRequest(request.body, request.signal);
+      const result = await executeHttpRequest(
+        request.body,
+        {
+          allowPrivateNetworkTargets: app.config.allowPrivateNetworkTargets,
+          allowedOutboundHosts: app.config.allowedOutboundHosts,
+        },
+        request.signal,
+      );
       const now = isoNow();
 
       const historyRecord = {
@@ -1381,3 +1444,4 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
 };
 
 export default requestRoutes;
+

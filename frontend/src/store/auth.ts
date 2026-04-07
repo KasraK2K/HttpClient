@@ -5,6 +5,7 @@ import { api } from "../lib/http-client";
 interface AuthState {
   user: AdminUser | User | null;
   needsSuperuser: boolean;
+  requiresSetupSecret: boolean;
   isInitializing: boolean;
   error?: string;
   initialize: () => Promise<void>;
@@ -13,6 +14,7 @@ interface AuthState {
     username: string,
     password: string,
     confirmPassword: string,
+    setupSecret?: string,
   ) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: AdminUser | User | null) => void;
@@ -21,6 +23,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   needsSuperuser: false,
+  requiresSetupSecret: false,
   isInitializing: true,
   error: undefined,
   setUser: (user) => set({ user }),
@@ -33,6 +36,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       ]);
       set({
         needsSuperuser: bootstrap.needsSuperuser,
+        requiresSetupSecret: bootstrap.requiresSetupSecret,
         user: session.user,
         isInitializing: false,
       });
@@ -50,13 +54,19 @@ export const useAuthStore = create<AuthState>((set) => ({
     const session = await api.login({ username, password });
     set({ user: session.user, needsSuperuser: false, error: undefined });
   },
-  createSuperuser: async (username, password, confirmPassword) => {
+  createSuperuser: async (username, password, confirmPassword, setupSecret) => {
     const session = await api.createSuperuser({
       username,
       password,
       confirmPassword,
+      setupSecret,
     });
-    set({ user: session.user, needsSuperuser: false, error: undefined });
+    set({
+      user: session.user,
+      needsSuperuser: false,
+      requiresSetupSecret: false,
+      error: undefined,
+    });
   },
   logout: async () => {
     await api.logout();

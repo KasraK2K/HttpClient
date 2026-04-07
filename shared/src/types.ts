@@ -142,6 +142,7 @@ export interface HistoryRequestSnapshot {
   body: RequestBodyConfig;
   auth: RequestAuthConfig;
   computedHeaders: Record<string, string>;
+  secretsRedacted?: boolean;
 }
 
 export interface RequestDoc extends Timestamped {
@@ -193,6 +194,7 @@ export interface WorkspaceTree {
 
 export interface BootstrapStatusResponse {
   needsSuperuser: boolean;
+  requiresSetupSecret: boolean;
 }
 
 export interface LoginPayload {
@@ -202,6 +204,7 @@ export interface LoginPayload {
 
 export interface CreateSuperuserPayload extends LoginPayload {
   confirmPassword: string;
+  setupSecret?: string;
 }
 
 export interface MeResponse {
@@ -291,4 +294,5 @@ export interface ListUsersResponse {
 export interface HistoryResponse {
   history: HistoryDoc[];
 }
+
 

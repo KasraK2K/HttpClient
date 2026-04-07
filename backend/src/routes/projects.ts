@@ -24,12 +24,22 @@ import {
   getRequiredUser,
 } from "../lib/permissions.js";
 import { parsePostmanCollection } from "../lib/postman-import.js";
+import {
+  protectProjectEnvVarsForStorage,
+  protectRequestAuthForStorage,
+  protectRequestHeadersForStorage,
+  revealProjectEnvVarsFromStorage,
+} from "../lib/secure-storage.js";
 
 type SessionUser = AdminUser | User;
 
-function normalizeProject(project: ProjectDoc): ProjectDoc {
+function normalizeProject(
+  project: ProjectDoc,
+  dataEncryptionKey: string,
+): ProjectDoc {
   return {
     ...project,
+    envVars: revealProjectEnvVarsFromStorage(project.envVars, dataEncryptionKey),
     passwordHash: null,
     isPasswordProtected: false,
     isPrivate: Boolean(project.isPrivate),
@@ -83,7 +93,10 @@ async function requireProject(
     throw app.httpErrors.notFound("Project not found");
   }
 
-  const normalizedProject = normalizeProject(serializeDoc(project) as ProjectDoc);
+  const normalizedProject = normalizeProject(
+    serializeDoc(project) as ProjectDoc,
+    app.config.dataEncryptionKey,
+  );
   if (user && !canViewEntity(user, normalizedProject)) {
     throw app.httpErrors.notFound("Project not found");
   }
@@ -145,7 +158,12 @@ const projectRoutes: FastifyPluginAsync = async (app) => {
       await workspaceDataCollection(app.mongo, workspace._id).insertOne(
         project as never,
       );
-      return { project: normalizeProject(serializeDoc(project) as ProjectDoc) };
+      return {
+        project: normalizeProject(
+          serializeDoc(project) as ProjectDoc,
+          app.config.dataEncryptionKey,
+        ),
+      };
     },
   );
 
@@ -180,7 +198,10 @@ const projectRoutes: FastifyPluginAsync = async (app) => {
         entityType: "project",
         workspaceId: workspace._id,
         name: projectName,
-        envVars: importedCollection.envVars,
+        envVars: protectProjectEnvVarsForStorage(
+          importedCollection.envVars,
+          app.config.dataEncryptionKey,
+        ),
         order:
           ((maxOrderRecord[0] as { order?: number } | undefined)?.order ?? -1) +
           1,
@@ -212,10 +233,16 @@ const projectRoutes: FastifyPluginAsync = async (app) => {
             name: importedRequest.name,
             method: importedRequest.method,
             url: importedRequest.url,
-            headers: importedRequest.headers,
+            headers: protectRequestHeadersForStorage(
+              importedRequest.headers,
+              app.config.dataEncryptionKey,
+            ),
             params: importedRequest.params,
             body: importedRequest.body,
-            auth: importedRequest.auth,
+            auth: protectRequestAuthForStorage(
+              importedRequest.auth,
+              app.config.dataEncryptionKey,
+            ),
             responseHistory: [],
             order: index,
             isPrivate: false,
@@ -315,7 +342,10 @@ const projectRoutes: FastifyPluginAsync = async (app) => {
       }
 
       if ("envVars" in request.body) {
-        patch.envVars = request.body.envVars ?? [];
+        patch.envVars = protectProjectEnvVarsForStorage(
+          request.body.envVars ?? [],
+          app.config.dataEncryptionKey,
+        );
       }
 
       if ("isPrivate" in request.body) {
@@ -577,6 +607,7 @@ const projectRoutes: FastifyPluginAsync = async (app) => {
 };
 
 export default projectRoutes;
+
 
 
 
