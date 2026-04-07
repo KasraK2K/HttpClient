@@ -17,4 +17,4 @@ logs/*
 *.out
 *.err
 desktop/.generated/app-config.json
-./vscode
+.vscode/
