@@ -153,6 +153,7 @@ export default function App() {
     user,
     needsSuperuser,
     requiresSetupSecret,
+    historyLimit,
     isInitializing,
     initialize,
     login,
@@ -184,7 +185,7 @@ export default function App() {
     setActiveTab,
   } = useActiveRequestStore();
   const { envVars, setEnvVars, getEnvVars } = useEnvironmentStore();
-  const { historyByProject, setHistory } = useHistoryStore();
+  const { historyByProject, setHistory, setHistoryLimit } = useHistoryStore();
 
   const [inspectorTab, setInspectorTab] = useState<InspectorTab>(
     getStoredInspectorTab,
@@ -297,6 +298,10 @@ export default function App() {
   }, [initialize]);
 
   useEffect(() => {
+    setHistoryLimit(historyLimit);
+  }, [historyLimit, setHistoryLimit]);
+
+  useEffect(() => {
     if (!user) {
       setDraft(null);
       setResponse(null);
@@ -336,8 +341,18 @@ export default function App() {
       return;
     }
 
+    if (responseRequestId === activeRequestId && response) {
+      return;
+    }
+
     setResponse(latestActiveRequestResponse, activeRequestId);
-  }, [activeRequestId, latestActiveRequestResponse, setResponse]);
+  }, [
+    activeRequestId,
+    latestActiveRequestResponse,
+    response,
+    responseRequestId,
+    setResponse,
+  ]);
 
   useEffect(() => {
     setDraft(activeRequest ? structuredClone(activeRequest) : null);
@@ -1220,11 +1235,14 @@ export default function App() {
           <Card className="shadow-none">
             <CardHeader>
               <CardTitle>Request History</CardTitle>
+              <p className="text-xs text-muted">
+                Keeping the latest {historyLimit} project executions.
+              </p>
             </CardHeader>
             <CardContent className="space-y-3">
               {activeHistory.length === 0 ? (
                 <p className="text-sm text-muted">
-                  The last 50 project executions will appear here.
+                  The latest project executions will appear here.
                 </p>
               ) : null}
               {activeHistory.map((entry: HistoryDoc) => (

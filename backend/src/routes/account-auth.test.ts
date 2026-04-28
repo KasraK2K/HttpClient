@@ -240,6 +240,7 @@ function createTestConfig(overrides: Partial<AppConfig> = {}): AppConfig {
     superuserBootstrapSecret: undefined,
     allowPrivateNetworkTargets: true,
     allowedOutboundHosts: [],
+    historyLimit: 250,
     ...overrides,
   };
 }

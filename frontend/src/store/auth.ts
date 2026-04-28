@@ -2,10 +2,13 @@
 import { create } from "zustand";
 import { api } from "../lib/http-client";
 
+const DEFAULT_HISTORY_LIMIT = 250;
+
 interface AuthState {
   user: AdminUser | User | null;
   needsSuperuser: boolean;
   requiresSetupSecret: boolean;
+  historyLimit: number;
   isInitializing: boolean;
   error?: string;
   initialize: () => Promise<void>;
@@ -25,6 +28,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   needsSuperuser: false,
   requiresSetupSecret: false,
+  historyLimit: DEFAULT_HISTORY_LIMIT,
   isInitializing: true,
   error: undefined,
   setUser: (user) => set({ user }),
@@ -38,6 +42,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         needsSuperuser: bootstrap.needsSuperuser,
         requiresSetupSecret: bootstrap.requiresSetupSecret,
+        historyLimit: bootstrap.historyLimit,
         user: session.user,
         isInitializing: false,
       });

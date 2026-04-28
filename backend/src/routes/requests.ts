@@ -277,7 +277,7 @@ async function trimHistory(
   const staleRecords = await workspaceDataCollection(app.mongo, workspaceId)
     .find({ entityType: "history", projectId })
     .sort({ createdAt: -1 })
-    .skip(50)
+    .skip(app.config.historyLimit)
     .project({ _id: 1 })
     .toArray();
 
@@ -1361,6 +1361,7 @@ const requestRoutes: FastifyPluginAsync = async (app) => {
         await workspaceDataCollection(app.mongo, workspace._id)
           .find({ entityType: "history", projectId: project._id })
           .sort({ createdAt: -1 })
+          .limit(app.config.historyLimit)
           .toArray(),
       ) as HistoryDoc[];
 

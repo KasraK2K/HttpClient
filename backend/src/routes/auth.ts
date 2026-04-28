@@ -95,6 +95,7 @@ const authRoutes: FastifyPluginAsync = async (app) => {
   app.get("/auth/bootstrap-status", async () => ({
     needsSuperuser: !(await hasAnyAdmins(app.mongo)),
     requiresSetupSecret: Boolean(app.config.superuserBootstrapSecret),
+    historyLimit: app.config.historyLimit,
   } satisfies BootstrapStatusResponse));
 
   app.post<{ Body: CreateSuperuserPayload }>(

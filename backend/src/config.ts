@@ -19,6 +19,7 @@ export interface AppConfig {
   superuserBootstrapSecret?: string;
   allowPrivateNetworkTargets: boolean;
   allowedOutboundHosts: string[];
+  historyLimit: number;
 }
 
 function toBoolean(value: string | undefined, fallback: boolean): boolean {
@@ -32,6 +33,10 @@ function toBoolean(value: string | undefined, fallback: boolean): boolean {
 function toNumber(value: string | undefined, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function toPositiveInteger(value: string | undefined, fallback: number): number {
+  return Math.max(1, Math.floor(toNumber(value, fallback)));
 }
 
 function toCookieSecureMode(
@@ -139,5 +144,6 @@ export function loadConfig(): AppConfig {
       nodeEnv !== "production",
     ),
     allowedOutboundHosts: parseStringList(process.env.ALLOWED_OUTBOUND_HOSTS),
+    historyLimit: toPositiveInteger(process.env.HISTORY_LIMIT, 250),
   };
 }

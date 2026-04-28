@@ -206,6 +206,7 @@ export interface WorkspaceTree {
 export interface BootstrapStatusResponse {
   needsSuperuser: boolean;
   requiresSetupSecret: boolean;
+  historyLimit: number;
 }
 
 export interface LoginPayload {
