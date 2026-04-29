@@ -2,6 +2,7 @@ import type { ExecuteRequestPayload, ProjectEnvVar, RequestDoc } from "@restify/
 import { ChevronLeft, ChevronRight, Save, TerminalSquare } from "lucide-react";
 import { useMemo } from "react";
 import { useCtrlEnter } from "../../hooks/use-ctrl-enter";
+import { writeClipboardText } from "../../lib/clipboard";
 import { buildCurlCommand } from "../../lib/curl";
 import { showErrorToast, showSuccessToast } from "../../store/toasts";
 import { createHeaderRow, createQueryParamRow } from "../../lib/request-helpers";
@@ -83,7 +84,7 @@ export function RequestBuilder({
     }
 
     try {
-      await navigator.clipboard.writeText(buildCurlCommand(sendPayload));
+      await writeClipboardText(buildCurlCommand(sendPayload));
       showSuccessToast(
         "cURL command copied to your clipboard.",
         "cURL Copied",

@@ -1,6 +1,7 @@
 import type { ExecuteRequestResult } from "@restify/shared";
 import { Copy } from "lucide-react";
 import { useMemo, useState } from "react";
+import { writeClipboardText } from "../../lib/clipboard";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
@@ -35,7 +36,7 @@ export function ResponseViewer({ response }: ResponseViewerProps) {
     if (!value) {
       return;
     }
-    await navigator.clipboard.writeText(value);
+    await writeClipboardText(value);
   };
 
   return (

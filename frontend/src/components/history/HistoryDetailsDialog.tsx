@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { HistoryDoc } from "@restify/shared";
 import { Copy, TerminalSquare } from "lucide-react";
+import { writeClipboardText } from "../../lib/clipboard";
 import { METHOD_STYLES } from "../../lib/methods";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -276,7 +277,7 @@ export function HistoryDetailsDialog({
     }
 
     try {
-      await navigator.clipboard.writeText(bodyCopyValue);
+      await writeClipboardText(bodyCopyValue);
     } catch {
       return;
     }
@@ -288,7 +289,7 @@ export function HistoryDetailsDialog({
     }
 
     try {
-      await navigator.clipboard.writeText(responseCopyValue);
+      await writeClipboardText(responseCopyValue);
     } catch {
       return;
     }
