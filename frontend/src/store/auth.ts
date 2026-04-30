@@ -1,4 +1,4 @@
-﻿import type { AdminUser, User } from "@restify/shared";
+import type { AdminUser, User } from "@reqloom/shared";
 import { create } from "zustand";
 import { api } from "../lib/http-client";
 

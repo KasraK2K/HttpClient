@@ -1,4 +1,4 @@
-﻿import type { ProjectEnvVar } from "@restify/shared";
+import type { ProjectEnvVar } from "@reqloom/shared";
 import { Plus, Save, Trash2 } from "lucide-react";
 import { useRef } from "react";
 import { Button } from "../ui/button";

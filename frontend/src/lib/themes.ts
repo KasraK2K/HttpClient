@@ -21,7 +21,7 @@ export interface AppTheme {
   vars: Record<`--${string}`, string>;
 }
 
-export const THEME_STORAGE_KEY = "httpclient.theme";
+export const THEME_STORAGE_KEY = "reqloom.theme";
 export const DEFAULT_THEME_ID = "midnight-signal";
 
 export const APP_THEMES: AppTheme[] = [

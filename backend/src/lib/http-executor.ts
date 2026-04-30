@@ -5,7 +5,7 @@ import type {
   FormValueRow,
   HeaderRow,
   QueryParamRow,
-} from "@restify/shared";
+} from "@reqloom/shared";
 import {
   assertAllowedOutboundUrl,
   type OutboundRequestPolicy,

@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   CSSProperties,
   PointerEvent as ReactPointerEvent,
   ReactNode,
@@ -20,18 +20,18 @@ import {
   User as UserIcon,
   Workflow,
 } from "lucide-react";
-import type { AdminUser, User } from "@restify/shared";
-import httpClientLogo from "../../assets/httpclient-logo.svg";
+import type { AdminUser, User } from "@reqloom/shared";
+import brandLogo from "../../assets/httpclient-logo.svg";
 import { cn } from "../../lib/cn";
 import type { ThemeId } from "../../lib/themes";
 import { Button } from "../ui/button";
 import { ThemeSelector } from "./ThemeSelector";
 
-const SIDEBAR_WIDTH_KEY = "httpclient.sidebar-width";
-const SIDEBAR_COLLAPSED_KEY = "httpclient.sidebar-collapsed";
-const INSPECTOR_WIDTH_KEY = "httpclient.inspector-width";
-const INSPECTOR_COLLAPSED_KEY = "httpclient.inspector-collapsed";
-const BUILDER_HEIGHT_KEY = "httpclient.builder-height";
+const SIDEBAR_WIDTH_KEY = "reqloom.sidebar-width";
+const SIDEBAR_COLLAPSED_KEY = "reqloom.sidebar-collapsed";
+const INSPECTOR_WIDTH_KEY = "reqloom.inspector-width";
+const INSPECTOR_COLLAPSED_KEY = "reqloom.inspector-collapsed";
+const BUILDER_HEIGHT_KEY = "reqloom.builder-height";
 const DEFAULT_SIDEBAR_WIDTH = 340;
 const MIN_SIDEBAR_WIDTH = 260;
 const MAX_SIDEBAR_WIDTH = 560;
@@ -600,8 +600,8 @@ export function AppShell({
           <div className="relative flex flex-wrap items-center justify-between gap-3 xl:flex-nowrap">
             <div className="flex min-w-0 flex-1 items-center gap-3">
               <img
-                src={httpClientLogo}
-                alt="HttpClient"
+                src={brandLogo}
+                alt="ReqLoom"
                 className="h-8 w-auto max-w-[180px] shrink-0 sm:h-9 sm:max-w-[208px]"
               />
               <span className="hidden h-6 w-px shrink-0 bg-border/60 sm:block" aria-hidden="true" />

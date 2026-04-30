@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { HistoryDoc } from "@restify/shared";
+import type { HistoryDoc } from "@reqloom/shared";
 import { Copy, TerminalSquare } from "lucide-react";
 import { writeClipboardText } from "../../lib/clipboard";
 import { METHOD_STYLES } from "../../lib/methods";

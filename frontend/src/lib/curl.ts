@@ -2,7 +2,7 @@ import type {
   ExecuteRequestPayload,
   FormValueRow,
   HeaderRow,
-} from "@restify/shared";
+} from "@reqloom/shared";
 
 function escapeShellValue(value: string) {
   return `'${value.replace(/'/g, `'"'"'`)}'`;

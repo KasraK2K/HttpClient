@@ -1,5 +1,5 @@
-﻿import type { HistoryDoc, RequestDoc, User } from "@restify/shared";
-import type { ExecuteRequestResult } from "@restify/shared";
+import type { HistoryDoc, RequestDoc, User } from "@reqloom/shared";
+import type { ExecuteRequestResult } from "@reqloom/shared";
 import { Activity, CircleUserRound, FileText, Settings2, Users } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CreateSuperuserPage } from "../components/auth/CreateSuperuserPage";
@@ -45,7 +45,7 @@ import {
 } from "../store/history";
 import { useWorkspaceStore } from "../store/workspaces";
 
-const INSPECTOR_TAB_STORAGE_KEY = "httpclient.inspector-tab";
+const INSPECTOR_TAB_STORAGE_KEY = "reqloom.inspector-tab";
 const INSPECTOR_TABS: InspectorTab[] = [
   "environment",
   "history",
@@ -1253,7 +1253,7 @@ export default function App() {
   if (isInitializing) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm text-muted">
-        Starting HttpClient...
+        Starting ReqLoom...
       </div>
     );
   }

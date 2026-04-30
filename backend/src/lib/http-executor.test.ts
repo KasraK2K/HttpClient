@@ -1,4 +1,4 @@
-import type { ExecuteRequestPayload } from "@restify/shared";
+import type { ExecuteRequestPayload } from "@reqloom/shared";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { executeHttpRequest } from "./http-executor.js";
 

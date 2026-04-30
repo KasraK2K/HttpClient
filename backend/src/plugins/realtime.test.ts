@@ -105,11 +105,11 @@ class FakeDb {
 function createTestConfig(): AppConfig {
   return {
     port: 0,
-    mongoUri: "mongodb://localhost:27017/restify-test",
+    mongoUri: "mongodb://localhost:27017/reqloom-test",
     mongoServerSelectionTimeoutMs: 100,
     jwtSecret: "test-jwt-secret-that-is-long-enough-123456",
     dataEncryptionKey: "test-data-secret-that-is-long-enough-123456",
-    cookieName: "restify_session",
+    cookieName: "reqloom_session",
     cookieDomain: undefined,
     cookieSecure: false,
     frontendOrigin: "http://localhost:3030",
@@ -206,7 +206,7 @@ describe("realtime plugin", () => {
       role: admin.role,
     });
     const socket = await app.injectWS("/api/realtime", {
-      headers: { cookie: `restify_session=${token}` },
+      headers: { cookie: `reqloom_session=${token}` },
     });
     await settleSocketHandler();
     const message = nextMessage(socket);
@@ -244,7 +244,7 @@ describe("realtime plugin", () => {
       role: user.role,
     });
     const socket = await app.injectWS("/api/realtime", {
-      headers: { cookie: `restify_session=${token}` },
+      headers: { cookie: `reqloom_session=${token}` },
     });
     await settleSocketHandler();
     let received = false;

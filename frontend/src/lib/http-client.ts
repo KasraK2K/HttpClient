@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   BootstrapStatusResponse,
   ChangeMyPasswordPayload,
   ChangeUserPasswordPayload,
@@ -22,7 +22,7 @@
   User,
   WorkspaceMeta,
   WorkspaceTreeResponse,
-} from "@restify/shared";
+} from "@reqloom/shared";
 import { extractApiErrorMessage } from "./errors";
 
 export class ApiError extends Error {

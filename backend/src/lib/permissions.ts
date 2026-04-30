@@ -5,7 +5,7 @@ import type {
   RequestDoc,
   User,
   WorkspaceMeta,
-} from "@restify/shared";
+} from "@reqloom/shared";
 import type { FastifyRequest } from "fastify";
 
 type PrivateEntity = Pick<ProjectDoc | FolderDoc | RequestDoc, "isPrivate">;

@@ -1,4 +1,4 @@
-﻿export * from "@restify/shared";
+export * from "@reqloom/shared";
 
 export type BuilderTab = "body" | "headers" | "auth" | "params";
 export type InspectorTab = "environment" | "history" | "account" | "admin";

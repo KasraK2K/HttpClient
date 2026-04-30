@@ -119,14 +119,14 @@ export function loadConfig(): AppConfig {
 
   return {
     port: resolvePort(),
-    mongoUri: process.env.MONGODB_URI ?? "mongodb://localhost:27017/restify",
+    mongoUri: process.env.MONGODB_URI ?? "mongodb://localhost:27017/reqloom",
     mongoServerSelectionTimeoutMs: toNumber(
       process.env.MONGODB_SERVER_SELECTION_TIMEOUT_MS,
       5000,
     ),
     jwtSecret,
     dataEncryptionKey,
-    cookieName: process.env.COOKIE_NAME ?? "restify_session",
+    cookieName: process.env.COOKIE_NAME ?? "reqloom_session",
     cookieDomain: process.env.COOKIE_DOMAIN || undefined,
     cookieSecure: toCookieSecureMode(
       process.env.COOKIE_SECURE,

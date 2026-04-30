@@ -1,4 +1,4 @@
-import type { RequestDoc, WorkspaceMeta, WorkspaceTree } from "@restify/shared";
+import type { RequestDoc, WorkspaceMeta, WorkspaceTree } from "@reqloom/shared";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { api } from "../lib/http-client";
@@ -28,7 +28,7 @@ interface WorkspaceState {
   getActiveRequest: () => RequestDoc | undefined;
 }
 
-const WORKSPACE_SELECTION_KEY = "httpclient.workspace-selection";
+const WORKSPACE_SELECTION_KEY = "reqloom.workspace-selection";
 let workspaceListRequestSequence = 0;
 const workspaceTreeRequestSequences = new Map<string, number>();
 

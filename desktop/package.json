@@ -1,9 +1,9 @@
 {
-    "name":  "@restify/desktop",
+    "name":  "@reqloom/desktop",
     "version":  "0.1.0",
     "private":  true,
-    "description":  "Desktop shell for hosted HttpClient deployments.",
-    "author":  "HttpClient",
+    "description":  "Desktop shell for hosted ReqLoom deployments.",
+    "author":  "ReqLoom",
     "type":  "module",
     "main":  "src/main.mjs",
     "scripts":  {
@@ -11,8 +11,8 @@
                     "dist":  "electron-builder --publish never"
                 },
     "build":  {
-                  "appId":  "com.restify.httpclient.desktop",
-                  "productName":  "HttpClient",
+                  "appId":  "com.reqloom.desktop",
+                  "productName":  "ReqLoom",
                   "asar":  true,
                   "directories":  {
                                       "output":  "dist",
@@ -23,7 +23,7 @@
                                 ".generated/**/*",
                                 "package.json"
                             ],
-                  "artifactName":  "HttpClient-${version}-${os}-${arch}.${ext}",
+                  "artifactName":  "ReqLoom-${version}-${os}-${arch}.${ext}",
                   "win":  {
                               "icon":  "build/icon.ico",
                               "target":  [

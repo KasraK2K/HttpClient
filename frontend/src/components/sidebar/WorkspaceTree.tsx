@@ -2,7 +2,7 @@ import type {
   RequestDoc,
   WorkspaceMeta,
   WorkspaceTree as WorkspaceTreeModel,
-} from "@restify/shared";
+} from "@reqloom/shared";
 import {
   DndContext,
   PointerSensor,
@@ -181,7 +181,7 @@ function getFolderContainerKey(projectId: string, parentFolderId?: string | null
     : `project:${projectId}:folders`;
 }
 
-const SIDEBAR_EXPANSION_STORAGE_KEY = "httpclient.sidebar-expansion";
+const SIDEBAR_EXPANSION_STORAGE_KEY = "reqloom.sidebar-expansion";
 
 interface SidebarExpansionState {
   workspaces: Record<string, boolean>;

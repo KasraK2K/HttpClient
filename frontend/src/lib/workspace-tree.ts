@@ -1,4 +1,4 @@
-import type { FolderTree, RequestDoc, WorkspaceTree } from "@restify/shared";
+import type { FolderTree, RequestDoc, WorkspaceTree } from "@reqloom/shared";
 
 type TreeProject = WorkspaceTree["projects"][number];
 

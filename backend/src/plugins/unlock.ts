@@ -3,7 +3,7 @@ import type {
   ProjectDoc,
   UnlockTokenPayload,
   WorkspaceMeta,
-} from "@restify/shared";
+} from "@reqloom/shared";
 
 export default fp(async function unlockPlugin(app) {
   app.decorate(

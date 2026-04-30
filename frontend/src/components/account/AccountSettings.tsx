@@ -1,9 +1,9 @@
-﻿import type {
+import type {
   AdminUser,
   ChangeMyPasswordPayload,
   UpdateProfilePayload,
   User,
-} from "@restify/shared";
+} from "@reqloom/shared";
 import { KeyRound, UserRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import {

@@ -1,5 +1,5 @@
 import type { ChangeEvent } from "react";
-import type { FormValueRow, ProjectEnvVar } from "@restify/shared";
+import type { FormValueRow, ProjectEnvVar } from "@reqloom/shared";
 import { FileUp, Plus, Trash2, X } from "lucide-react";
 import { resolveKeyValueRowsResolution } from "../../lib/var-resolver";
 import { createFormValueRow } from "../../lib/request-helpers";

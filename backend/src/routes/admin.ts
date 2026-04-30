@@ -1,9 +1,9 @@
-﻿import type {
+import type {
   ChangeUserPasswordPayload,
   CreateUserPayload,
   UpdateUserPayload,
   User,
-} from "@restify/shared";
+} from "@reqloom/shared";
 import type { FastifyPluginAsync } from "fastify";
 import { sanitizeAuthUser } from "../db/bootstrap.js";
 import {

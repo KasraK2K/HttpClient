@@ -7,7 +7,7 @@ import type {
   RequestAuthConfig,
   RequestBodyConfig,
   RequestDoc,
-} from "@restify/shared";
+} from "@reqloom/shared";
 import { createClientId } from "./id";
 import type { VariableResolution } from "../types";
 

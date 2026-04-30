@@ -1,4 +1,4 @@
-import type { ProjectEnvVar } from "@restify/shared";
+import type { ProjectEnvVar } from "@reqloom/shared";
 import { create } from "zustand";
 
 interface EnvironmentState {

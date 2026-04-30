@@ -1,4 +1,4 @@
-import type { ProjectEnvVar, RequestAuthConfig } from "@restify/shared";
+import type { ProjectEnvVar, RequestAuthConfig } from "@reqloom/shared";
 import { resolveRequestAuthResolution } from "../../lib/var-resolver";
 import {
   DropdownSelect,

@@ -1,7 +1,16 @@
 {
-  "name": "restify-monorepo",
+  "name": "reqloom-monorepo",
   "version": "0.1.0",
   "private": true,
+  "description": "Self-hosted API workspaces for building, sending, and tracing HTTP requests.",
+  "keywords": [
+    "reqloom",
+    "api-client",
+    "http-client",
+    "rest-client",
+    "developer-tools",
+    "self-hosted"
+  ],
   "scripts": {
     "install:all": "npm install --prefix shared && npm install --prefix backend && npm install --prefix frontend && npm install --prefix desktop",
     "db:up": "docker compose up -d mongodb",

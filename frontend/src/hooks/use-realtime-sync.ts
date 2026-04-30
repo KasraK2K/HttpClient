@@ -1,4 +1,4 @@
-import type { RealtimeEvent } from "@restify/shared";
+import type { RealtimeEvent } from "@reqloom/shared";
 import { useEffect, useRef } from "react";
 import { api } from "../lib/http-client";
 import {

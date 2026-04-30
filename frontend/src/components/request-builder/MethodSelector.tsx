@@ -1,4 +1,4 @@
-import type { HttpMethod } from "@restify/shared";
+import type { HttpMethod } from "@reqloom/shared";
 import { METHOD_OPTIONS, METHOD_STYLES } from "../../lib/methods";
 import { cn } from "../../lib/cn";
 import {

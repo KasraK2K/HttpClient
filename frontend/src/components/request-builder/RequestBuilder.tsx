@@ -1,4 +1,4 @@
-import type { ExecuteRequestPayload, ProjectEnvVar, RequestDoc } from "@restify/shared";
+import type { ExecuteRequestPayload, ProjectEnvVar, RequestDoc } from "@reqloom/shared";
 import { ChevronLeft, ChevronRight, Save, TerminalSquare } from "lucide-react";
 import { useMemo } from "react";
 import { useCtrlEnter } from "../../hooks/use-ctrl-enter";

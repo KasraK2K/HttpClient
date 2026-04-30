@@ -9,8 +9,8 @@ const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
 const backupPath = `/backup/${timestamp}`;
 
 function buildDefaultMongoUri() {
-  const database = process.env.MONGODB_DATABASE ?? "restify";
-  const username = process.env.MONGODB_APP_USERNAME ?? "httpclient";
+  const database = process.env.MONGODB_DATABASE ?? "reqloom";
+  const username = process.env.MONGODB_APP_USERNAME ?? "reqloom";
   const password = process.env.MONGODB_APP_PASSWORD ?? "change-this-app-password";
   return `mongodb://${username}:${password}@127.0.0.1:27017/${database}?authSource=${database}`;
 }

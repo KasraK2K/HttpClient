@@ -1,4 +1,4 @@
-﻿import Fastify from "fastify";
+import Fastify from "fastify";
 import fastifySensible from "@fastify/sensible";
 import type { AppConfig } from "../config.js";
 import { migrateUserNames } from "../db/bootstrap.js";
@@ -225,11 +225,11 @@ class FakeDb {
 function createTestConfig(overrides: Partial<AppConfig> = {}): AppConfig {
   return {
     port: 0,
-    mongoUri: "mongodb://localhost:27017/restify-test",
+    mongoUri: "mongodb://localhost:27017/reqloom-test",
     mongoServerSelectionTimeoutMs: 100,
     jwtSecret: "test-jwt-secret-that-is-long-enough-123456",
     dataEncryptionKey: "test-data-secret-that-is-long-enough-123456",
-    cookieName: "restify_session",
+    cookieName: "reqloom_session",
     cookieDomain: undefined,
     cookieSecure: false,
     frontendOrigin: "http://localhost:3030",

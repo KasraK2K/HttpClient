@@ -5,7 +5,7 @@ import type {
   UnlockTokenPayload,
   User,
   WorkspaceMeta,
-} from "@restify/shared";
+} from "@reqloom/shared";
 import type { FastifyReply, FastifyRequest } from "fastify";
 import type { Db } from "mongodb";
 import type { AppConfig } from "../config.js";

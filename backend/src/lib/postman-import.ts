@@ -7,7 +7,7 @@ import type {
   QueryParamRow,
   RequestAuthConfig,
   RequestBodyConfig,
-} from "@restify/shared";
+} from "@reqloom/shared";
 
 export interface ImportedPostmanRequest {
   name: string;

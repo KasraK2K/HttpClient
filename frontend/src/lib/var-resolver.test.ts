@@ -1,4 +1,4 @@
-import type { RequestDoc } from "@restify/shared";
+import type { RequestDoc } from "@reqloom/shared";
 import { describe, expect, it } from "vitest";
 import {
   buildExecuteRequestPayload,

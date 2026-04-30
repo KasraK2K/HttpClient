@@ -1,14 +1,14 @@
 <p align="center">
-  <img src="frontend/src/assets/httpclient-logo.svg" alt="HttpClient logo" width="180" />
+  <img src="frontend/src/assets/httpclient-logo.svg" alt="ReqLoom logo" width="180" />
 </p>
 
-# HttpClient
+# ReqLoom
 
-HttpClient is a browser-based REST API client built as a multi-package repo with:
+ReqLoom is a self-hosted API workspace for building, sending, organizing, and tracing HTTP requests. It is built as a multi-package repo with:
 
 - `frontend/`: React + TypeScript + Vite + Tailwind
 - `backend/`: Fastify + MongoDB + JWT cookie auth
-- `desktop/`: Electron wrapper that opens a deployed HttpClient domain
+- `desktop/`: Electron wrapper that opens a deployed ReqLoom domain
 - `shared/`: shared TypeScript contracts used by both apps
 
 ## Local development
@@ -78,7 +78,7 @@ Optional Docker env overrides from `.env`:
 
 ## Nginx on a server
 
-If you want to put the Docker app behind Nginx on a server, start with the sample file at `./nginx.httpclient.conf.sample`, replace `<domain>`, then move it into `/etc/nginx/sites-available/`, link it into `/etc/nginx/sites-enabled/`, and let Certbot add the TLS section.
+If you want to put the Docker app behind Nginx on a server, start with `./nginx.conf` for HTTP or `./nginx.https.conf` for a manual TLS setup, replace `<domain>`, then move it into `/etc/nginx/sites-available/`, link it into `/etc/nginx/sites-enabled/`, and reload Nginx after validation.
 
 The sample is written so:
 

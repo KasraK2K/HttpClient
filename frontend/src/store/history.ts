@@ -1,4 +1,4 @@
-import type { HistoryDoc } from "@restify/shared";
+import type { HistoryDoc } from "@reqloom/shared";
 import { create } from "zustand";
 
 const DEFAULT_HISTORY_LIMIT = 250;

@@ -8,7 +8,7 @@ import type {
   RequestDoc,
   User,
   WorkspaceMeta,
-} from "@restify/shared";
+} from "@reqloom/shared";
 import type { FastifyPluginAsync } from "fastify";
 import { getWorkspaceById } from "../db/bootstrap.js";
 import {

@@ -1,6 +1,6 @@
 import { LockKeyhole } from "lucide-react";
 import { useState } from "react";
-import httpClientLogo from "../../assets/httpclient-logo.svg";
+import brandLogo from "../../assets/httpclient-logo.svg";
 import { showErrorToast } from "../../store/toasts";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -37,8 +37,8 @@ export function LoginPage({ onSubmit }: LoginPageProps) {
         <CardHeader className="border-b border-border/45 bg-[linear-gradient(180deg,rgb(var(--surface-2)/0.78),rgb(var(--surface-1)/0.42))] p-6">
           <div className="space-y-5">
             <img
-              src={httpClientLogo}
-              alt="HttpClient"
+              src={brandLogo}
+              alt="ReqLoom"
               className="block h-10 w-auto max-w-[184px]"
             />
             <div className="flex items-start gap-3">

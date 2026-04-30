@@ -1,4 +1,4 @@
-﻿import { ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { showErrorToast } from "../../store/toasts";
 import { Button } from "../ui/button";
@@ -60,7 +60,7 @@ export function CreateSuperuserPage({
             <div>
               <CardTitle className="text-base">Create The First Superuser</CardTitle>
               <p className="mt-1 text-sm leading-6 text-muted">
-                HttpClient found an empty admins collection, so the first secure account starts here.
+                ReqLoom found an empty admins collection, so the first secure account starts here.
               </p>
               {requiresSetupSecret ? (
                 <p className="mt-2 text-xs leading-5 text-muted">

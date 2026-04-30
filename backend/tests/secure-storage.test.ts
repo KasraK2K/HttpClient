@@ -17,7 +17,7 @@ describe("secure storage helpers", () => {
     const auth = protectRequestAuthForStorage(
       {
         type: "basic",
-        username: "restify",
+        username: "reqloom",
         password: "secret-password",
       },
       secret,
@@ -38,13 +38,13 @@ describe("secure storage helpers", () => {
       secret,
     );
 
-    expect(auth.username).not.toBe("restify");
+    expect(auth.username).not.toBe("reqloom");
     expect(headers[0].value).not.toBe("Bearer super-secret-token");
     expect(envVars[0].value).not.toBe("top-secret");
 
     expect(revealRequestAuthFromStorage(auth, secret)).toEqual({
       type: "basic",
-      username: "restify",
+      username: "reqloom",
       password: "secret-password",
     });
     expect(revealRequestHeadersFromStorage(headers, secret)[0].value).toBe(

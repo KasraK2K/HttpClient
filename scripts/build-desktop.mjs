@@ -1,4 +1,4 @@
-﻿import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { createInterface } from "node:readline/promises";
@@ -143,7 +143,7 @@ function stampExecutableIcon(executablePath, iconPath) {
 function stampWindowsBuildIcons() {
   const iconPath = path.resolve("desktop", "build", "icon.ico");
   const distDir = path.resolve("desktop", "dist");
-  const unpackedExe = path.join(distDir, "win-unpacked", "HttpClient.exe");
+  const unpackedExe = path.join(distDir, "win-unpacked", "ReqLoom.exe");
   const rootExecutables = readdirSync(distDir)
     .filter((entry) => entry.endsWith(".exe"))
     .map((entry) => path.join(distDir, entry));

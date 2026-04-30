@@ -9,7 +9,7 @@ import type {
   HistoryRequestSnapshot,
   ProjectEnvVar,
   RequestAuthConfig,
-} from "@restify/shared";
+} from "@reqloom/shared";
 import type { Db } from "mongodb";
 
 const ENCRYPTED_PREFIX = "enc:v1:";

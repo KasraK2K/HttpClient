@@ -1,5 +1,5 @@
-const appDatabase = process.env.MONGODB_DATABASE || "restify";
-const appUsername = process.env.MONGODB_APP_USERNAME || "httpclient";
+const appDatabase = process.env.MONGODB_DATABASE || "reqloom";
+const appUsername = process.env.MONGODB_APP_USERNAME || "reqloom";
 const appPassword = process.env.MONGODB_APP_PASSWORD;
 
 if (!appPassword) {

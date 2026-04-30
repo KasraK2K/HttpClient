@@ -1,4 +1,4 @@
-import type { ExecuteRequestResult, RequestDoc } from "@restify/shared";
+import type { ExecuteRequestResult, RequestDoc } from "@reqloom/shared";
 import { create } from "zustand";
 import type { BuilderTab } from "../types";
 

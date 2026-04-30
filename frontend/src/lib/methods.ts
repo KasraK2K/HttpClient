@@ -1,4 +1,4 @@
-import type { HttpMethod } from "@restify/shared";
+import type { HttpMethod } from "@reqloom/shared";
 
 export const METHOD_STYLES: Record<HttpMethod, string> = {
   GET: "bg-emerald-500/15 text-emerald-300 border-emerald-400/20",

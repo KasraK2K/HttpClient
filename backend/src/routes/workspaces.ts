@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from "fastify";
-import type { WorkspaceMeta } from "@restify/shared";
+import type { WorkspaceMeta } from "@reqloom/shared";
 import {
   buildWorkspaceTree,
   getWorkspaceById,

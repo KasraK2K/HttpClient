@@ -1,10 +1,10 @@
-﻿import type {
+import type {
   HistoryDoc,
   ProjectDoc,
   RequestDoc,
   User,
   WorkspaceMeta,
-} from "@restify/shared";
+} from "@reqloom/shared";
 import { ObjectId, type Db, type Document, type OptionalId } from "mongodb";
 
 export type AdminRecord = {

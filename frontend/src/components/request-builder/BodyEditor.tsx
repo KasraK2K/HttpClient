@@ -1,4 +1,4 @@
-import type { ProjectEnvVar, RequestBodyConfig } from "@restify/shared";
+import type { ProjectEnvVar, RequestBodyConfig } from "@reqloom/shared";
 import { json } from "@codemirror/lang-json";
 import { oneDark } from "@codemirror/theme-one-dark";
 import CodeMirror from "@uiw/react-codemirror";

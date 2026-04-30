@@ -1,4 +1,4 @@
-import type { ContentKind } from "@restify/shared";
+import type { ContentKind } from "@reqloom/shared";
 
 export function detectContentKind(contentType: string): ContentKind {
   const normalized = contentType.toLowerCase();

@@ -1,7 +1,8 @@
 {
-  "name": "@restify/frontend",
+  "name": "@reqloom/frontend",
   "version": "0.1.0",
   "private": true,
+  "description": "ReqLoom web UI for API request workspaces.",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -15,7 +16,7 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
-    "@restify/shared": "file:../shared",
+    "@reqloom/shared": "file:../shared",
     "@uiw/react-codemirror": "^4.23.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

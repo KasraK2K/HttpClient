@@ -8,8 +8,8 @@
     "noEmit": true,
     "paths": {
       "@/*": ["src/*"],
-      "@restify/shared": ["../shared/src/index.ts"],
-      "@restify/shared/*": ["../shared/src/*"]
+      "@reqloom/shared": ["../shared/src/index.ts"],
+      "@reqloom/shared/*": ["../shared/src/*"]
     }
   },
   "include": ["src", "vite.config.ts"]

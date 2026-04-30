@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         "@": path.resolve(dirname, "./src"),
-        "@restify/shared": path.resolve(dirname, "../shared/src/index.ts"),
+        "@reqloom/shared": path.resolve(dirname, "../shared/src/index.ts"),
       },
     },
     server: {

@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   AdminUser,
   FolderDoc,
   FolderTree,
@@ -8,7 +8,7 @@
   User,
   WorkspaceTree,
   WorkspaceMeta,
-} from "@restify/shared";
+} from "@reqloom/shared";
 import {
   type AdminRecord,
   type UserRecord,

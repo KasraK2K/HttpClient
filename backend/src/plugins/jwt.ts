@@ -2,7 +2,7 @@ import fp from "fastify-plugin";
 import fastifyCookie from "@fastify/cookie";
 import fastifyJwt from "@fastify/jwt";
 import { findSessionUserById } from "../db/bootstrap.js";
-import type { UserSessionToken } from "@restify/shared";
+import type { UserSessionToken } from "@reqloom/shared";
 
 export default fp(async function jwtPlugin(app) {
   app.decorateRequest("currentUser", null);

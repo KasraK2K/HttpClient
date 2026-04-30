@@ -3,7 +3,7 @@ import type {
   HeaderRow,
   ProjectEnvVar,
   QueryParamRow,
-} from "@restify/shared";
+} from "@reqloom/shared";
 import { Plus, Trash2 } from "lucide-react";
 import { useRef } from "react";
 import { resolveKeyValueRowsResolution } from "../../lib/var-resolver";

@@ -1,4 +1,4 @@
-﻿import { timingSafeEqual } from "node:crypto";
+import { timingSafeEqual } from "node:crypto";
 import type {
   AdminUser,
   BootstrapStatusResponse,
@@ -8,7 +8,7 @@ import type {
   MeResponse,
   UpdateProfilePayload,
   User,
-} from "@restify/shared";
+} from "@reqloom/shared";
 import type { FastifyPluginAsync, FastifyRequest } from "fastify";
 import { findUserByUsername, hasAnyAdmins, sanitizeAuthUser } from "../db/bootstrap.js";
 import {

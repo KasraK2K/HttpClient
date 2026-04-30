@@ -1,4 +1,4 @@
-﻿import type { ChangeUserPasswordPayload, User, WorkspaceMeta } from "@restify/shared";
+import type { ChangeUserPasswordPayload, User, WorkspaceMeta } from "@reqloom/shared";
 import { KeyRound, Plus, Shield, Trash2, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { cn } from "../../lib/cn";

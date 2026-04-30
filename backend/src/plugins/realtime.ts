@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import websocket from "@fastify/websocket";
-import type { AdminUser, RealtimeEvent, User } from "@restify/shared";
+import type { AdminUser, RealtimeEvent, User } from "@reqloom/shared";
 import fp from "fastify-plugin";
 import WebSocket from "ws";
 import { listAccessibleWorkspaces } from "../db/bootstrap.js";

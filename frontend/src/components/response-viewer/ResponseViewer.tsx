@@ -1,4 +1,4 @@
-import type { ExecuteRequestResult } from "@restify/shared";
+import type { ExecuteRequestResult } from "@reqloom/shared";
 import { Copy } from "lucide-react";
 import { useMemo, useState } from "react";
 import { writeClipboardText } from "../../lib/clipboard";

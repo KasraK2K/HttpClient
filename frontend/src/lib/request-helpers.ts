@@ -5,7 +5,7 @@ import type {
   QueryParamRow,
   RequestDoc,
   RequestHistorySummary,
-} from "@restify/shared";
+} from "@reqloom/shared";
 import { createClientId } from "./id";
 
 function createRow<T extends HeaderRow | QueryParamRow>(): T {
