@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="frontend/src/assets/httpclient-logo.svg" alt="ReqLoom logo" width="180" />
+  <img src="frontend/src/assets/reqloom-logo.svg" alt="ReqLoom logo" width="180" />
 </p>
 
 # ReqLoom
@@ -20,6 +20,8 @@ ReqLoom is a self-hosted API workspace for building, sending, organizing, and tr
 5. Open the local Vite URL shown in the terminal, usually `http://127.0.0.1:3030`
 
 The backend expects an authenticated local MongoDB database, and `compose.yaml` binds MongoDB to `127.0.0.1` by default so Docker does not expose it publicly on your server. Backups are written into `./backup` by running `npm run db:backup` when the MongoDB container is up.
+
+If you change `MONGODB_APP_PASSWORD` after MongoDB already has a persistent Docker volume, the `mongodb-init` service updates the app database user before the app container starts. Re-run `npm run docker:up` after changing MongoDB credentials so the one-shot init service and app container are recreated with the same values.
 
 The frontend dev server uses `127.0.0.1` and starts at port `3030` because some Windows setups reserve port `5173`, which causes Vite to fail with `EACCES`. If `3030` is busy, Vite will automatically move to the next available local port.
 

@@ -21,7 +21,7 @@ import {
   Workflow,
 } from "lucide-react";
 import type { AdminUser, User } from "@reqloom/shared";
-import brandLogo from "../../assets/httpclient-logo.svg";
+import brandLogo from "../../assets/reqloom-logo.svg";
 import { cn } from "../../lib/cn";
 import type { ThemeId } from "../../lib/themes";
 import { Button } from "../ui/button";

@@ -72,6 +72,34 @@ function parseStringList(value: string | undefined): string[] {
     .filter(Boolean);
 }
 
+function buildMongoUriFromParts(): string | undefined {
+  const host = process.env.MONGODB_HOST?.trim();
+  if (!host) {
+    return undefined;
+  }
+
+  const database = process.env.MONGODB_DATABASE?.trim() || "reqloom";
+  const port = process.env.MONGODB_PORT?.trim() || "27017";
+  const username = (
+    process.env.MONGODB_USERNAME ??
+    process.env.MONGODB_APP_USERNAME ??
+    ""
+  ).trim();
+  const password =
+    process.env.MONGODB_PASSWORD ?? process.env.MONGODB_APP_PASSWORD;
+  const authSource = process.env.MONGODB_AUTH_SOURCE?.trim() || database;
+  const credentials =
+    username && password !== undefined
+      ? `${encodeURIComponent(username)}:${encodeURIComponent(password)}@`
+      : "";
+  const hostAndPort = port ? `${host}:${port}` : host;
+  const params = new URLSearchParams({ authSource });
+
+  return `mongodb://${credentials}${hostAndPort}/${encodeURIComponent(
+    database,
+  )}?${params.toString()}`;
+}
+
 function resolvePort(): number {
   const configuredPort = process.env.BACKEND_PORT ?? process.env.PORT;
   const parsedPort = toNumber(configuredPort, 3500);
@@ -119,7 +147,10 @@ export function loadConfig(): AppConfig {
 
   return {
     port: resolvePort(),
-    mongoUri: process.env.MONGODB_URI ?? "mongodb://localhost:27017/reqloom",
+    mongoUri:
+      process.env.MONGODB_URI?.trim() ||
+      buildMongoUriFromParts() ||
+      "mongodb://localhost:27017/reqloom",
     mongoServerSelectionTimeoutMs: toNumber(
       process.env.MONGODB_SERVER_SELECTION_TIMEOUT_MS,
       5000,

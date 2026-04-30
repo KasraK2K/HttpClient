@@ -8,16 +8,24 @@ if (!appPassword) {
 
 db = db.getSiblingDB(appDatabase);
 
+const appUserRoles = [
+  {
+    role: "readWrite",
+    db: appDatabase,
+  },
+];
 const existingUser = db.getUser(appUsername);
 if (!existingUser) {
   db.createUser({
     user: appUsername,
     pwd: appPassword,
-    roles: [
-      {
-        role: "readWrite",
-        db: appDatabase,
-      },
-    ],
+    roles: appUserRoles,
   });
+  print(`Created MongoDB application user "${appUsername}" for database "${appDatabase}".`);
+} else {
+  db.updateUser(appUsername, {
+    pwd: appPassword,
+    roles: appUserRoles,
+  });
+  print(`Updated MongoDB application user "${appUsername}" for database "${appDatabase}".`);
 }

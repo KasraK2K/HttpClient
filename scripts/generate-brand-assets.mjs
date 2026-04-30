@@ -1,4 +1,10 @@
-import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createRequire } from "node:module";
@@ -7,8 +13,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..");
 const require = createRequire(import.meta.url);
-const IconFile = require("../desktop/node_modules/resedit/dist/data/IconFile.js").default;
-const RawIconItem = require("../desktop/node_modules/resedit/dist/data/RawIconItem.js").default;
+const IconFile =
+  require("../desktop/node_modules/resedit/dist/data/IconFile.js").default;
+const RawIconItem =
+  require("../desktop/node_modules/resedit/dist/data/RawIconItem.js").default;
 
 const iconPalette = {
   badgeTop: "#0A1C34",
@@ -202,7 +210,12 @@ function main() {
   const frontendAssetsDir = path.join(repoRoot, "frontend", "src", "assets");
   const desktopBuildDir = path.join(repoRoot, "desktop", "build");
   const desktopBuildIconsDir = path.join(desktopBuildDir, "icons");
-  const desktopRuntimeAssetsDir = path.join(repoRoot, "desktop", "src", "assets");
+  const desktopRuntimeAssetsDir = path.join(
+    repoRoot,
+    "desktop",
+    "src",
+    "assets",
+  );
 
   ensureDir(frontendPublicDir);
   ensureDir(frontendAssetsDir);
@@ -210,8 +223,16 @@ function main() {
   ensureDir(desktopBuildIconsDir);
   ensureDir(desktopRuntimeAssetsDir);
 
-  writeFileSync(path.join(frontendAssetsDir, "httpclient-logo.svg"), createLogoSvg(), "utf8");
-  writeFileSync(path.join(frontendPublicDir, "favicon.svg"), createFaviconSvg(), "utf8");
+  writeFileSync(
+    path.join(frontendAssetsDir, "reqloom-logo.svg"),
+    createLogoSvg(),
+    "utf8",
+  );
+  writeFileSync(
+    path.join(frontendPublicDir, "favicon.svg"),
+    createFaviconSvg(),
+    "utf8",
+  );
 
   const iconSizes = [16, 32, 48, 64, 128, 256, 512, 1024];
   const pngBySize = new Map(
@@ -225,13 +246,33 @@ function main() {
     }),
   );
 
-  copyFileSync(path.join(desktopBuildIconsDir, "16x16.png"), path.join(frontendPublicDir, "favicon-16x16.png"));
-  copyFileSync(path.join(desktopBuildIconsDir, "32x32.png"), path.join(frontendPublicDir, "favicon-32x32.png"));
-  copyFileSync(path.join(desktopBuildIconsDir, "512x512.png"), path.join(desktopBuildDir, "icon.png"));
-  copyFileSync(path.join(desktopBuildIconsDir, "512x512.png"), path.join(desktopRuntimeAssetsDir, "window-icon.png"));
+  copyFileSync(
+    path.join(desktopBuildIconsDir, "16x16.png"),
+    path.join(frontendPublicDir, "favicon-16x16.png"),
+  );
+  copyFileSync(
+    path.join(desktopBuildIconsDir, "32x32.png"),
+    path.join(frontendPublicDir, "favicon-32x32.png"),
+  );
+  copyFileSync(
+    path.join(desktopBuildIconsDir, "512x512.png"),
+    path.join(desktopBuildDir, "icon.png"),
+  );
+  copyFileSync(
+    path.join(desktopBuildIconsDir, "512x512.png"),
+    path.join(desktopRuntimeAssetsDir, "window-icon.png"),
+  );
 
-  writeIco(path.join(frontendPublicDir, "favicon.ico"), [16, 32, 48, 64], pngBySize);
-  writeIco(path.join(desktopBuildDir, "icon.ico"), [16, 32, 48, 64, 128, 256], pngBySize);
+  writeIco(
+    path.join(frontendPublicDir, "favicon.ico"),
+    [16, 32, 48, 64],
+    pngBySize,
+  );
+  writeIco(
+    path.join(desktopBuildDir, "icon.ico"),
+    [16, 32, 48, 64, 128, 256],
+    pngBySize,
+  );
   writeIcns(path.join(desktopBuildDir, "icon.icns"), pngBySize);
 }
 

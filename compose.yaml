@@ -8,10 +8,17 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+      mongodb-init:
+        condition: service_completed_successfully
     environment:
       NODE_ENV: production
       BACKEND_PORT: "3500"
-      MONGODB_URI: "mongodb://${MONGODB_APP_USERNAME:-reqloom}:${MONGODB_APP_PASSWORD:?Set MONGODB_APP_PASSWORD in .env}@mongodb:27017/${MONGODB_DATABASE:-reqloom}?authSource=${MONGODB_DATABASE:-reqloom}"
+      MONGODB_HOST: mongodb
+      MONGODB_PORT: "27017"
+      MONGODB_DATABASE: "${MONGODB_DATABASE:-reqloom}"
+      MONGODB_AUTH_SOURCE: "${MONGODB_DATABASE:-reqloom}"
+      MONGODB_APP_USERNAME: "${MONGODB_APP_USERNAME:-reqloom}"
+      MONGODB_APP_PASSWORD: "${MONGODB_APP_PASSWORD:?Set MONGODB_APP_PASSWORD in .env}"
       MONGODB_SERVER_SELECTION_TIMEOUT_MS: "${MONGODB_SERVER_SELECTION_TIMEOUT_MS:-5000}"
       JWT_SECRET: "${JWT_SECRET:?Set JWT_SECRET in .env}"
       DATA_ENCRYPTION_KEY: "${DATA_ENCRYPTION_KEY:?Set DATA_ENCRYPTION_KEY in .env}"
@@ -47,12 +54,32 @@ services:
       test:
         [
           "CMD-SHELL",
-          "mongosh --quiet --host 127.0.0.1 --port 27017 --username \"$$MONGODB_APP_USERNAME\" --password \"$$MONGODB_APP_PASSWORD\" --authenticationDatabase \"$$MONGODB_DATABASE\" --eval \"db.adminCommand({ ping: 1 }).ok\" || exit 1"
+          "mongosh --quiet --host 127.0.0.1 --port 27017 --username \"$$MONGO_INITDB_ROOT_USERNAME\" --password \"$$MONGO_INITDB_ROOT_PASSWORD\" --authenticationDatabase admin --eval \"db.adminCommand({ ping: 1 }).ok\" || exit 1"
         ]
       interval: 10s
       timeout: 5s
       retries: 10
       start_period: 10s
+
+  mongodb-init:
+    image: mongo:7
+    container_name: reqloom-mongodb-init
+    restart: "no"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "${MONGODB_ROOT_USERNAME:-root}"
+      MONGO_INITDB_ROOT_PASSWORD: "${MONGODB_ROOT_PASSWORD:?Set MONGODB_ROOT_PASSWORD in .env}"
+      MONGODB_DATABASE: "${MONGODB_DATABASE:-reqloom}"
+      MONGODB_APP_USERNAME: "${MONGODB_APP_USERNAME:-reqloom}"
+      MONGODB_APP_PASSWORD: "${MONGODB_APP_PASSWORD:?Set MONGODB_APP_PASSWORD in .env}"
+    volumes:
+      - ./docker/mongo-init.js:/mongo-init.js:ro
+    command:
+      - /bin/sh
+      - -c
+      - mongosh --quiet --host mongodb --port 27017 --username "$$MONGO_INITDB_ROOT_USERNAME" --password "$$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin /mongo-init.js
 
 volumes:
   mongodb_data:

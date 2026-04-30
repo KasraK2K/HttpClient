@@ -1,6 +1,6 @@
 import { LockKeyhole } from "lucide-react";
 import { useState } from "react";
-import brandLogo from "../../assets/httpclient-logo.svg";
+import brandLogo from "../../assets/reqloom-logo.svg";
 import { showErrorToast } from "../../store/toasts";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";

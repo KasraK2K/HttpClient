@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "description": "Self-hosted API workspaces for building, sending, and tracing HTTP requests.",
+  "author": "Kasra Karami <Kasra.Karami.KK@gmail.com>",
+  "license": "MIT",
   "keywords": [
     "reqloom",
     "api-client",
