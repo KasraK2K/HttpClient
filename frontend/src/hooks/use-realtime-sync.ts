@@ -11,6 +11,7 @@ import { useWorkspaceStore } from "../store/workspaces";
 const RECONNECT_BASE_DELAY_MS = 750;
 const RECONNECT_MAX_DELAY_MS = 30_000;
 const INVALIDATION_DELAY_MS = 150;
+const FALLBACK_POLL_INTERVAL_MS = 10_000;
 
 interface PendingInvalidations {
   workspaces: boolean;
@@ -69,6 +70,7 @@ export function useRealtimeSync(enabled: boolean) {
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<number | null>(null);
   const invalidationTimerRef = useRef<number | null>(null);
+  const fallbackPollTimerRef = useRef<number | null>(null);
   const reconnectAttemptRef = useRef(0);
   const hasConnectedRef = useRef(false);
   const pendingRef = useRef<PendingInvalidations>(createPendingInvalidations());
@@ -84,6 +86,13 @@ export function useRealtimeSync(enabled: boolean) {
       if (reconnectTimerRef.current !== null) {
         window.clearTimeout(reconnectTimerRef.current);
         reconnectTimerRef.current = null;
+      }
+    };
+
+    const stopFallbackPolling = () => {
+      if (fallbackPollTimerRef.current !== null) {
+        window.clearInterval(fallbackPollTimerRef.current);
+        fallbackPollTimerRef.current = null;
       }
     };
 
@@ -189,12 +198,25 @@ export function useRealtimeSync(enabled: boolean) {
       );
     };
 
+    const startFallbackPolling = () => {
+      if (fallbackPollTimerRef.current !== null) {
+        return;
+      }
+
+      queueLoadedStateRefresh();
+      fallbackPollTimerRef.current = window.setInterval(
+        queueLoadedStateRefresh,
+        FALLBACK_POLL_INTERVAL_MS,
+      );
+    };
+
     function connect() {
       clearReconnectTimer();
       const socket = new WebSocket(getRealtimeUrl());
       socketRef.current = socket;
 
       socket.addEventListener("open", () => {
+        stopFallbackPolling();
         reconnectAttemptRef.current = 0;
         if (hasConnectedRef.current) {
           queueLoadedStateRefresh();
@@ -225,6 +247,7 @@ export function useRealtimeSync(enabled: boolean) {
           socketRef.current = null;
         }
         if (event.code !== 1008) {
+          startFallbackPolling();
           scheduleReconnect();
         }
       });
@@ -239,6 +262,7 @@ export function useRealtimeSync(enabled: boolean) {
     return () => {
       disposed = true;
       clearReconnectTimer();
+      stopFallbackPolling();
       if (invalidationTimerRef.current !== null) {
         window.clearTimeout(invalidationTimerRef.current);
         invalidationTimerRef.current = null;
