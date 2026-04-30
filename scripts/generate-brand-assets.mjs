@@ -113,42 +113,6 @@ ${createIconMarkup()}
 `;
 }
 
-function createLogoSvg() {
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg width="256" height="88" viewBox="0 0 256 88" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-${createIconDefsBody()}    <linearGradient id="hcWordHttp" x1="84" y1="16" x2="184" y2="68" gradientUnits="userSpaceOnUse">
-      <stop stop-color="${iconPalette.cyanTop}" />
-      <stop offset="1" stop-color="${iconPalette.cyanBottom}" />
-    </linearGradient>
-    <linearGradient id="hcWordClient" x1="164" y1="18" x2="324" y2="70" gradientUnits="userSpaceOnUse">
-      <stop stop-color="${iconPalette.greenTop}" />
-      <stop offset="1" stop-color="${iconPalette.greenBottom}" />
-    </linearGradient>
-    <filter id="hcWordShadow" x="0" y="0" width="256" height="88" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feFlood flood-opacity="0" result="BackgroundImageFix" />
-      <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
-      <feOffset dy="4" />
-      <feGaussianBlur stdDeviation="4" />
-      <feComposite in2="hardAlpha" operator="out" />
-      <feColorMatrix type="matrix" values="0 0 0 0 0.0196078 0 0 0 0 0.0588235 0 0 0 0 0.133333 0 0 0 0.26 0" />
-      <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_0_1" />
-      <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_0_1" result="shape" />
-    </filter>
-  </defs>
-  <g filter="url(#hcWordShadow)">
-    <g transform="translate(0 2) scale(0.54)">
-${createIconMarkup()}    </g>
-    <g font-family="Segoe UI, Arial, sans-serif" font-weight="700" paint-order="stroke fill markers" stroke="${iconPalette.ink}" stroke-linejoin="round">
-      <text x="80" y="54" fill="url(#hcWordHttp)" stroke-width="4.5" font-size="34" letter-spacing="-0.7">Http</text>
-      <text x="158" y="54" fill="url(#hcWordClient)" stroke-width="4.5" font-size="34" letter-spacing="-0.8">Client</text>
-    </g>
-    <path d="M82 66H246" stroke="url(#hcBridgeFill)" stroke-width="4" stroke-linecap="round" opacity="0.9" />
-  </g>
-</svg>
-`;
-}
-
 function writeIco(outputPath, sizes, pngBySize) {
   const iconFile = new IconFile();
   for (const size of sizes) {
@@ -223,11 +187,6 @@ function main() {
   ensureDir(desktopBuildIconsDir);
   ensureDir(desktopRuntimeAssetsDir);
 
-  writeFileSync(
-    path.join(frontendAssetsDir, "reqloom-logo.svg"),
-    createLogoSvg(),
-    "utf8",
-  );
   writeFileSync(
     path.join(frontendPublicDir, "favicon.svg"),
     createFaviconSvg(),
