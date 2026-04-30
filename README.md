@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="frontend/src/assets/reqloom-logo.png" alt="ReqLoom logo" />
+  <img src="frontend/src/assets/reqloom-logo.png" width="40%" alt="ReqLoom logo" />
 </p>
 
 # ReqLoom
