@@ -2,7 +2,7 @@
   "name": "@reqloom/backend",
   "version": "0.1.0",
   "private": true,
-  "description": "ReqLoom Fastify API and request executor.",
+  "description": "ReqLoom is a self-hosted API workspace for building, sending, organizing, and tracing HTTP requests with environments, history, Postman imports, and realtime team sync.",
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
