@@ -21,7 +21,7 @@ ReqLoom is a self-hosted API workspace for building, sending, organizing, and tr
 
 The backend expects an authenticated local MongoDB database, and `compose.yaml` binds MongoDB to `127.0.0.1` by default so Docker does not expose it publicly on your server. Backups are written into `./backup` by running `npm run db:backup` when the MongoDB container is up.
 
-If you change `MONGODB_APP_PASSWORD` after MongoDB already has a persistent Docker volume, the `mongodb-init` service updates the app database user before the app container starts. Re-run `npm run docker:up` after changing MongoDB credentials so the one-shot init service and app container are recreated with the same values.
+MongoDB creates the application database user from `docker/mongo-init.js` when the Docker volume is initialized for the first time. If you change `MONGODB_APP_PASSWORD` after the persistent volume already exists, update the MongoDB user manually or recreate the Docker volume with `npm run docker:remove` before starting the stack again.
 
 The frontend dev server uses `127.0.0.1` and starts at port `3030` because some Windows setups reserve port `5173`, which causes Vite to fail with `EACCES`. If `3030` is busy, Vite will automatically move to the next available local port.
 
@@ -57,7 +57,7 @@ Run the full application with:
 
 - `npm run docker:up`
 
-Open the app at `http://localhost:3500`. The backend serves the built frontend from the same container, MongoDB runs in Docker with authentication enabled, and backups can be written into `./backup` with:
+Open the app at `http://localhost:4000` when using the example `.env`. The backend serves the built frontend from the same container, MongoDB runs in Docker with authentication enabled, and backups can be written into `./backup` with:
 
 - `npm run db:backup`
 
@@ -119,4 +119,3 @@ In the current Docker setup, both Nginx locations still proxy to `127.0.0.1:3500
 - MongoDB is authenticated and bound to loopback by default in compose.yaml, which addresses the same kind of public exposure warning DigitalOcean sends for Docker-published databases.
 - On a server, keep MongoDB off the public internet and put the app behind Nginx or another reverse proxy when possible.
 - The first superuser bootstrap route should only be used with SUPERUSER_BOOTSTRAP_SECRET set in production.
-

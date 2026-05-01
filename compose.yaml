@@ -8,8 +8,6 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
-      mongodb-init:
-        condition: service_completed_successfully
     environment:
       NODE_ENV: production
       BACKEND_PORT: "3500"
@@ -26,13 +24,13 @@ services:
       COOKIE_NAME: "${COOKIE_NAME:-reqloom_session}"
       COOKIE_DOMAIN: "${COOKIE_DOMAIN:-}"
       COOKIE_SECURE: "${COOKIE_SECURE:-auto}"
-      FRONTEND_ORIGIN: "${DOCKER_FRONTEND_ORIGIN:-http://localhost:3500,http://127.0.0.1:3500}"
+      FRONTEND_ORIGIN: "${DOCKER_FRONTEND_ORIGIN:-http://localhost:4000,http://127.0.0.1:4000}"
       UNLOCK_TTL_MINUTES: "${UNLOCK_TTL_MINUTES:-15}"
       ALLOW_PRIVATE_NETWORK_TARGETS: "${ALLOW_PRIVATE_NETWORK_TARGETS:-false}"
       ALLOWED_OUTBOUND_HOSTS: "${ALLOWED_OUTBOUND_HOSTS:-}"
       HISTORY_LIMIT: "${HISTORY_LIMIT:-250}"
     ports:
-      - "${APP_PORT:-3500}:3500"
+      - "${APP_PORT:-4000}:3500"
 
   mongodb:
     image: mongo:7
@@ -60,26 +58,6 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
-
-  mongodb-init:
-    image: mongo:7
-    container_name: reqloom-mongodb-init
-    restart: "no"
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: "${MONGODB_ROOT_USERNAME:-root}"
-      MONGO_INITDB_ROOT_PASSWORD: "${MONGODB_ROOT_PASSWORD:?Set MONGODB_ROOT_PASSWORD in .env}"
-      MONGODB_DATABASE: "${MONGODB_DATABASE:-reqloom}"
-      MONGODB_APP_USERNAME: "${MONGODB_APP_USERNAME:-reqloom}"
-      MONGODB_APP_PASSWORD: "${MONGODB_APP_PASSWORD:?Set MONGODB_APP_PASSWORD in .env}"
-    volumes:
-      - ./docker/mongo-init.js:/mongo-init.js:ro
-    command:
-      - /bin/sh
-      - -c
-      - mongosh --quiet --host mongodb --port 27017 --username "$$MONGO_INITDB_ROOT_USERNAME" --password "$$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin /mongo-init.js
 
 volumes:
   mongodb_data:
